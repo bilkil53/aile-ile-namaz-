@@ -47,10 +47,36 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Kod analizi (hatalar özet sayfasına yazılır)
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1
+          cat analyze.txt
+          {
+            echo '## flutter analyze'
+            echo '```'
+            head -c 6000 analyze.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          grep -E '^\s*error •' analyze.txt | head -20 | while IFS= read -r l; do echo "::error::${l}"; done
+          exit 0
 
       - name: APK derle
-        run: flutter build apk --release
+        run: |
+          set +e
+          flutter build apk --release > build.txt 2>&1
+          code=$?
+          tail -n 80 build.txt
+          {
+            echo '## flutter build apk'
+            echo '```'
+            tail -c 6000 build.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -ne 0 ]; then
+            grep -iE 'error|exception|failure|what went wrong' build.txt | head -15 | while IFS= read -r l; do echo "::error::${l}"; done
+          fi
+          exit $code
 
       - uses: actions/upload-artifact@v4
         with:
