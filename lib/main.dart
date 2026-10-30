@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config.dart';
 import 'screens/login_screen.dart';
 import 'screens/pools_screen.dart';
+import 'update_checker.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,8 +35,22 @@ class App extends StatelessWidget {
 }
 
 /// Oturum açıksa havuz listesi, değilse giriş ekranı.
-class AuthGate extends StatelessWidget {
+/// Açılışta GitHub'da yeni sürüm olup olmadığını da kontrol eder.
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) UpdateChecker.check(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

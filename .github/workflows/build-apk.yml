@@ -124,7 +124,7 @@ jobs:
       - name: APK derle
         run: |
           set +e
-          flutter build apk --release > build.txt 2>&1
+          flutter build apk --release --build-number=${{ github.run_number }} --build-name=2.0.${{ github.run_number }} > build.txt 2>&1
           code=$?
           tail -n 80 build.txt
           {
@@ -138,15 +138,20 @@ jobs:
           fi
           exit $code
 
+      - name: APK dosya adını sabitle
+        run: cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
+
       - uses: actions/upload-artifact@v4
         with:
           name: aile-ile-namaz-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: aile-ile-namaz.apk
 
-      - name: Yayınla (telefondan indirmek için)
+      - name: Yayınla (uygulama içi güncelleme buradan okur)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-${{ github.run_number }}
-          name: APK ${{ github.run_number }}
-          prerelease: true
-          files: build/app/outputs/flutter-apk/app-release.apk
+          name: Sürüm ${{ github.run_number }}
+          body: ${{ github.event.head_commit.message }}
+          prerelease: false
+          make_latest: true
+          files: aile-ile-namaz.apk
