@@ -232,12 +232,7 @@ class _PoolScreenState extends State<PoolScreen> {
       };
     });
     try {
-      final pools = await Repo.myPools();
-      await Repo.setPrayer(
-        key: key,
-        status: status,
-        poolIds: pools.map((p) => p.id).toList(),
-      );
+      await Repo.setPrayer(key: key, status: status);
     } catch (_) {
       _toast('Kaydedilemedi.');
       _load();

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../data.dart';
+import '../notifications.dart';
+
 import '../theme.dart';
+import 'karne_screen.dart';
+import 'kaza_screen.dart';
 import 'pools_screen.dart';
+import 'settings_screen.dart';
 import 'today_screen.dart';
 
 /// Ana iskelet: yeşil üst bar + alt menü (Bugün, Aile Havuzu, Kaza, Karne).
@@ -15,6 +19,16 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Giriş sonrası: bildirim izni iste ve vakit hatırlatmalarını kur.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Notifications.requestPermission();
+      await Notifications.reschedule();
+    });
+  }
 
   static const _subtitles = [
     'Vakitler & Günlük İbadet',
@@ -63,9 +77,12 @@ class _HomeShellState extends State<HomeShell> {
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 12),
-              child: PopupMenuButton<String>(
-                tooltip: 'Ayarlar',
-                icon: Container(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
+                child: Container(
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
@@ -75,12 +92,6 @@ class _HomeShellState extends State<HomeShell> {
                   ),
                   child: const Icon(Icons.settings, size: 19, color: Colors.white),
                 ),
-                onSelected: (v) {
-                  if (v == 'logout') supa.auth.signOut();
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'logout', child: Text('Çıkış yap')),
-                ],
               ),
             ),
           ],
@@ -90,17 +101,8 @@ class _HomeShellState extends State<HomeShell> {
           children: const [
             TodayScreen(),
             PoolsScreen(),
-            _ComingSoon(
-              icon: Icons.calendar_month,
-              title: 'Kaza Namazı',
-              text: 'Kaza borcunu ve ödediklerini buradan takip edeceksin. '
-                  'Havuzdaki aile üyelerin sadece toplam sayıyı görür.',
-            ),
-            _ComingSoon(
-              icon: Icons.emoji_events,
-              title: 'İbadet Karnesi',
-              text: 'Haftalık ve aylık namaz istatistiklerin burada olacak.',
-            ),
+            KazaScreen(),
+            KarneScreen(),
           ],
         ),
         bottomNavigationBar: Container(
@@ -126,50 +128,6 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ComingSoon extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String text;
-  const _ComingSoon({required this.icon, required this.title, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.emerald,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: Colors.white, size: 28),
-              const SizedBox(height: 10),
-              Text(title,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 6),
-              Text(text, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85))),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text('Yakında',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

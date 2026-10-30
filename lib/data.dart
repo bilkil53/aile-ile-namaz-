@@ -22,6 +22,7 @@ class Repo {
   }
 
   static Future<void> createPool(String name, String role, String icon) async {
+    invalidatePools();
     await supa.rpc('create_pool', params: {
       'p_name': name,
       'p_role_title': role,
@@ -39,8 +40,10 @@ class Repo {
     return res != null;
   }
 
-  static Future<void> leavePool(String poolId) =>
-      supa.rpc('leave_pool', params: {'p_pool': poolId});
+  static Future<void> leavePool(String poolId) {
+    invalidatePools();
+    return supa.rpc('leave_pool', params: {'p_pool': poolId});
+  }
 
   // ---- Üyeler ve yönetim ----
   static Future<List<Member>> members(String poolId) async {
@@ -115,30 +118,86 @@ class Repo {
     };
   }
 
-  /// Bugünkü bir vakti kaydeder; "kıldı/kılmadı" ise üye olduğum havuzlara olay düşer.
+  /// Üye olunan havuz kimlikleri (önbellekli; havuz değişince [invalidatePools]).
+  static List<String>? _poolIds;
+  static void invalidatePools() => _poolIds = null;
+  static Future<List<String>> myPoolIds() async =>
+      _poolIds ??= (await myPools()).map((p) => p.id).toList();
+
+  /// Bir vakti kaydeder. Bugünse ve "kıldı/kılmadı" ise havuzlara olay düşer.
   static Future<void> setPrayer({
     required String key,
     required PrayerStatus status,
-    required List<String> poolIds,
+    String? date,
   }) async {
+    final day = date ?? todayStr();
     await supa.from('daily_prayers').upsert(
-      {'user_id': myId, 'prayer_date': todayStr(), key: status.code},
+      {'user_id': myId, 'prayer_date': day, key: status.code},
       onConflict: 'user_id,prayer_date',
     );
+    if (day != todayStr()) return;
     final type = switch (status) {
       PrayerStatus.prayed => 'PRAYED',
       PrayerStatus.missed => 'MISSED',
       _ => null,
     };
     if (type == null) return;
-    for (final p in poolIds) {
-      await supa.from('pool_events').insert({
-        'pool_id': p,
-        'sender_id': myId,
-        'event_type': type,
-        'prayer': key.toUpperCase(),
-      });
-    }
+    final pools = await myPoolIds();
+    if (pools.isEmpty) return;
+    // Tek istekte tüm havuzlara
+    await supa.from('pool_events').insert([
+      for (final p in pools)
+        {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
+    ]);
+  }
+
+  /// Kendi namaz kayıtlarım (tarih aralığı, Karne için).
+  static Future<Map<String, Map<String, PrayerStatus>>> myRange(DateTime from, DateTime to) async {
+    String f(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+    final rows = await supa
+        .from('daily_prayers')
+        .select('prayer_date, fajr, dhuhr, asr, maghrib, isha')
+        .eq('user_id', myId)
+        .gte('prayer_date', f(from))
+        .lte('prayer_date', f(to));
+    return {
+      for (final r in rows)
+        r['prayer_date'] as String: {
+          for (final k in prayerKeys) k: PrayerStatusX.parse(r[k] as String?),
+        },
+    };
+  }
+
+  // ---- Kaza (detay sadece sahibine görünür) ----
+  static Future<Map<String, (int, int)>> myKaza() async {
+    final rows = await supa
+        .from('kaza_prayers')
+        .select('prayer_type, owed_count, completed_count')
+        .eq('user_id', myId);
+    return {
+      for (final r in rows)
+        r['prayer_type'] as String: (
+          (r['owed_count'] as num).toInt(),
+          (r['completed_count'] as num).toInt(),
+        ),
+    };
+  }
+
+  static Future<void> saveKaza(String type, int owed, int completed, {bool announce = false}) async {
+    await supa.from('kaza_prayers').upsert({
+      'user_id': myId,
+      'prayer_type': type,
+      'owed_count': owed,
+      'completed_count': completed,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }, onConflict: 'user_id,prayer_type');
+    if (!announce) return;
+    final pools = await myPoolIds();
+    if (pools.isEmpty) return;
+    // Hangi vaktin kaza edildiği paylaşılmaz; sadece "kaza kıldı" olayı.
+    await supa.from('pool_events').insert([
+      for (final p in pools) {'pool_id': p, 'sender_id': myId, 'event_type': 'KAZA'},
+    ]);
   }
 
   // ---- Olaylar ----

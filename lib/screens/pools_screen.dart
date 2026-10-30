@@ -20,7 +20,10 @@ class _PoolsScreenState extends State<PoolsScreen> {
     _future = Repo.myPools();
   }
 
-  void _reload() => setState(() => _future = Repo.myPools());
+  void _reload() {
+    Repo.invalidatePools();
+    setState(() => _future = Repo.myPools());
+  }
 
   void _toast(String msg) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));

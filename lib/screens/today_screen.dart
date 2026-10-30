@@ -1,11 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../content/daily_content.dart';
 import '../data.dart';
+import '../location.dart';
 import '../models.dart';
+import '../notifications.dart';
+import '../prayer_times.dart';
+import '../settings.dart';
 import '../theme.dart';
+import '../widgets/qibla_card.dart';
 
-/// "Bugün" sekmesi: karşılama, aile özeti kartı ve vakit kartları.
+/// "Bugün" sekmesi: karşılama, SIRADAKİ VAKİT, günün ayeti, vakit kartları, kıble.
 /// Vakte dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -15,10 +23,15 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  Map<String, PrayerStatus> _mine = {};
-  List<Pool> _pools = [];
+  Map<String, PrayerStatus> _today = {};
+  Map<String, PrayerStatus> _yesterday = {};
+  bool _showYesterday = false;
+  DayTimes? _times;
+  DayTimes? _tomorrow;
   String _name = '';
   bool _loading = true;
+  bool _gpsBusy = false;
+  Timer? _ticker;
 
   static const _icons = {
     'fajr': Icons.wb_twilight,
@@ -32,25 +45,78 @@ class _TodayScreenState extends State<TodayScreen> {
   void initState() {
     super.initState();
     _load();
+    // Geri sayım için dakikada bir yenile (saniyelik yenileme pil harcar).
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted) return;
+      // Gün değiştiyse her şeyi yeniden yükle
+      if (_times != null && !_isSameDay(_times!.date, DateTime.now())) {
+        _load();
+      } else {
+        setState(() {});
+      }
+    });
   }
 
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
+
+  String _yesterdayStr() =>
+      DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(const Duration(days: 1)));
+
   Future<void> _load() async {
+    final now = DateTime.now();
+    // Vakitler (önbellekten anında gelir) ve sunucu verisi paralel
+    final timesF = Future.wait([
+      PrayerTimesService.forDate(now),
+      PrayerTimesService.forDate(now.add(const Duration(days: 1))),
+    ]);
     try {
       final results = await Future.wait<dynamic>([
-        Repo.myPools(),
         Repo.dayPrayers([myId], todayStr()),
+        Repo.dayPrayers([myId], _yesterdayStr()),
         supa.from('profiles').select('display_name').eq('id', myId).maybeSingle(),
       ]);
-      if (!mounted) return;
       final profile = results[2] as Map<String, dynamic>?;
-      setState(() {
-        _pools = results[0] as List<Pool>;
-        _mine = (results[1] as Map<String, Map<String, PrayerStatus>>)[myId] ?? {};
-        _name = (profile?['display_name'] as String? ?? '').trim();
-        _loading = false;
-      });
+      _today = (results[0] as Map<String, Map<String, PrayerStatus>>)[myId] ?? {};
+      _yesterday = (results[1] as Map<String, Map<String, PrayerStatus>>)[myId] ?? {};
+      _name = (profile?['display_name'] as String? ?? '').trim();
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      // Çevrimdışı: vakitler yine gösterilir
+    }
+    final times = await timesF;
+    if (!mounted) return;
+    setState(() {
+      _times = times[0];
+      _tomorrow = times[1];
+      _loading = false;
+    });
+  }
+
+  Future<void> _updateGps() async {
+    setState(() => _gpsBusy = true);
+    try {
+      final (ok, msg) = await LocationHelper.updateFromGps();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(ok ? 'Konum güncellendi: $msg' : msg)),
+      );
+      if (ok) {
+        await _load();
+        unawaited(Notifications.reschedule());
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Konum alınamadı. İli Ayarlar\'dan seçebilirsin.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _gpsBusy = false);
     }
   }
 
@@ -61,27 +127,47 @@ class _TodayScreenState extends State<TodayScreen> {
         PrayerStatus.excused => PrayerStatus.none,
       };
 
+  Map<String, PrayerStatus> get _current => _showYesterday ? _yesterday : _today;
+
   Future<void> _toggle(String key) async {
-    final next = _next(_mine[key] ?? PrayerStatus.none);
-    final before = Map<String, PrayerStatus>.from(_mine);
-    setState(() => _mine = {..._mine, key: next});
+    final map = _current;
+    final next = _next(map[key] ?? PrayerStatus.none);
+    final before = Map<String, PrayerStatus>.from(map);
+    final updated = {...map, key: next};
+    setState(() {
+      if (_showYesterday) {
+        _yesterday = updated;
+      } else {
+        _today = updated;
+      }
+    });
     try {
       await Repo.setPrayer(
         key: key,
         status: next,
-        poolIds: _pools.map((p) => p.id).toList(),
+        date: _showYesterday ? _yesterdayStr() : null,
       );
     } catch (_) {
       if (!mounted) return;
-      setState(() => _mine = before);
+      setState(() {
+        if (_showYesterday) {
+          _yesterday = before;
+        } else {
+          _today = before;
+        }
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kaydedilemedi. İnternet bağlantını kontrol et.')),
       );
     }
   }
 
-  int get _prayedCount =>
-      prayerKeys.where((k) => _mine[k] == PrayerStatus.prayed).length;
+  bool _arrived(String key) {
+    if (_showYesterday || _times == null) return true;
+    return !_times!.at(_times!.timeFor(key)).isAfter(DateTime.now());
+  }
+
+  int get _prayedCount => prayerKeys.where((k) => _current[k] == PrayerStatus.prayed).length;
 
   @override
   Widget build(BuildContext context) {
@@ -92,15 +178,26 @@ class _TodayScreenState extends State<TodayScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           _greeting(),
-          const SizedBox(height: 14),
-          _heroCard(),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
+          _dayToggle(),
+          const SizedBox(height: 12),
+          if (!_showYesterday) ...[
+            _heroCard(),
+            const SizedBox(height: 12),
+            _quoteCard(),
+            const SizedBox(height: 16),
+          ] else ...[
+            _yesterdayInfo(),
+            const SizedBox(height: 12),
+          ],
           _trackingHeader(),
           const SizedBox(height: 12),
           for (final k in prayerKeys) ...[
             _prayerCard(k),
             const SizedBox(height: 8),
           ],
+          const SizedBox(height: 8),
+          if (!_showYesterday) const QiblaCard(),
         ],
       ),
     );
@@ -108,39 +205,104 @@ class _TodayScreenState extends State<TodayScreen> {
 
   Widget _greeting() {
     final date = DateFormat('d MMMM y, EEEE', 'tr').format(DateTime.now());
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        const Text(
-          'AİLE İLE NAMAZ',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: AppColors.emerald,
-            letterSpacing: 0.8,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'AİLE İLE NAMAZ',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.emerald, letterSpacing: 0.8),
+              ),
+              Text(
+                _name.isEmpty ? 'Selamün aleyküm' : 'Selamün aleyküm,\n$_name',
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary, height: 1.25),
+              ),
+              const SizedBox(height: 2),
+              Row(children: [
+                const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.textSecondary),
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    '$date · ${_gpsBusy ? 'GPS güncelleniyor…' : '${AppSettings.cityName}${AppSettings.locationFromGps ? ' (GPS)' : ''}'}',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ),
+              ]),
+            ],
           ),
         ),
-        Text(
-          _name.isEmpty ? 'Selamün aleyküm' : 'Selamün aleyküm,\n$_name',
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-            height: 1.25,
+        Material(
+          color: AppColors.emeraldContainer,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: _gpsBusy ? null : _updateGps,
+            child: const SizedBox(
+              width: 42,
+              height: 42,
+              child: Icon(Icons.my_location, size: 20, color: AppColors.emerald),
+            ),
           ),
         ),
-        const SizedBox(height: 2),
-        Row(children: [
-          const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.textSecondary),
-          const SizedBox(width: 5),
-          Text(date, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-        ]),
       ],
     );
   }
 
+  Widget _dayToggle() {
+    Widget seg(String label, bool selected, VoidCallback onTap) => Expanded(
+          child: GestureDetector(
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: selected ? AppColors.emerald : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: selected ? Colors.white : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        );
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.emeraldContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(children: [
+        seg('Dün', _showYesterday, () => setState(() => _showYesterday = true)),
+        seg('Bugün', !_showYesterday, () => setState(() => _showYesterday = false)),
+      ]),
+    );
+  }
+
+  Widget _yesterdayInfo() => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.goldContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Text(
+          'Dünkü namazlarını görüntülüyorsun. Unuttuğun veya kıldığın vakitleri işaretleyebilirsin.',
+          style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
+        ),
+      );
+
   Widget _heroCard() {
-    final hasPool = _pools.isNotEmpty;
+    final t = _times!;
+    final n = PrayerTimesService.next(t, _tomorrow ?? t);
+    final mins = n.remaining.inMinutes;
+    final h = mins ~/ 60, m = mins % 60;
     final white85 = Colors.white.withValues(alpha: 0.85);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
@@ -153,45 +315,52 @@ class _TodayScreenState extends State<TodayScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(children: [
-            Icon(Icons.diversity_1, size: 14, color: Colors.white),
+            Icon(Icons.notifications, size: 14, color: Colors.white),
             SizedBox(width: 5),
-            Text(
-              'AİLE HAVUZU',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1),
-            ),
+            Text('SIRADAKİ VAKİT',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1)),
           ]),
           const SizedBox(height: 10),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      hasPool ? _pools.first.name : 'Henüz bir havuzun yok',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    Text(
-                      hasPool
-                          ? (_pools.length > 1 ? '${_pools.length} havuza üyesin' : 'Kıldıkların ailene anında bildirilir')
-                          : 'Aile Havuzu sekmesinden oluştur ya da katıl',
-                      style: TextStyle(fontSize: 13, color: white85, fontWeight: FontWeight.w500),
-                    ),
+                    Text(n.name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(h > 0 ? '$h sa $m dk sonra' : '$m dk sonra',
+                        style: TextStyle(fontSize: 13, color: white85, fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
-              Text(
-                '$_prayedCount/5',
-                style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
+              Text(n.time, style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white)),
             ],
           ),
           const SizedBox(height: 12),
+          // Günün tüm vakitleri
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (final (name, time) in t.all)
+                Column(children: [
+                  Text(name, style: TextStyle(fontSize: 10, color: white85)),
+                  const SizedBox(height: 2),
+                  Text(time,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: name == n.name ? AppColors.prayedMint : Colors.white,
+                      )),
+                ]),
+            ],
+          ),
+          const SizedBox(height: 10),
           Divider(color: Colors.white.withValues(alpha: 0.2), height: 1),
           const SizedBox(height: 10),
           Text(
-            'Namaz, müminin miracıdır. Ailenle birlikte, vaktinde.',
+            t.fromDiyanet
+                ? 'Diyanet İşleri Başkanlığı hesaplama yöntemiyle ${AppSettings.cityName} vakitleri.'
+                : 'İnternet yok: vakitler cihazda yaklaşık hesaplandı.',
             style: TextStyle(fontSize: 11, color: white85, height: 1.35),
           ),
         ],
@@ -199,78 +368,106 @@ class _TodayScreenState extends State<TodayScreen> {
     );
   }
 
+  Widget _quoteCard() {
+    final q = dailyQuotes()[0];
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(q.category.toUpperCase(),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.emerald, letterSpacing: 0.8)),
+          const SizedBox(height: 6),
+          if (q.arabic != null) ...[
+            Text(q.arabic!,
+                textAlign: TextAlign.right,
+                textDirection: TextDirection.rtl,
+                style: const TextStyle(fontSize: 18, color: AppColors.textPrimary, height: 1.6)),
+            const SizedBox(height: 6),
+          ],
+          Text(q.text, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.4)),
+          const SizedBox(height: 6),
+          Text(q.source, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+        ],
+      ),
+    );
+  }
+
   Widget _trackingHeader() {
+    final map = _current;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Bugünün takibi',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-            ),
+            Text(_showYesterday ? 'Dünün takibi' : 'Bugünün takibi',
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.emeraldContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '$_prayedCount/5',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.emerald),
-              ),
+              decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(8)),
+              child: Text('$_prayedCount/5',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.emerald)),
             ),
           ],
         ),
         const SizedBox(height: 2),
-        const Text(
-          'Niyetinle başla; küçük bir işaret sürdürülebilirliği güçlendirir.',
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
-        ),
+        const Text('Niyetinle başla; küçük bir işaret sürdürülebilirliği güçlendirir.',
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3)),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            for (var i = 0; i < prayerKeys.length; i++) ...[
-              if (i > 0) const SizedBox(width: 5),
-              Expanded(
-                child: Container(
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: _mine[prayerKeys[i]] == PrayerStatus.prayed
-                        ? AppColors.emerald
-                        : AppColors.segmentInactive,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
+        Row(children: [
+          for (var i = 0; i < prayerKeys.length; i++) ...[
+            if (i > 0) const SizedBox(width: 5),
+            Expanded(
+              child: Container(
+                height: 5,
+                decoration: BoxDecoration(
+                  color: map[prayerKeys[i]] == PrayerStatus.prayed ? AppColors.emerald : AppColors.segmentInactive,
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ]),
         const SizedBox(height: 6),
-        const Text(
-          'Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.',
-          style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-        ),
+        const Text('Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.',
+            style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
       ],
     );
   }
 
   Widget _prayerCard(String key) {
-    final status = _mine[key] ?? PrayerStatus.none;
-    final (statusText, statusColor) = switch (status) {
-      PrayerStatus.prayed => ('✓ Kılındı', AppColors.prayedMint),
-      PrayerStatus.missed => ('✕ Kılınmadı', AppColors.missedCoral),
-      PrayerStatus.excused => ('— Muaf', const Color(0xFFE5E7EB)),
-      PrayerStatus.none => ('Dokunarak işaretle', Colors.white.withValues(alpha: 0.75)),
-    };
+    final status = _current[key] ?? PrayerStatus.none;
+    final arrived = _arrived(key);
+    final time = _times?.timeFor(key) ?? '';
+    final (statusText, statusColor) = !arrived
+        ? ('Vakti henüz girmedi', Colors.white.withValues(alpha: 0.65))
+        : switch (status) {
+            PrayerStatus.prayed => ('✓ Kılındı', AppColors.prayedMint),
+            PrayerStatus.missed => ('✕ Kılınmadı', AppColors.missedCoral),
+            PrayerStatus.excused => ('— Muaf', const Color(0xFFE5E7EB)),
+            PrayerStatus.none => ('Dokunarak işaretle', Colors.white.withValues(alpha: 0.75)),
+          };
     return Material(
-      color: AppColors.emerald,
+      color: arrived ? AppColors.emerald : AppColors.emerald.withValues(alpha: 0.82),
       borderRadius: BorderRadius.circular(16),
       elevation: 1,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _toggle(key),
+        onTap: () {
+          if (arrived) {
+            _toggle(key);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${prayerLabels[key]} vakti $time\'de girecek.')),
+            );
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           child: Row(
@@ -279,7 +476,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
+                  color: Colors.white.withValues(alpha: arrived ? 0.16 : 0.10),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(_icons[key], size: 20, color: Colors.white),
@@ -289,28 +486,39 @@ class _TodayScreenState extends State<TodayScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      prayerLabels[key]!,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: statusColor,
-                        fontWeight: status == PrayerStatus.none ? FontWeight.normal : FontWeight.bold,
-                      ),
-                    ),
+                    Text(prayerLabels[key]!,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(statusText,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: statusColor,
+                          fontWeight: arrived && status != PrayerStatus.none ? FontWeight.bold : FontWeight.normal,
+                        )),
                   ],
                 ),
               ),
-              _statusCircle(status),
+              if (time.isNotEmpty && !_showYesterday) ...[
+                Text(time, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(width: 12),
+              ],
+              arrived ? _statusCircle(status) : _lockCircle(),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _lockCircle() => Container(
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.16),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+        ),
+        child: Icon(Icons.lock, size: 13, color: Colors.white.withValues(alpha: 0.8)),
+      );
 
   Widget _statusCircle(PrayerStatus status) {
     const size = 26.0;
