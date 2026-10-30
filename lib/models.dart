@@ -1,0 +1,169 @@
+enum PrayerStatus { none, prayed, missed, excused }
+
+extension PrayerStatusX on PrayerStatus {
+  String get code => switch (this) {
+        PrayerStatus.none => 'NONE',
+        PrayerStatus.prayed => 'PRAYED',
+        PrayerStatus.missed => 'MISSED',
+        PrayerStatus.excused => 'EXCUSED',
+      };
+
+  String get label => switch (this) {
+        PrayerStatus.none => 'Belirtilmedi',
+        PrayerStatus.prayed => 'Kıldı',
+        PrayerStatus.missed => 'Kılmadı',
+        PrayerStatus.excused => 'Muaf',
+      };
+
+  String get emoji => switch (this) {
+        PrayerStatus.none => '⏳',
+        PrayerStatus.prayed => '✅',
+        PrayerStatus.missed => '❌',
+        PrayerStatus.excused => '➖',
+      };
+
+  static PrayerStatus parse(String? s) => switch (s) {
+        'PRAYED' => PrayerStatus.prayed,
+        'MISSED' => PrayerStatus.missed,
+        'EXCUSED' => PrayerStatus.excused,
+        _ => PrayerStatus.none,
+      };
+}
+
+/// Veritabanındaki sütun adları (daily_prayers).
+const prayerKeys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+const prayerLabels = {
+  'fajr': 'Sabah',
+  'dhuhr': 'Öğle',
+  'asr': 'İkindi',
+  'maghrib': 'Akşam',
+  'isha': 'Yatsı',
+  'witr': 'Vitir',
+};
+
+/// Aile rolleri ve varsayılan simgeleri.
+const familyRoles = {
+  'Aile Reisi': '👑',
+  'Eşi': '🧕',
+  'Babası': '🧔',
+  'Annesi': '🧕',
+  'Oğlu': '👦',
+  'Kızı': '👧',
+  'Kardeşi': '🧒',
+  'Torunu': '👶',
+  'Dede': '👴',
+  'Nine': '👵',
+  'Aile Ferdi': '👥',
+};
+
+class Pool {
+  final String id;
+  final String name;
+  final String ownerId;
+  final String inviteCode;
+
+  Pool({
+    required this.id,
+    required this.name,
+    required this.ownerId,
+    required this.inviteCode,
+  });
+
+  factory Pool.fromMap(Map<String, dynamic> m) => Pool(
+        id: m['id'] as String,
+        name: m['name'] as String,
+        ownerId: m['owner_id'] as String,
+        inviteCode: m['invite_code'] as String,
+      );
+
+  /// ABCD-EFGH biçiminde gösterim.
+  String get displayCode => inviteCode.length == 8
+      ? '${inviteCode.substring(0, 4)}-${inviteCode.substring(4)}'
+      : inviteCode;
+}
+
+class Member {
+  final String userId;
+  final String name;
+  final String roleTitle;
+  final String icon;
+
+  Member({
+    required this.userId,
+    required this.name,
+    required this.roleTitle,
+    required this.icon,
+  });
+
+  factory Member.fromMap(Map<String, dynamic> m) {
+    final profile = m['profiles'];
+    final name = profile is Map ? (profile['display_name'] as String? ?? '') : '';
+    return Member(
+      userId: m['user_id'] as String,
+      name: name,
+      roleTitle: m['role_title'] as String? ?? 'Aile Ferdi',
+      icon: m['icon'] as String? ?? '👥',
+    );
+  }
+
+  /// Ekranda gösterilecek ad: önce rol, yoksa profil adı.
+  String get shownName => roleTitle.isNotEmpty ? roleTitle : name;
+}
+
+class JoinRequest {
+  final String id;
+  final String userId;
+  final String name;
+  final String email;
+  final String roleTitle;
+  final String icon;
+
+  JoinRequest({
+    required this.id,
+    required this.userId,
+    required this.name,
+    required this.email,
+    required this.roleTitle,
+    required this.icon,
+  });
+
+  factory JoinRequest.fromMap(Map<String, dynamic> m) {
+    final profile = m['profiles'];
+    return JoinRequest(
+      id: m['id'] as String,
+      userId: m['user_id'] as String,
+      name: profile is Map ? (profile['display_name'] as String? ?? '') : '',
+      email: profile is Map ? (profile['email'] as String? ?? '') : '',
+      roleTitle: m['role_title'] as String? ?? 'Aile Ferdi',
+      icon: m['icon'] as String? ?? '👥',
+    );
+  }
+}
+
+class PoolEvent {
+  final int id;
+  final String senderId;
+  final String type;
+  final String? prayer;
+  final String message;
+  final DateTime createdAt;
+
+  PoolEvent({
+    required this.id,
+    required this.senderId,
+    required this.type,
+    required this.prayer,
+    required this.message,
+    required this.createdAt,
+  });
+
+  factory PoolEvent.fromMap(Map<String, dynamic> m) => PoolEvent(
+        id: (m['id'] as num).toInt(),
+        senderId: m['sender_id'] as String,
+        type: m['event_type'] as String,
+        prayer: m['prayer'] as String?,
+        message: m['message'] as String? ?? '',
+        createdAt: DateTime.parse(m['created_at'] as String).toLocal(),
+      );
+}
