@@ -42,19 +42,28 @@ const prayerLabels = {
   'witr': 'Vitir',
 };
 
-/// Aile rolleri ve varsayılan simgeleri.
-const familyRoles = {
-  'Aile Reisi': '👑',
+/// Unvanlar Aile Reisine göredir (reisin eşi, oğlu, kızı…). Reisin unvanı sabit: "Aile Reisi".
+const reisTitles = {
   'Eşi': '🧕',
-  'Babası': '🧔',
-  'Annesi': '🧕',
   'Oğlu': '👦',
   'Kızı': '👧',
+  'Annesi': '👵',
+  'Babası': '🧔',
   'Kardeşi': '🧒',
   'Torunu': '👶',
-  'Dede': '👴',
-  'Nine': '👵',
+  'Gelini': '👩',
+  'Damadı': '👨',
+  'Dedesi': '👴',
+  'Ninesi': '👵',
   'Aile Ferdi': '👥',
+};
+
+/// Reisin seçebileceği simgeler (eski uygulamadaki gruplar).
+const iconGroups = <String, List<String>>{
+  'Kadın / Anne / Eş': ['🧕', '👩', '👵', '👱‍♀️'],
+  'Erkek / Baba / Eş': ['🧔', '👨', '👴', '👱‍♂️'],
+  'Çocuk & Bebek': ['👦', '👧', '🧒', '👶'],
+  'Diğer': ['👤', '👥', '🌟', '🕌'],
 };
 
 class Pool {

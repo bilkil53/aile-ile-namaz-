@@ -31,7 +31,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
   bool _showYesterday = false;
   String _myName = '';
   final _joinCtrl = TextEditingController();
-  String _joinRole = 'Aile Ferdi';
 
   RealtimeChannel? _poolChannel;
   RealtimeChannel? _meChannel;
@@ -174,12 +173,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
     }
   }
 
-  Future<void> _join(String input, String role) async {
+  Future<void> _join(String input) async {
     final v = input.trim();
     if (v.isEmpty) return;
     try {
-      final icon = familyRoles[role] ?? '👥';
-      final ok = await Repo.requestJoin(v, role, icon);
+      // Unvanı ve simgeyi onaylarken Aile Reisi belirler.
+      final ok = await Repo.requestJoin(v, 'Aile Ferdi', '👥');
       if (!ok) {
         _toast('Davet kodu geçersiz. Aile Reisinden kodu tekrar iste.');
         return;
@@ -191,21 +190,22 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Future<void> _approve(JoinRequest r) async {
-    final ownerNow = _members.where((m) => m.userId == myId).firstOrNull;
-    final res = await showDialog<(String, String, String, String)>(
+    final who = r.name.isNotEmpty ? r.name : 'Bir aile ferdi';
+    final res = await showDialog<(String, String)>(
       context: context,
-      builder: (_) => _ApproveDialog(
-        requesterName: r.name.isNotEmpty ? r.name : 'Bir aile ferdi',
-        ownerRole: ownerNow?.roleTitle ?? 'Aile Reisi',
-        memberRole: r.roleTitle,
+      builder: (_) => _TitleDialog(
+        title: '🤝 $who havuzuna katılmak istiyor',
+        subtitle: 'Sana göre unvanını ve simgesini seç:',
+        initialTitle: 'Aile Ferdi',
+        initialIcon: '👥',
+        confirm: 'Onayla & Havuza Ekle',
       ),
     );
     if (res == null) return;
-    final (ownerRole, ownerIcon, memberRole, memberIcon) = res;
+    final (title, icon) = res;
     try {
-      await Repo.approveWithRoles(r.id,
-          memberRole: memberRole, memberIcon: memberIcon, ownerRole: ownerRole, ownerIcon: ownerIcon);
-      _toast('🎉 $memberRole aile havuzuna katıldı!');
+      await Repo.approveWithRoles(r.id, memberRole: title, memberIcon: icon);
+      _toast('🎉 $title aile havuzuna katıldı!');
       await _load();
     } catch (e) {
       _toast(_err(e));
@@ -232,7 +232,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
         case 'role':
           final res = await showDialog<(String, String)>(
             context: context,
-            builder: (_) => _RoleDialog(title: '${m.shownName} için unvan', initial: m.roleTitle),
+            builder: (_) => _TitleDialog(
+              title: '${m.name.isNotEmpty ? m.name : m.shownName}',
+              subtitle: 'Sana göre unvanı ve simgesi:',
+              initialTitle: m.roleTitle,
+              initialIcon: m.icon,
+              confirm: 'Kaydet',
+            ),
           );
           if (res == null) return;
           await Repo.setMemberRole(pool.id, m.userId, res.$1, res.$2);
@@ -402,22 +408,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text('Ailedeki unvanın:', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
-            const SizedBox(height: 4),
-            Wrap(spacing: 6, runSpacing: 6, children: [
-              for (final e in familyRoles.entries.where((e) => e.key != 'Aile Reisi'))
-                ChoiceChip(
-                  label: Text('${e.value} ${e.key}'),
-                  selected: _joinRole == e.key,
-                  onSelected: (_) => setState(() => _joinRole = e.key),
-                ),
-            ]),
+            Text('Katıldıktan sonra ünvanını (Eşi, Oğlu, Kızı…) ve simgeni Aile Reisi belirler.',
+                style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85))),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.emerald),
-                onPressed: () => _join(_joinCtrl.text, _joinRole),
+                onPressed: () => _join(_joinCtrl.text),
                 child: const Text('Havuza Katıl', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
@@ -435,7 +433,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             const SizedBox(height: 4),
             const Text(
               'Kendi aile havuzunu başlat; davet kodunu ailenle paylaş. '
-              'Biri katılmak istediğinde ekranında bir onay kartı açılır ve unvanları sen belirlersin.',
+              'Biri katılmak istediğinde ekranında bir onay kartı açılır; ona sana göre ünvanını (Eşi, Oğlu, Kızı…) ve simgesini sen verirsin.',
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
             ),
             const SizedBox(height: 10),
@@ -465,7 +463,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 6),
           Text(
             '"$poolName" havuzuna katılma isteğin ${ownerName.isNotEmpty ? '$ownerName adlı ' : ''}Aile Reisine iletildi. '
-            'Onaylayıp unvanını belirlediğinde havuz burada açılacak. İstek 24 saat geçerlidir.',
+            'Onaylayıp ünvanını belirlediğinde havuz burada açılacak. İstek 24 saat geçerlidir.',
             style: const TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.35),
           ),
           const SizedBox(height: 8),
@@ -506,7 +504,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(r.name.isNotEmpty ? r.name : 'Bir aile ferdi',
                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  Text('"${r.roleTitle}" olarak katılmak istiyor',
+                  Text('Onaylarken ünvanını ve simgesini sen belirleyeceksin.',
                       style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                 ]),
               ),
@@ -579,7 +577,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ]),
           Text(
             'Bu kodu ailenle paylaş. Katılmak istediklerinde burada onay kartı açılır; '
-            'onaylarken senin ve onun unvanını (Babası, Oğlu, Eşi…) belirlersin.',
+            'onaylarken ona sana göre ünvanını (Eşi, Oğlu, Kızı…) ve simgesini verirsin.',
             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85), height: 1.35),
           ),
         ],
@@ -771,16 +769,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
               PopupMenuButton<String>(
                 onSelected: (v) => _memberAction(m, v),
                 itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'role', child: Text('Unvan / simge değiştir')),
+                  PopupMenuItem(value: 'role', child: Text('Ünvan / simge belirle')),
                   PopupMenuItem(value: 'owner', child: Text('Aile Reisi yap')),
                   PopupMenuItem(value: 'remove', child: Text('Havuzdan çıkar')),
                 ],
-              ),
-            if (_isOwner && isMe)
-              IconButton(
-                tooltip: 'Unvanımı değiştir',
-                onPressed: () => _memberAction(m, 'role'),
-                icon: const Icon(Icons.edit, size: 18, color: AppColors.textSecondary),
               ),
           ]),
           if (kazaLeft > 0) ...[
@@ -864,19 +856,30 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
 // ======================= Diyaloglar =======================
 
-/// Unvan seçici: hazır şablonlar + kendin yaz.
-class _RoleDialog extends StatefulWidget {
+/// Aile Reisinin kullandığı ünvan + simge seçici (ünvanlar reise göre).
+class _TitleDialog extends StatefulWidget {
   final String title;
-  final String initial;
-  const _RoleDialog({required this.title, required this.initial});
+  final String subtitle;
+  final String initialTitle;
+  final String initialIcon;
+  final String confirm;
+  const _TitleDialog({
+    required this.title,
+    required this.subtitle,
+    required this.initialTitle,
+    required this.initialIcon,
+    required this.confirm,
+  });
 
   @override
-  State<_RoleDialog> createState() => _RoleDialogState();
+  State<_TitleDialog> createState() => _TitleDialogState();
 }
 
-class _RoleDialogState extends State<_RoleDialog> {
-  late String _role = widget.initial;
-  late final _ctrl = TextEditingController(text: familyRoles.containsKey(widget.initial) ? '' : widget.initial);
+class _TitleDialogState extends State<_TitleDialog> {
+  late String _title = widget.initialTitle;
+  late String _icon = widget.initialIcon;
+  late final _ctrl =
+      TextEditingController(text: reisTitles.containsKey(widget.initialTitle) ? '' : widget.initialTitle);
 
   @override
   void dispose() {
@@ -886,120 +889,68 @@ class _RoleDialogState extends State<_RoleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final custom = _ctrl.text.trim();
     return AlertDialog(
       title: Text(widget.title, style: const TextStyle(fontSize: 16)),
-      content: SingleChildScrollView(
-        child: _RolePicker(
-          selected: _role,
-          controller: _ctrl,
-          onChanged: (r) => setState(() => _role = r),
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
-        FilledButton(
-          onPressed: () {
-            final custom = _ctrl.text.trim();
-            final role = custom.isNotEmpty ? custom : _role;
-            Navigator.pop(context, (role, familyRoles[role] ?? '👥'));
-          },
-          child: const Text('Kaydet'),
-        ),
-      ],
-    );
-  }
-}
-
-class _RolePicker extends StatelessWidget {
-  final String selected;
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  const _RolePicker({required this.selected, required this.controller, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(spacing: 6, runSpacing: 6, children: [
-          for (final e in familyRoles.entries)
-            ChoiceChip(
-              label: Text('${e.value} ${e.key}'),
-              selected: selected == e.key && controller.text.trim().isEmpty,
-              onSelected: (_) {
-                controller.clear();
-                onChanged(e.key);
-              },
-            ),
-        ]),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          maxLength: 30,
-          decoration: const InputDecoration(labelText: 'Veya kendin yaz (örn. Ahmet)'),
-          onChanged: (_) => onChanged(selected),
-        ),
-      ],
-    );
-  }
-}
-
-/// Reis onayı: iki tarafın unvanı (v1.16).
-class _ApproveDialog extends StatefulWidget {
-  final String requesterName;
-  final String ownerRole;
-  final String memberRole;
-  const _ApproveDialog({required this.requesterName, required this.ownerRole, required this.memberRole});
-
-  @override
-  State<_ApproveDialog> createState() => _ApproveDialogState();
-}
-
-class _ApproveDialogState extends State<_ApproveDialog> {
-  late String _owner = widget.ownerRole;
-  late String _member = widget.memberRole;
-  final _ownerCtrl = TextEditingController();
-  final _memberCtrl = TextEditingController();
-
-  @override
-  void dispose() {
-    _ownerCtrl.dispose();
-    _memberCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('🤝 Katılım Talebini Onayla', style: TextStyle(fontSize: 16)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${widget.requesterName} havuza katılmak istiyor.',
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-            const SizedBox(height: 12),
-            const Text('1. Senin ailedeki unvanın (Havuz Sahibi):', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(widget.subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            const SizedBox(height: 10),
+            const Text('Ünvanı (sana göre)', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-            _RolePicker(selected: _owner, controller: _ownerCtrl, onChanged: (r) => setState(() => _owner = r)),
-            const SizedBox(height: 12),
-            const Text('2. Katılan kişinin unvanı:', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            _RolePicker(selected: _member, controller: _memberCtrl, onChanged: (r) => setState(() => _member = r)),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final e in reisTitles.entries)
+                ChoiceChip(
+                  label: Text(e.key),
+                  selected: custom.isEmpty && _title == e.key,
+                  onSelected: (_) => setState(() {
+                    _ctrl.clear();
+                    _title = e.key;
+                    _icon = e.value;
+                  }),
+                ),
+            ]),
+            TextField(
+              controller: _ctrl,
+              maxLength: 30,
+              decoration: const InputDecoration(labelText: 'Veya ismini yaz (örn. Ahmet)'),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 4),
+            const Text('Simgesi', style: TextStyle(fontWeight: FontWeight.bold)),
+            for (final g in iconGroups.entries) ...[
+              const SizedBox(height: 6),
+              Text(g.key, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+              const SizedBox(height: 4),
+              Wrap(spacing: 6, children: [
+                for (final ic in g.value)
+                  GestureDetector(
+                    onTap: () => setState(() => _icon = ic),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _icon == ic ? AppColors.emeraldContainer : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _icon == ic ? AppColors.emerald : AppColors.cardBorder, width: 1.5),
+                      ),
+                      child: Text(ic, style: const TextStyle(fontSize: 22)),
+                    ),
+                  ),
+              ]),
+            ],
           ],
         ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
         FilledButton(
-          onPressed: () {
-            final o = _ownerCtrl.text.trim().isNotEmpty ? _ownerCtrl.text.trim() : _owner;
-            final m = _memberCtrl.text.trim().isNotEmpty ? _memberCtrl.text.trim() : _member;
-            Navigator.pop(context, (o, familyRoles[o] ?? '👑', m, familyRoles[m] ?? '👥'));
-          },
-          child: const Text('Onayla & Havuza Ekle'),
+          onPressed: () => Navigator.pop(context, (custom.isNotEmpty ? custom : _title, _icon)),
+          child: Text(widget.confirm),
         ),
       ],
     );
