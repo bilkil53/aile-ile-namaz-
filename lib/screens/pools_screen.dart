@@ -78,16 +78,6 @@ class _PoolsScreenState extends State<PoolsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Aile Havuzlarım'),
-        actions: [
-          IconButton(
-            tooltip: 'Çıkış yap',
-            icon: const Icon(Icons.logout),
-            onPressed: () => supa.auth.signOut(),
-          ),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: () async => _reload(),
         child: FutureBuilder<List<Pool>>(

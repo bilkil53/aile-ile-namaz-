@@ -4,7 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
 import 'screens/login_screen.dart';
-import 'screens/pools_screen.dart';
+import 'screens/home_shell.dart';
+import 'theme.dart';
 import 'update_checker.dart';
 
 Future<void> main() async {
@@ -25,10 +26,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Aile İle Namaz',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF1B5E20),
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
       home: const AuthGate(),
     );
   }
@@ -59,7 +57,7 @@ class _AuthGateState extends State<AuthGate> {
       stream: auth.onAuthStateChange,
       builder: (context, snapshot) {
         final session = auth.currentSession;
-        return session == null ? const LoginScreen() : const PoolsScreen();
+        return session == null ? const LoginScreen() : const HomeShell();
       },
     );
   }

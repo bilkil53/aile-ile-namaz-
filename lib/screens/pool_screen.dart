@@ -151,7 +151,13 @@ class _PoolScreenState extends State<PoolScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_pool.name),
-          bottom: TabBar(tabs: tabs),
+          bottom: TabBar(
+            tabs: tabs,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            dividerColor: Colors.transparent,
+          ),
           actions: [
             if (!_isOwner)
               PopupMenuButton<String>(
