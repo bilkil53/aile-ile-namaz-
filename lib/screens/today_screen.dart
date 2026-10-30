@@ -41,9 +41,12 @@ class _TodayScreenState extends State<TodayScreen> {
     'isha': Icons.bedtime,
   };
 
+  void _onLocation() => _load();
+
   @override
   void initState() {
     super.initState();
+    LocationHelper.version.addListener(_onLocation);
     _load();
     // Geri sayım için dakikada bir yenile (saniyelik yenileme pil harcar).
     _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -59,6 +62,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   @override
   void dispose() {
+    LocationHelper.version.removeListener(_onLocation);
     _ticker?.cancel();
     super.dispose();
   }
@@ -79,12 +83,11 @@ class _TodayScreenState extends State<TodayScreen> {
       final results = await Future.wait<dynamic>([
         Repo.dayPrayers([myId], todayStr()),
         Repo.dayPrayers([myId], _yesterdayStr()),
-        supa.from('profiles').select('display_name').eq('id', myId).maybeSingle(),
+        Repo.myDisplayName(),
       ]);
-      final profile = results[2] as Map<String, dynamic>?;
       _today = (results[0] as Map<String, Map<String, PrayerStatus>>)[myId] ?? {};
       _yesterday = (results[1] as Map<String, Map<String, PrayerStatus>>)[myId] ?? {};
-      _name = (profile?['display_name'] as String? ?? '').trim();
+      _name = results[2] as String;
     } catch (_) {
       // Çevrimdışı: vakitler yine gösterilir
     }
@@ -178,6 +181,10 @@ class _TodayScreenState extends State<TodayScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           _greeting(),
+          if (LocationHelper.permissionDenied) ...[
+            const SizedBox(height: 10),
+            _locationBanner(),
+          ],
           const SizedBox(height: 10),
           _dayToggle(),
           const SizedBox(height: 12),
@@ -225,7 +232,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 const SizedBox(width: 5),
                 Flexible(
                   child: Text(
-                    '$date · ${_gpsBusy ? 'GPS güncelleniyor…' : '${AppSettings.cityName}${AppSettings.locationFromGps ? ' (GPS)' : ''}'}',
+                    '$date · ${_gpsBusy ? 'GPS güncelleniyor…' : AppSettings.cityName}',
                     style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ),
@@ -249,6 +256,25 @@ class _TodayScreenState extends State<TodayScreen> {
       ],
     );
   }
+
+  Widget _locationBanner() => Container(
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(12)),
+        child: Row(children: [
+          const Icon(Icons.location_off, size: 18, color: Color(0xFF78350F)),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text('Doğru vakitler için konum izni ver. Şu an İstanbul vakitleri gösteriliyor.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+          ),
+          TextButton(
+            onPressed: () async {
+              await LocationHelper.openSettings();
+            },
+            child: const Text('İzin ver'),
+          ),
+        ]),
+      );
 
   Widget _dayToggle() {
     Widget seg(String label, bool selected, VoidCallback onTap) => Expanded(

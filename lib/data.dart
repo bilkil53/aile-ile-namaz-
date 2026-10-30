@@ -68,6 +68,58 @@ class Repo {
   static Future<void> approve(String requestId) =>
       supa.rpc('approve_join', params: {'p_request': requestId});
 
+  /// Reis onaylarken iki tarafın rolünü birden belirler.
+  static Future<void> approveWithRoles(String requestId,
+      {required String memberRole, required String memberIcon, String? ownerRole, String? ownerIcon}) =>
+      supa.rpc('approve_join_with_roles', params: {
+        'p_request': requestId,
+        'p_member_role': memberRole,
+        'p_member_icon': memberIcon,
+        'p_owner_role': ownerRole,
+        'p_owner_icon': ownerIcon,
+      });
+
+  /// Reisin Gmail adresiyle katılma isteği. Bulunamazsa false.
+  static Future<bool> requestJoinByEmail(String email, String role, String icon) async {
+    final res = await supa.rpc('request_join_by_email', params: {
+      'p_email': email,
+      'p_role_title': role,
+      'p_icon': icon,
+    });
+    return res != null;
+  }
+
+  static Future<void> cancelRequest(String requestId) =>
+      supa.rpc('cancel_join_request', params: {'p_request': requestId});
+
+  /// Gönderdiğim bekleyen istekler: (id, havuz adı, reis adı)
+  static Future<List<(String, String, String)>> myOutgoingRequests() async {
+    final rows = await supa.rpc('my_outgoing_requests') as List<dynamic>;
+    return [
+      for (final r in rows.cast<Map<String, dynamic>>())
+        (r['id'] as String, r['pool_name'] as String? ?? '', r['owner_name'] as String? ?? ''),
+    ];
+  }
+
+  static Future<void> setMemberRole(String poolId, String userId, String role, String icon) =>
+      supa.rpc('set_member_role', params: {'p_pool': poolId, 'p_user': userId, 'p_role': role, 'p_icon': icon});
+
+  /// Reis havuzu tamamen kapatır (üyelik ve olaylar silinir).
+  static Future<void> deletePool(String poolId) async {
+    invalidatePools();
+    await supa.from('pools').delete().eq('id', poolId);
+  }
+
+  /// Kullanıcı adı (tüm sekmelerde aynı görünür), önbellekli.
+  static String? _myName;
+  static Future<String> myDisplayName() async {
+    if (_myName != null) return _myName!;
+    final p = await supa.from('profiles').select('display_name').eq('id', myId).maybeSingle();
+    final n = (p?['display_name'] as String? ?? '').trim();
+    _myName = n.isNotEmpty ? n : (supa.auth.currentUser?.email ?? '').split('@').first;
+    return _myName!;
+  }
+
   static Future<void> reject(String requestId) =>
       supa.rpc('reject_join', params: {'p_request': requestId});
 

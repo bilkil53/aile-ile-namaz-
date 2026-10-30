@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../location.dart';
 import '../notifications.dart';
 
 import '../theme.dart';
 import 'karne_screen.dart';
 import 'kaza_screen.dart';
-import 'pools_screen.dart';
+import 'family_screen.dart';
 import 'settings_screen.dart';
 import 'today_screen.dart';
 
@@ -25,6 +26,8 @@ class _HomeShellState extends State<HomeShell> {
     super.initState();
     // Giriş sonrası: bildirim izni iste ve vakit hatırlatmalarını kur.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Konum otomatik (GPS) → vakitler → hatırlatmalar
+      await LocationHelper.autoUpdate();
       await Notifications.requestPermission();
       await Notifications.reschedule();
     });
@@ -100,7 +103,7 @@ class _HomeShellState extends State<HomeShell> {
           index: _tab,
           children: const [
             TodayScreen(),
-            PoolsScreen(),
+            FamilyScreen(),
             KazaScreen(),
             KarneScreen(),
           ],

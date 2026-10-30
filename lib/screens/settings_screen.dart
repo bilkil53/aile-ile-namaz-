@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data.dart';
 import '../location.dart';
 import '../notifications.dart';
-import '../prayer_times.dart';
 import '../settings.dart';
 import '../theme.dart';
 
@@ -33,25 +32,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _toast(String m) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
-  Future<void> _pickCity() async {
-    final city = await showModalBottomSheet<City>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const _CityPicker(),
-    );
-    if (city == null) return;
-    await AppSettings.setLocation(city.name, city.lat, city.lng);
-    unawaited(Notifications.reschedule());
-    if (mounted) setState(() {});
-    _toast('Konum: ${city.name}');
-  }
-
   Future<void> _gps() async {
     setState(() => _gpsBusy = true);
     try {
       final (ok, msg) = await LocationHelper.updateFromGps();
       _toast(ok ? 'Konum güncellendi: $msg' : msg);
       if (ok) unawaited(Notifications.reschedule());
+      if (mounted) setState(() {});
     } catch (_) {
       _toast('Konum alınamadı.');
     } finally {
@@ -99,17 +86,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _section('Konum ve vakitler', [
             ListTile(
-              leading: const Icon(Icons.location_city, color: AppColors.emerald),
-              title: const Text('İl seç'),
-              subtitle: Text(AppSettings.cityName),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _pickCity,
+              leading: const Icon(Icons.location_on, color: AppColors.emerald),
+              title: Text(AppSettings.cityName),
+              subtitle: const Text('Konum GPS ile otomatik bulunur. Sadece telefonda tutulur, sunucuya gönderilmez.'),
             ),
             const Divider(height: 1),
+            if (LocationHelper.permissionDenied)
+              ListTile(
+                leading: const Icon(Icons.location_off, color: AppColors.gold),
+                title: const Text('Konum izni ver'),
+                subtitle: const Text('İzin olmadan İstanbul vakitleri gösterilir.'),
+                onTap: LocationHelper.openSettings,
+              ),
             ListTile(
               leading: const Icon(Icons.my_location, color: AppColors.emerald),
-              title: const Text('GPS ile bul'),
-              subtitle: const Text('Konum sadece telefonda tutulur, sunucuya gönderilmez.'),
+              title: const Text('Konumu şimdi yenile'),
               trailing: _gpsBusy
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                   : null,
@@ -174,57 +165,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CityPicker extends StatefulWidget {
-  const _CityPicker();
-
-  @override
-  State<_CityPicker> createState() => _CityPickerState();
-}
-
-class _CityPickerState extends State<_CityPicker> {
-  String _q = '';
-
-  @override
-  Widget build(BuildContext context) {
-    String norm(String v) => v.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
-    final q = norm(_q);
-    final list = turkeyCities.where((c) => norm(c.name).contains(q)).toList();
-    return SafeArea(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.8,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: TextField(
-                autofocus: true,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'İl ara',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (v) => setState(() => _q = v),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: list.length,
-                itemBuilder: (_, i) => ListTile(
-                  title: Text(list[i].name),
-                  trailing: list[i].name == AppSettings.cityName
-                      ? const Icon(Icons.check, color: AppColors.emerald)
-                      : null,
-                  onTap: () => Navigator.pop(context, list[i]),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
