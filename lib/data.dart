@@ -79,6 +79,12 @@ class Repo {
         'p_owner_icon': ownerIcon,
       });
 
+  /// Kendi havuzum yoksa otomatik oluşturur (davet kodu hazır gelir).
+  static Future<void> ensureMyPool() async {
+    invalidatePools();
+    await supa.rpc('ensure_my_pool');
+  }
+
   static Future<void> cancelRequest(String requestId) =>
       supa.rpc('cancel_join_request', params: {'p_request': requestId});
 

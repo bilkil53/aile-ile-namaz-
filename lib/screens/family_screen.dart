@@ -29,7 +29,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
   List<(String, String, String)> _outgoing = [];
   bool _loading = true;
   bool _showYesterday = false;
-  String _myName = '';
   final _joinCtrl = TextEditingController();
 
   RealtimeChannel? _poolChannel;
@@ -93,29 +92,23 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Future<void> _load() async {
     try {
       Repo.invalidatePools();
-      final results = await Future.wait<dynamic>([Repo.myPools(), Repo.myDisplayName()]);
-      final pools = results[0] as List<Pool>;
-      _myName = results[1] as String;
+      var pools = await Repo.myPools();
       if (pools.isEmpty) {
-        final out = await Repo.myOutgoingRequests();
-        if (!mounted) return;
-        setState(() {
-          _pools = [];
-          _outgoing = out;
-          _members = [];
-          _requests = [];
-          _loading = false;
-        });
-        return;
+        // Herkesin kendi havuzu ve davet kodu otomatik hazır
+        await Repo.ensureMyPool();
+        pools = await Repo.myPools();
+        if (pools.isEmpty) throw Exception('pool');
       }
       final pool = pools[_idx(pools.length)];
       final members = await Repo.members(pool.id);
       final ids = members.map((m) => m.userId).toList();
+      final solo = members.length <= 1;
       final r = await Future.wait<dynamic>([
         Repo.dayPrayers(ids, todayStr()),
         Repo.dayPrayers(ids, _yStr()),
         Repo.kazaSummary(ids),
         pool.ownerId == myId ? Repo.pendingRequests(pool.id) : Future.value(<JoinRequest>[]),
+        solo ? Repo.myOutgoingRequests() : Future.value(<(String, String, String)>[]),
       ]);
       if (!mounted) return;
       _subscribePool(pool.id);
@@ -126,7 +119,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         _yesterday = r[1] as Map<String, Map<String, PrayerStatus>>;
         _kaza = r[2] as Map<String, List<int>>;
         _requests = r[3] as List<JoinRequest>;
-        _outgoing = [];
+        _outgoing = r[4] as List<(String, String, String)>;
         _loading = false;
       });
     } catch (_) {
@@ -161,17 +154,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
       );
 
   // ======================= Eylemler =======================
-
-  Future<void> _startPool() async {
-    try {
-      final first = _myName.split(' ').first;
-      await Repo.createPool('${first.isEmpty ? 'Benim' : first} Ailesi', 'Aile Reisi', '👑');
-      await _load();
-      _toast('Aile havuzun hazır. Kodunu ailenle paylaş.');
-    } catch (e) {
-      _toast(_err(e));
-    }
-  }
 
   Future<void> _join(String input) async {
     final v = input.trim();
@@ -268,16 +250,18 @@ class _FamilyScreenState extends State<FamilyScreen> {
         children: [
           _hero(),
           const SizedBox(height: 12),
-          if (pool == null) ...[
-            if (_outgoing.isNotEmpty) _pendingCard() else ...[
-              _joinCard(),
+          if (pool != null) ...[
+            if (_members.length <= 1) ...[
+              _codeCard(pool),
               const SizedBox(height: 12),
-              _startCard(),
+              if (_outgoing.isNotEmpty) _pendingCard() else _joinCard(),
+              const SizedBox(height: 12),
             ],
-          ] else ...[
             for (final r in _requests) ...[_requestCard(r), const SizedBox(height: 10)],
-            _isOwner ? _codeCard(pool) : _memberStatusCard(pool),
-            const SizedBox(height: 12),
+            if (_members.length > 1) ...[
+              _isOwner ? _codeCard(pool) : _memberStatusCard(pool),
+              const SizedBox(height: 12),
+            ],
             _matrix(),
             const SizedBox(height: 10),
             OutlinedButton.icon(
@@ -296,7 +280,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             const SizedBox(height: 16),
             _feed(),
             const SizedBox(height: 16),
-            if (_isOwner)
+            if (_isOwner && _members.length > 1)
               TextButton.icon(
                 onPressed: () async {
                   if (await _confirm('Havuz kapatılırsa tüm üyeler çıkarılır ve havuz kayıtları silinir. Emin misin?',
@@ -340,8 +324,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 2),
           Text(
             pool == null
-                ? 'Henüz bir havuza bağlı değilsin. Davet koduyla katıl ya da kendi havuzunu başlat.'
-                : '${_members.length} kişi • Aile Havuzunda Bağlı 🟢 Aktif',
+                ? 'Aile havuzun hazırlanıyor…'
+                : _members.length <= 1
+                    ? 'Davet kodunu ailenle paylaş; katıldıkça burada görünecekler.'
+                    : '${_members.length} kişi • Aile Havuzunda Bağlı 🟢 Aktif',
             style: TextStyle(fontSize: 13, color: white85),
           ),
           if (_pools.length > 1) ...[
@@ -387,12 +373,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
               Text('📥', style: TextStyle(fontSize: 16)),
               SizedBox(width: 6),
               Expanded(
-                child: Text('Aile Havuzuna Katıl (Davet Kodu)',
+                child: Text('Başka Bir Aile Havuzuna Katıl',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.goldContainer)),
               ),
             ]),
             const SizedBox(height: 4),
-            Text('Aile Reisinin sana ilettiği davet kodunu gir:',
+            Text('Aile Reisin sen değilsen, onun sana ilettiği davet kodunu gir:',
                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
             const SizedBox(height: 10),
             TextField(
@@ -423,29 +409,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
         ),
       );
   }
-
-  Widget _startCard() => _whiteCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('👑  Aile Reisi misin?',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const SizedBox(height: 4),
-            const Text(
-              'Kendi aile havuzunu başlat; davet kodunu ailenle paylaş. '
-              'Biri katılmak istediğinde ekranında bir onay kartı açılır; ona sana göre ünvanını (Eşi, Oğlu, Kızı…) ve simgesini sen verirsin.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
-            ),
-            const SizedBox(height: 10),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
-              onPressed: _startPool,
-              icon: const Icon(Icons.add),
-              label: const Text('Aile Havuzumu Başlat'),
-            ),
-          ],
-        ),
-      );
 
   Widget _pendingCard() {
     final (id, poolName, ownerName) = _outgoing.first;
