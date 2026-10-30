@@ -39,7 +39,7 @@ const motivasyonlar = <DailyQuote>[
   DailyQuote(category: "Bugünün Manevi Hatırlatması", title: "Kaza Borcu Dağ Değildir", text: "Kılınan her bir kaza namazı, ruhun üzerindeki bir yükü hafifletir. Küçük adımların istikrarı, büyük engelleri aşmanın en kutlu yoludur.", source: "Aile ile Namaz Manevi Hatırlatma"),
 ];
 
-const ozlu_sozler = <DailyQuote>[
+const ozluSozler = <DailyQuote>[
   DailyQuote(category: "Günün Özlü Sözü · Hikmet", title: "Secdenin Kıymeti", text: "Secde, yere fısıldayıp göklerin ötesinden işitildiğin en yakın ve en samimi makamdır.", source: "Gönül Dünyasından Hikmet Damlaları"),
   DailyQuote(category: "Günün Özlü Sözü · Hikmet", title: "Vaktin Bereketi", text: "Zamanın efendisi olmak istiyorsan, vaktini namazla tanzim et; çünkü namaz ömrün nizamıdır.", source: "İslami Tefekkür ve Hikmet"),
 ];
