@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// GitHub Releases'taki en son APK'yı kontrol eder.
+/// GitHub Releases'taki en son APK'yı kontrol eder, uygulama içinde indirir
+/// ve Android'in kurulum ekranını açar.
 /// Her derlemede sürüm numarası = GitHub Actions çalışma numarası (apk-N etiketi).
 class UpdateChecker {
   static const _latestApi =
@@ -48,9 +52,8 @@ class UpdateChecker {
         builder: (ctx) => AlertDialog(
           title: const Text('Yeni sürüm var'),
           content: Text(
-            'Sürüm $latest yayınlandı (sizdeki: $current).'
-            '${notes.isNotEmpty ? '\n\n$notes' : ''}'
-            '\n\nİndirilen dosyaya dokunup "Güncelle" demeniz yeterli.',
+            'Sürüm $latest hazır (sizdeki: $current).'
+            '${notes.isNotEmpty ? '\n\n$notes' : ''}',
           ),
           actions: [
             TextButton(
@@ -64,14 +67,96 @@ class UpdateChecker {
           ],
         ),
       );
-      if (ok == true) {
-        await launchUrl(
-          Uri.parse(downloadUrl),
-          mode: LaunchMode.externalApplication,
-        );
+      if (ok == true && context.mounted) {
+        await _downloadAndInstall(context, latest);
       }
     } catch (_) {
       // İnternet yoksa vb. sessizce geç.
+    }
+  }
+
+  static Future<void> _downloadAndInstall(BuildContext context, int version) async {
+    final progress = ValueNotifier<double?>(null);
+    var cancelled = false;
+
+    // İlerleme penceresi
+    unawaited(showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: const Text('Güncelleniyor'),
+          content: ValueListenableBuilder<double?>(
+            valueListenable: progress,
+            builder: (_, p, __) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LinearProgressIndicator(value: p),
+                const SizedBox(height: 10),
+                Text(p == null ? 'İndirme başlıyor…' : 'İndiriliyor… %${(p * 100).toStringAsFixed(0)}'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                cancelled = true;
+                Navigator.pop(ctx);
+              },
+              child: const Text('Vazgeç'),
+            ),
+          ],
+        ),
+      ),
+    ));
+
+    final client = HttpClient();
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/aile-ile-namaz-$version.apk');
+
+      final req = await client.getUrl(Uri.parse(downloadUrl));
+      req.headers.set('User-Agent', 'aile-ile-namaz-app');
+      final res = await req.close();
+      if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
+
+      final total = res.contentLength;
+      var received = 0;
+      final sink = file.openWrite();
+      await for (final chunk in res) {
+        if (cancelled) break;
+        sink.add(chunk);
+        received += chunk.length;
+        if (total > 0) progress.value = received / total;
+      }
+      await sink.close();
+      client.close();
+      if (cancelled) {
+        if (await file.exists()) await file.delete();
+        return;
+      }
+
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+
+      // Android'in "Bu uygulamayı güncellemek istiyor musunuz?" ekranı
+      final result = await OpenFilex.open(
+        file.path,
+        type: 'application/vnd.android.package-archive',
+      );
+      if (result.type != ResultType.done) {
+        throw Exception(result.message);
+      }
+    } catch (_) {
+      client.close(force: true);
+      if (context.mounted && !cancelled) {
+        Navigator.of(context, rootNavigator: true).maybePop();
+        // Son çare: tarayıcıdan indir.
+        await launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
+      }
+    } finally {
+      progress.dispose();
     }
   }
 }

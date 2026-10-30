@@ -32,8 +32,10 @@ jobs:
           python3 - <<'PY'
           p = 'android/app/src/main/AndroidManifest.xml'
           s = open(p, encoding='utf-8').read()
-          if 'android.permission.INTERNET' not in s:
-              s = s.replace('<application', '<uses-permission android:name="android.permission.INTERNET"/>\n    <application', 1)
+          perms = ['android.permission.INTERNET', 'android.permission.REQUEST_INSTALL_PACKAGES']
+          for perm in perms:
+              if perm not in s:
+                  s = s.replace('<application', f'<uses-permission android:name="{perm}"/>\n    <application', 1)
           intent = '''<intent-filter>
                           <action android:name="android.intent.action.VIEW" />
                           <category android:name="android.intent.category.DEFAULT" />
