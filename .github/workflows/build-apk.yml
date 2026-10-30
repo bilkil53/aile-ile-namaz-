@@ -56,6 +56,9 @@ jobs:
             echo "::warning::ANDROID_KEYSTORE_BASE64 secret yok; APK geçici anahtarla imzalanacak ve telefondan Google hesap seçimi çalışmayacak."
             exit 0
           fi
+          # Takma ad gizli değil; secret yoksa "upload" kullan. Anahtar şifresi = depo şifresi.
+          KEY_ALIAS="${KEY_ALIAS:-upload}"
+          KEY_PASSWORD="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
           {
             echo "KEYSTORE_PATH=$RUNNER_TEMP/upload.jks"
