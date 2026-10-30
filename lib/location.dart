@@ -52,8 +52,9 @@ class LocationHelper {
         if (pos == null) rethrow;
       }
 
-      final name = await _placeName(pos!.latitude, pos.longitude);
-      await AppSettings.setLocation(name, pos.latitude, pos.longitude, gps: true);
+      final p = pos!;
+      final name = await _placeName(p.latitude, p.longitude);
+      await AppSettings.setLocation(name, p.latitude, p.longitude, gps: true);
       await AppSettings.prefs.setInt('locationUpdatedAt', DateTime.now().millisecondsSinceEpoch);
       version.value++;
       return (true, name);
