@@ -19,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: AppConfig.authRedirect,
+        // Telefonda Gmail hesabı açıksa hesap seçtir, açık değilse Google'ın giriş sayfası açılır.
+        queryParams: {'prompt': 'select_account'},
       );
     } catch (e) {
       if (!mounted) return;
