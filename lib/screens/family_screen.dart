@@ -179,11 +179,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (v.isEmpty) return;
     try {
       final icon = familyRoles[role] ?? '👥';
-      final ok = v.contains('@')
-          ? await Repo.requestJoinByEmail(v, role, icon)
-          : await Repo.requestJoin(v, role, icon);
+      final ok = await Repo.requestJoin(v, role, icon);
       if (!ok) {
-        _toast(v.contains('@') ? 'Bu Gmail adresine ait bir aile havuzu bulunamadı.' : 'Kod geçersiz.');
+        _toast('Davet kodu geçersiz. Aile Reisinden kodu tekrar iste.');
         return;
       }
       await _load();
@@ -197,7 +195,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final res = await showDialog<(String, String, String, String)>(
       context: context,
       builder: (_) => _ApproveDialog(
-        requesterName: r.name.isNotEmpty ? r.name : r.email,
+        requesterName: r.name.isNotEmpty ? r.name : 'Bir aile ferdi',
         ownerRole: ownerNow?.roleTitle ?? 'Aile Reisi',
         memberRole: r.roleTitle,
       ),
@@ -336,7 +334,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 2),
           Text(
             pool == null
-                ? 'Henüz bir havuza bağlı değilsin. Kod veya Gmail ile katıl ya da kendi havuzunu başlat.'
+                ? 'Henüz bir havuza bağlı değilsin. Davet koduyla katıl ya da kendi havuzunu başlat.'
                 : '${_members.length} kişi • Aile Havuzunda Bağlı 🟢 Aktif',
             style: TextStyle(fontSize: 13, color: white85),
           ),
@@ -383,12 +381,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
               Text('📥', style: TextStyle(fontSize: 16)),
               SizedBox(width: 6),
               Expanded(
-                child: Text('Aile Havuzuna Katıl (Kod veya Gmail)',
+                child: Text('Aile Havuzuna Katıl (Davet Kodu)',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.goldContainer)),
               ),
             ]),
             const SizedBox(height: 4),
-            Text('Aile Reisinin sana ilettiği davet kodunu veya Gmail adresini gir:',
+            Text('Aile Reisinin sana ilettiği davet kodunu gir:',
                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
             const SizedBox(height: 10),
             TextField(
@@ -396,7 +394,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               style: const TextStyle(color: Colors.white),
               textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
-                hintText: 'Örn: ABCD-EFGH veya mail@gmail.com',
+                hintText: 'Örn: ABCD-EFGH',
                 hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.12),
@@ -436,7 +434,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const SizedBox(height: 4),
             const Text(
-              'Kendi aile havuzunu başlat; davet kodunu veya Gmail adresini ailenle paylaş. '
+              'Kendi aile havuzunu başlat; davet kodunu ailenle paylaş. '
               'Biri katılmak istediğinde ekranında bir onay kartı açılır ve unvanları sen belirlersin.',
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
             ),
@@ -506,9 +504,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(r.name.isNotEmpty ? r.name : r.email,
+                  Text(r.name.isNotEmpty ? r.name : 'Bir aile ferdi',
                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  Text('${r.email} • "${r.roleTitle}" olarak',
+                  Text('"${r.roleTitle}" olarak katılmak istiyor',
                       style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                 ]),
               ),
@@ -541,7 +539,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
       );
 
   Widget _codeCard(Pool pool) {
-    final email = supa.auth.currentUser?.email ?? '';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
@@ -561,7 +558,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(
                     text: 'Aile ile Namaz uygulamasında aile havuzumuza katıl! '
-                        'Davet kodu: ${pool.displayCode} (veya Gmail: $email)'));
+                        'Davet kodu: ${pool.displayCode}'));
                 _toast('Davet mesajı kopyalandı.');
               },
               icon: const Icon(Icons.copy, color: Colors.white),
@@ -581,7 +578,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
           ]),
           Text(
-            'Bu kodu veya Gmail adresini ($email) ailenle paylaş. Katılmak istediklerinde burada onay kartı açılır; '
+            'Bu kodu ailenle paylaş. Katılmak istediklerinde burada onay kartı açılır; '
             'onaylarken senin ve onun unvanını (Babası, Oğlu, Eşi…) belirlersin.',
             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85), height: 1.35),
           ),

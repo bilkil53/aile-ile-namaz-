@@ -58,7 +58,7 @@ class Repo {
   static Future<List<JoinRequest>> pendingRequests(String poolId) async {
     final rows = await supa
         .from('join_requests')
-        .select('id, user_id, role_title, icon, profiles(display_name, email)')
+        .select('id, user_id, role_title, icon, profiles(display_name)')
         .eq('pool_id', poolId)
         .eq('status', 'pending')
         .order('created_at');
@@ -78,16 +78,6 @@ class Repo {
         'p_owner_role': ownerRole,
         'p_owner_icon': ownerIcon,
       });
-
-  /// Reisin Gmail adresiyle katılma isteği. Bulunamazsa false.
-  static Future<bool> requestJoinByEmail(String email, String role, String icon) async {
-    final res = await supa.rpc('request_join_by_email', params: {
-      'p_email': email,
-      'p_role_title': role,
-      'p_icon': icon,
-    });
-    return res != null;
-  }
 
   static Future<void> cancelRequest(String requestId) =>
       supa.rpc('cancel_join_request', params: {'p_request': requestId});
