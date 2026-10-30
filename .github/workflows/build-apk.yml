@@ -45,6 +45,63 @@ jobs:
           open(p, 'w', encoding='utf-8').write(s)
           PY
 
+      - name: Kalıcı imza anahtarını ayarla (Google girişi için SHA-1 sabit kalmalı)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::ANDROID_KEYSTORE_BASE64 secret yok; APK geçici anahtarla imzalanacak ve telefondan Google hesap seçimi çalışmayacak."
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          {
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/upload.jks"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "KEY_ALIAS=$KEY_ALIAS"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          import os
+          kts = 'android/app/build.gradle.kts'
+          groovy = 'android/app/build.gradle'
+          if os.path.exists(kts):
+              p = kts
+              block = '''    signingConfigs {
+                  create("release") {
+                      storeFile = file(System.getenv("KEYSTORE_PATH"))
+                      storePassword = System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias = System.getenv("KEY_ALIAS")
+                      keyPassword = System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {'''
+              s = open(p, encoding='utf-8').read()
+              s = s.replace('    buildTypes {', block, 1)
+              s = s.replace('signingConfig = signingConfigs.getByName("debug")',
+                            'signingConfig = signingConfigs.getByName("release")')
+          else:
+              p = groovy
+              block = '''    signingConfigs {
+                  release {
+                      storeFile file(System.getenv("KEYSTORE_PATH"))
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {'''
+              s = open(p, encoding='utf-8').read()
+              s = s.replace('    buildTypes {', block, 1)
+              s = s.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release')
+          open(p, 'w', encoding='utf-8').write(s)
+          print('release signing ->', p, 'signingConfigs' in s and 'release' in s)
+          PY
+
       - run: flutter pub get
 
       - name: Kod analizi (hatalar özet sayfasına yazılır)
