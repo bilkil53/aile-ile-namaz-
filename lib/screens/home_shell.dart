@@ -52,6 +52,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         _listenFamily();
         // Uygulama kapalıyken de aile bildirimleri için cihazı kaydet (FCM)
         unawaited(Push.register());
+        if (mounted) await _firstRunQuestions();
       }
       // Konum otomatik (GPS) → vakitler → hatırlatmalar
       await LocationHelper.autoUpdate();
@@ -67,6 +68,66 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       unawaited(LocationHelper.autoUpdate(maxAge: const Duration(hours: 1)));
       unawaited(Repo.syncNow()); // telefonda bekleyen işaretleri gönder
     }
+  }
+
+  /// Bir kez sorulan sorular: kilit ekranında bildirim içeriği ve (gerekirse) cinsiyet.
+  Future<void> _firstRunQuestions() async {
+    final p = AppSettings.prefs;
+    if (!(p.getBool('askedLockScreen') ?? false)) {
+      final show = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          icon: const Icon(Icons.lock_outline, color: AppColors.emerald, size: 32),
+          title: const Text('Telefon kilitliyken bildirimler', style: TextStyle(fontSize: 18)),
+          content: const Text(
+            'Aileden biri namaz kılınca veya dua gönderince bildirim gelir.\n\n'
+            'Telefon kilitliyken bildirimin yazısı kilit ekranında görünsün mü? '
+            '"Gizle" dersen sadece "yeni bildirim" görünür, yazı kilidi açınca okunur.\n\n'
+            'Bunu sonra Ayarlar\'dan değiştirebilirsin.',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Gizle')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Göster'),
+            ),
+          ],
+        ),
+      );
+      await AppSettings.setNotify('lockScreen', show ?? true);
+      await p.setBool('askedLockScreen', true);
+      unawaited(Push.register());
+    }
+    if (!mounted || AppSettings.gender != null) return;
+    // Ünvandan cinsiyet anlaşılmıyorsa (ör. Aile Reisi, Eşi, Kardeşi) bir kez sor
+    final me = await Repo.myMember();
+    if (me == null || !mounted) return;
+    const clear = {'Baba', 'Oğlu', 'Babası', 'Dedesi', 'Damadı', 'Anne', 'Kızı', 'Annesi', 'Ninesi', 'Gelini'};
+    if (clear.contains(me.roleTitle)) return;
+    final g = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Cinsiyetin', style: TextStyle(fontSize: 18)),
+        content: Text(
+          'Ünvanın "${me.roleTitle}". Namaz takibinde "Muaf" seçeneği sadece kadınlarda gösterilir. '
+          'Bu bilgi sadece telefonunda tutulur; Ayarlar\'dan değiştirebilirsin.',
+        ),
+        actions: [
+          OutlinedButton(onPressed: () => Navigator.pop(ctx, 'f'), child: const Text('🧕 Kadın')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+            onPressed: () => Navigator.pop(ctx, 'm'),
+            child: const Text('🧔 Erkek'),
+          ),
+        ],
+      ),
+    );
+    if (g != null) await AppSettings.setGender(g);
   }
 
   @override

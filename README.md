@@ -40,7 +40,7 @@
 ### 1. 🕌 Bugün — Vakitler ve Günlük İbadet
 * **Selamün aleyküm** karşılaması ve tarih. Konum uygulama her açıldığında **otomatik** alınır (alınamazsa 10 sn sonra tekrar, en fazla 3 deneme); konum bilgisi ve yenileme sadece **Ayarlar**'da.
 * **SIRADAKİ VAKİT** kartı: geri sayım ve günün 6 vakti (İmsak, Güneş, Öğle/Cuma, İkindi, Akşam, Yatsı).
-* **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor** (erkek ünvan/simgelerde Muaf yok). Kayıt buluta 5 sn sonra yazılır; internet yoksa telefonda bekler ve otomatik gönderilir. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
+* **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor** (Muaf sadece kadınlarda; cinsiyet Ayarlar'dan seçilir, ünvandan anlaşılmıyorsa bir kez sorulur). Aileye bildirim 15 sn, buluta kayıt 20 sn sonra gider; internet yoksa telefonda bekler ve otomatik gönderilir. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
 * **← Dün / Bugün** geçişi: unuttuğun dünkü vakitleri işaretleyebilirsin.
 * **Günün Ayeti / Hadisi** (Arapça metin + Diyanet meali).
 * **🧭 Kıble Pusulası:** İnternet gerektirmez; ivme + manyetik sensörle Kâbe yönü.
@@ -183,6 +183,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 8:** Kıldı/kılmadı: aileye bildirim 15 sn, buluta yazma 20 sn sonra (son duruma göre). İlk açılışta "Telefon kilitliyken bildirim yazısı görünsün mü?" sorusu. Cinsiyet seçimi (Ayarlar + ünvandan anlaşılmıyorsa bir kez sorulur): Muaf sadece kadınlarda.
 * **Derleme 7:** İnternet yokken uygulama açılışta takılmıyor (oturum telefondan yüklenir, en fazla 3 sn beklenir); ad ve kayıtlar çevrimdışı telefondan gösterilir, ağ isteklerine zaman aşımı eklendi.
 * **Derleme 6:** Kıldı/kılmadı buluta da 5 saniye sonra yazılır (aile matrisi ve bildirim son duruma göre); internet yoksa telefonda bekler, 20 saniyede bir arka planda tekrar denenir. Erkek ünvan/simgelerde "Muaf" seçeneği yok. Bildirimlerde kişinin simgesi (ör. "🧕🏻 Kızın kaza namazı kıldı"). Ayarlar'da hangi aile bildirimlerinin alınacağı (namaz / kaza / dua) ve kilit ekranında içerik gösterimi.
 * **Derleme 5:** Android otomatik yedeklemesi kapatıldı (oturum bilgisi Drive'a/başka cihaza taşınmaz; kişisel kayıtlar zaten bulutta ve girişte geri gelir); sadece Google ile giriş (e-posta/şifre kaydı kapatıldı); güncelleme telefonun işlemci türüne uygun küçük APK'yı indirir.

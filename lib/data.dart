@@ -106,8 +106,24 @@ class Repo {
     await supa.from('pools').delete().eq('id', poolId);
   }
 
+  /// Havuzdaki kendi üyeliğim (ünvan + simge); yoksa null.
+  static Future<Member?> myMember() async {
+    if (isGuest) return null;
+    try {
+      final pools = await myPools().timeout(const Duration(seconds: 6));
+      if (pools.isEmpty) return null;
+      return (await members(pools.first.id).timeout(const Duration(seconds: 6)))
+          .where((m) => m.userId == myId)
+          .firstOrNull;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Bu kullanıcı "Muaf" işaretleyebilir mi? (erkek ünvan/simgede hayır)
   static Future<bool> canExcuse() async {
+    final g = AppSettings.gender;
+    if (g != null) return g == 'f';
     if (isGuest) return true;
     try {
       final pools = await myPools().timeout(const Duration(seconds: 6));
@@ -259,8 +275,16 @@ class Repo {
     await LocalStore.enqueue({'t': 'prayer', 'date': day, 'key': key, 'status': status.code});
     final id = '$day|$key';
     if (day == todayStr()) _pendingAnnounce.add(id);
+    // Aile bildirimi 15 sn, buluta yazma 20 sn sonra (son duruma göre, tek sefer)
+    _announceTimers.remove(id)?.cancel();
+    if (day == todayStr()) {
+      _announceTimers[id] = Timer(const Duration(seconds: 15), () async {
+        _announceTimers.remove(id);
+        if (await _announce(day, key)) _pendingAnnounce.remove(id);
+      });
+    }
     _writeTimers.remove(id)?.cancel();
-    _writeTimers[id] = Timer(const Duration(seconds: 5), () {
+    _writeTimers[id] = Timer(const Duration(seconds: 20), () {
       _writeTimers.remove(id);
       unawaited(syncNow());
     });
@@ -268,6 +292,7 @@ class Repo {
   }
 
   static final Map<String, Timer> _writeTimers = {};
+  static final Map<String, Timer> _announceTimers = {};
   static final Set<String> _pendingAnnounce = {};
   static final Map<String, String> _announced = {};
   static Timer? _retry;
@@ -286,12 +311,13 @@ class Repo {
       }
       _retry?.cancel();
       _retry = null;
+      // 15 sn'de internet yüzünden gidemeyen bildirimler
       for (final id in _pendingAnnounce.toList()) {
-        if (_writeTimers.containsKey(id)) continue;
-        _pendingAnnounce.remove(id);
+        if (_announceTimers.containsKey(id)) continue;
         final parts = id.split('|');
-        await _announce(parts[0], parts[1]);
+        if (await _announce(parts[0], parts[1])) _pendingAnnounce.remove(id);
       }
+      if (_pendingAnnounce.isNotEmpty) _ensureRetry();
     } finally {
       _syncing = false;
     }
@@ -300,8 +326,9 @@ class Repo {
   static void _ensureRetry() => _retry ??= Timer.periodic(const Duration(seconds: 20), (_) => syncNow());
 
   /// Aileye bildirim: son duruma göre bir kez (aynı durum tekrar bildirilmez).
-  static Future<void> _announce(String day, String key) async {
-    if (isGuest || day != todayStr()) return;
+  /// true: gönderildi ya da gönderilecek bir şey yok; false: internet yüzünden gönderilemedi.
+  static Future<bool> _announce(String day, String key) async {
+    if (isGuest || day != todayStr()) return true;
     final id = '$day|$key';
     final status = LocalStore.day(day)[key] ?? PrayerStatus.none;
     final type = switch (status) {
@@ -309,16 +336,21 @@ class Repo {
       PrayerStatus.missed => 'MISSED',
       _ => null,
     };
-    if (type == null || _announced[id] == type) return;
+    if (type == null || _announced[id] == type) return true;
     try {
       final pools = await myPoolIds();
-      if (pools.isEmpty) return;
+      if (pools.isEmpty) return true;
       await supa.from('pool_events').insert([
         for (final p in pools)
           {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
       ]);
       _announced[id] = type;
-    } catch (_) {}
+      return true;
+    } catch (e) {
+      if (e.toString().contains('rate_limited')) return true;
+      _ensureRetry();
+      return false;
+    }
   }
 
   static Future<int> flushQueue() async {

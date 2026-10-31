@@ -1,4 +1,4 @@
-Düzeltme: internet yokken uygulama açılmıyordu; artık telefondaki kayıtlarla anında açılıyor.
+Kıldı/kılmadı 15 sn sonra aileye, 20 sn sonra buluta; kilit ekranı ve cinsiyet tercihleri.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,11 @@ Düzeltme: internet yokken uygulama açılmıyordu; artık telefondaki kayıtlar
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**Derleme 8**
+- Kıldı/kılmadı: aileye bildirim 15 saniye, buluta kayıt 20 saniye sonra (son duruma göre, tek sefer). İnternet yoksa ikisi de bağlantı gelince arka planda gider.
+- İlk açılışta "Telefon kilitliyken bildirim yazısı görünsün mü?" sorusu (Ayarlar'dan değiştirilebilir).
+- Cinsiyet seçimi: "Muaf" sadece kadınlarda. Ünvandan anlaşılmıyorsa (Aile Reisi, Eşi, Kardeşi…) bir kez sorulur; bilgi sadece telefonda tutulur.
 
 **Çevrimdışı açılış (derleme 7)**
 - İnternet yokken uygulama takılmadan açılır; oturum telefondan yüklenir, bağlantı gelince arka planda yenilenir. Ad ve namaz kayıtları telefondan gösterilir.
