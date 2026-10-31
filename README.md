@@ -90,6 +90,11 @@
 
 > Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
 
+### ✉️ Sürüm 34 — Öneri Yaz mail ile, gerçek veri gösterimi
+* **Öneri Yaz** (Ayarlar) telefondaki mail uygulamasını konu ve sürüm bilgisi hazır şekilde açar.
+* Vakit saatleri yüklenmeden Bugün ekranındaki kartlar kilitli; gelecek vakitler yanlışlıkla işaretlenemez.
+* Aile İbadet Halkası matrisinde işaretlenmemiş vakitler örnek veri gibi görünmesin diye sade "—" ile gösterilir; yalnızca gerçekten işaretlenen Kıldı / Kılmadı / Muaf görünür.
+
 ### 📤 Sürüm 32 — Paylaşım penceresi, yumuşak vakit simgeleri
 * **Uygulamayı paylaş** (Ayarlar) ve **davet kodu paylaş** (Aile Havuzu) artık telefonun paylaşım penceresini açıyor: WhatsApp, Gmail, Mesajlar, Telegram vb. Davet mesajında EMB kodu ve indirme linki hazır gelir. Kopyala düğmesi sadece kodu kopyalar.
 * Vakit simgeleri emoji yerine eski uygulamadaki ince çizgili simgeler: gün doğumu, güneş, yarım güneş, ay-bulut, hilal.

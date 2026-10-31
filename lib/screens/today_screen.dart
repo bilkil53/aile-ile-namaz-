@@ -165,7 +165,9 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   bool _arrived(String key) {
-    if (_showYesterday || _times == null) return true;
+    if (_showYesterday) return true;
+    // Vakitler henüz yüklenmediyse işaretlemeye izin verme (gelecek vakit yanlışlıkla işaretlenmesin).
+    if (_times == null) return false;
     return !_times!.at(_times!.timeFor(key)).isAfter(DateTime.now());
   }
 

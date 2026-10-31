@@ -61,6 +61,14 @@ jobs:
                   </receiver>'''
           if 'ScheduledNotificationReceiver' not in s:
               s = s.replace('</application>', receivers + '\n    </application>', 1)
+          # Android 11+: mail ve tarayıcı uygulamalarını görebilmek için
+          q = '''<intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>
+                  <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>'''
+          if 'android:scheme="mailto"' not in s:
+              if '<queries>' in s:
+                  s = s.replace('<queries>', '<queries>\n        ' + q, 1)
+              else:
+                  s = s.replace('</manifest>', '    <queries>\n        ' + q + '\n    </queries>\n</manifest>', 1)
           open(p, 'w', encoding='utf-8').write(s)
           PY
 

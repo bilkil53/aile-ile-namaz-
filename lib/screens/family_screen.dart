@@ -978,14 +978,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
       PrayerStatus.prayed => ('Kıldı', Colors.white, AppColors.emerald),
       PrayerStatus.missed => ('Kılmadı', AppColors.missed, Colors.white),
       PrayerStatus.excused => ('Muaf', Colors.white.withValues(alpha: 0.25), Colors.white),
-      PrayerStatus.none => ('Bekliyor', Colors.transparent, Colors.white.withValues(alpha: 0.7)),
+      PrayerStatus.none => ('—', Colors.transparent, Colors.white.withValues(alpha: 0.45)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(8),
-        border: s == PrayerStatus.none ? Border.all(color: Colors.white.withValues(alpha: 0.3)) : null,
+        border: null,
       ),
       child: Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: fg)),
     );

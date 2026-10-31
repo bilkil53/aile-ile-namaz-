@@ -53,6 +53,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _open(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
+  /// Öneri & Destek: telefondaki mail uygulamasını hazır konu ve sürüm bilgisiyle açar.
+  Future<void> _mail() async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: 'e.bilkil5391@gmail.com',
+      query: _enc({
+        'subject': 'Aile ile Namaz – Öneri / Destek (v$_version)',
+        'body': 'Merhaba,\n\n\n\n---\nSürüm: v$_version (yapı $_build)',
+      }),
+    );
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok) _toast('Telefonda mail uygulaması bulunamadı.');
+  }
+
+  static String _enc(Map<String, String> q) =>
+      q.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
+
   Future<void> _check() async {
     setState(() => _checking = true);
     final r = await UpdateChecker.latest();
@@ -380,7 +397,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.code,
             ),
             _divider(),
-            _row('Öneri & Destek', _whiteBtn('Öneri Yaz', () => _open('$_repo/issues/new'), icon: Icons.mail),
+            _row('Öneri & Destek', _whiteBtn('Öneri Yaz', _mail, icon: Icons.mail),
                 icon: Icons.mail),
             const SizedBox(height: 6),
           ]),
