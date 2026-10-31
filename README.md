@@ -31,7 +31,7 @@
 
 **Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
-**Sürüm:** Uygulamada ve GitHub'da sadece **v1.0** yazar; yayınlar tarih ve saatle ayrılır (ör. *v1.0 — 31.10.2026 12:45*). Büyük bir değişiklikte **v2.0**'a geçilir. Arka planda artan bir derleme numarası tutulur (Android güncellemeyi bununla tanır), ekranda görünmez.
+**Sürüm:** Uygulamada ve GitHub'da sadece **v1.0** yazar; yayınlar tarih ve saatle ayrılır (ör. *v1.0 — 31.10.2026 12:45*). Büyük bir değişiklikte **v2.0**'a geçilir. Arka planda derleme numarası tutulur (v1.0 ile **1**'den başladı, her resmi yayında bir artar; Android güncellemeyi bununla tanır), ekranda görünmez.
 
 ---
 
@@ -71,7 +71,9 @@
 * **Günün Hadis-i Şerifi.**
 
 ### 5. 🔔 Bildirimler
-* Her vakitten **11 dakika önce** hatırlatma; her bildirimde farklı bir **hadis, dua veya özlü söz**.
+* Her vakitten **11 dakika önce** hatırlatma; eski uygulamadaki gibi **vakte özel** hadis / ayet / dua.
+* **Cuma:** "Cuma Namazı 🕌" kartı ve "Hayırlı Cumalar!" hatırlatması.
+* **Tam zamanında:** "Alarm ve hatırlatıcılar" izniyle dakikası dakikasına (izin yoksa Ayarlar'da uyarı).
 * Her gün **12:00**'de günün ayeti / hadisi.
 * **Aile bildirimleri** (5 sn gecikmeli, tek bildirim). Hepsi Ayarlar'dan açılıp kapatılabilir.
 
@@ -108,7 +110,7 @@
 
 | Katman | Kullanılan |
 |---|---|
-| Uygulama | Flutter (Dart 3), Material 3, tek kod tabanı · görünen sürüm `1.0`, `versionCode` = derleme no |
+| Uygulama | Flutter (Dart 3), Material 3, tek kod tabanı · görünen sürüm `1.0`, `versionCode` = derleme no (1'den başlar) |
 | Arka uç | Supabase — PostgreSQL 15, Row Level Security, Auth, Realtime (Frankfurt / eu-central-1) |
 | Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
 | Vakitler | aladhan.com, method 13 (Diyanet) → önbellek → çevrimdışı yerel hesap; 81 il koordinatı |
@@ -148,7 +150,7 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house`.
 
 ### Derleme ve dallar
-* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0 — tarih saat*, iç etiket `apk-N`).
+* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0 — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).
 * Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
 * İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
 
@@ -169,6 +171,8 @@ Yukarıdaki tüm özellikler. Görünen sürüm **v1.0**; güncellemeler tarihle
 Bu sürümdeki son eklemeler:
 * Toplu kaza eklemede **yıl** seçeneği ve hızlı yıl düğmeleri.
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
+* Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
+* Derleme numarası **1**'den başladı.
 * Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.
 * Aile Reisi simgesi **🏡** (taç simgesi kaldırıldı), **başörtülü** simgeler.
 * Sürüm açıklamalarında teknik ayrıntılar.

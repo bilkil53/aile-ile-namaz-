@@ -27,12 +27,14 @@
 - Haftalık başarı oranı, 7 günlük tarihli grafik, vakit detayı, Birlikte Secde, gerçek veriyle 5 rozet, günün hadisi.
 
 **Bildirimler ve Ayarlar**
-- Vakitten **11 dk önce** hatırlatma + her bildirimde hadis / dua / özlü söz; her gün 12:00 günün ayeti.
+- Vakitten **11 dk önce** hatırlatma; eski uygulamadaki gibi **vakte özel** hadis / ayet / dua (Sabah, Öğle, İkindi, Akşam, Yatsı için ayrı ayrı). Her gün 12:00 günün ayeti.
+- **Cuma:** Öğle kartı "Cuma Namazı 🕌" olur; hatırlatma "Hayırlı Cumalar! Cuma Namazına 11 Dakika Kaldı" ve Cuma'ya özel sözlerle gelir.
+- **Tam zamanında hatırlatma:** "Alarm ve hatırlatıcılar" izni verilirse bildirimler dakikası dakikasına gelir (Ayarlar'da uyarı ve İzin ver düğmesi).
 - Uygulama içi güncelleme, bulut durumu, Şimdi Yedekle, Uygulamayı paylaş, Öneri Yaz (mail), Hesabımı ve verilerimi sil.
 
 ## 🛠 Teknik ayrıntılar
 
-**Uygulama:** Flutter (Dart 3), Material 3. Paket adı `com.bilkil53.aile_ile_namaz`. Görünen sürüm `1.0`; `versionCode` arka planda artan derleme numarasıdır (Android güncellemeyi ve uygulama içi güncelleme kontrolü bununla çalışır).
+**Uygulama:** Flutter (Dart 3), Material 3. Paket adı `com.bilkil53.aile_ile_namaz`. Görünen sürüm `1.0`; `versionCode` = derleme numarası (v1.0 ile **1**'den başladı, yalnızca resmi yayınlarda artar; yayın etiketi `r<N>`). Android güncellemeyi ve uygulama içi güncelleme kontrolü bununla çalışır.
 
 **Paketler:** supabase_flutter ^2.8 · google_sign_in ^6.2 · geolocator ^13 · geocoding ^4 · sensors_plus ^6.1 · flutter_local_notifications ^18 (+ timezone, core library desugaring 2.1.4) · shared_preferences ^2.3 · package_info_plus ^8 · url_launcher ^6.3 · share_plus ^10.1 · open_filex ^4.6 · path_provider ^2.1 · intl ^0.19.
 
@@ -51,7 +53,7 @@
 - Misafir verisi yalnızca bellekte. Test dönemi önbelleği ilk açılışta bir kez temizlenir.
 - `profiles.email` sütununa istemci erişimi kapalı.
 
-**Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri, BigText). Aile olayları Realtime `pool_events` dinlenerek gösterilir; vakit olayları 5 sn gecikmeli ve tekilleştirilmiş gönderilir.
+**Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri, BigText; `SCHEDULE_EXACT_ALARM` izni varsa `exactAllowWhileIdle`, yoksa esnek). Vakte özel söz havuzu eski uygulamadan taşındı (31 söz). Aile olayları Realtime `pool_events` dinlenerek gösterilir; vakit olayları 5 sn gecikmeli ve tekilleştirilmiş gönderilir.
 
 **Güncelleme:** GitHub Releases API (`releases/latest`) → iç etiket numarası > yüklü `versionCode` ise APK uygulama içinde indirilir (ilerleme çubuğu) → Android kurulum ekranı.
 

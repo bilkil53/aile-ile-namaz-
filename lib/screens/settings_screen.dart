@@ -33,10 +33,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _syncing = false;
   bool _gpsBusy = false;
   String _lastSync = '';
+  bool _exact = true;
 
   @override
   void initState() {
     super.initState();
+    Notifications.exactAllowed().then((v) {
+      if (mounted) setState(() => _exact = v);
+    });
     PackageInfo.fromPlatform().then((i) {
       if (!mounted) return;
       setState(() {
@@ -437,6 +441,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               unawaited(Notifications.reschedule());
               setState(() {});
             }),
+            if (AppSettings.prayerReminders && !_exact)
+              InkWell(
+                onTap: () async {
+                  await Notifications.requestExact();
+                  final v = await Notifications.exactAllowed();
+                  if (mounted) setState(() => _exact = v);
+                  unawaited(Notifications.reschedule());
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(12)),
+                  child: const Row(children: [
+                    Icon(Icons.alarm, color: Color(0xFF78350F), size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Hatırlatmalar birkaç dakika gecikebilir. Tam zamanında gelmesi için "Alarm ve hatırlatıcılar" iznini ver.',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+                    ),
+                    Text('İzin ver', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
+                  ]),
+                ),
+              ),
             _switchRow('Günün ayeti / hadisi', 'Her gün 12:00\'de', AppSettings.dailyContent, (v) async {
               await AppSettings.setDailyContent(v);
               if (v) await Notifications.requestPermission();

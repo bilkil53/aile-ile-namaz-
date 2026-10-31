@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'content/approaching_quotes.dart';
 import 'content/daily_content.dart';
 import 'prayer_times.dart';
 import 'settings.dart';
@@ -61,10 +62,27 @@ class Notifications {
         ?.requestNotificationsPermission();
   }
 
+  /// Vakit hatırlatmalarının dakikası dakikasına gelmesi için "Alarm ve hatırlatıcılar" izni (Android 12+).
+  static Future<bool> exactAllowed() async =>
+      await _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.canScheduleExactNotifications() ??
+      false;
+
+  static Future<void> requestExact() async {
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestExactAlarmsPermission();
+  }
+
+  static bool _exact = false;
+
   /// Önümüzdeki 3 günün hatırlatmalarını yeniden kurar.
   static Future<void> reschedule() async {
     try {
       await init();
+      final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      _exact = await android?.canScheduleExactNotifications() ?? false;
       await _plugin.cancelAll();
       final now = DateTime.now();
       final lead = AppSettings.reminderMinutes;
@@ -73,20 +91,28 @@ class Notifications {
         final day = DateTime(now.year, now.month, now.day).add(Duration(days: d));
         if (AppSettings.prayerReminders) {
           final t = await PrayerTimesService.forDate(day);
+          final friday = day.weekday == DateTime.friday;
           final list = [
-            ('Sabah', t.imsak),
-            (day.weekday == DateTime.friday ? 'Cuma' : 'Öğle', t.ogle),
-            ('İkindi', t.ikindi),
-            ('Akşam', t.aksam),
-            ('Yatsı', t.yatsi),
+            ('Sabah', 'fajr', t.imsak),
+            (friday ? 'Cuma Namazı' : 'Öğle', friday ? 'cuma' : 'dhuhr', t.ogle),
+            ('İkindi', 'asr', t.ikindi),
+            ('Akşam', 'maghrib', t.aksam),
+            ('Yatsı', 'isha', t.yatsi),
           ];
-          for (final (name, hhmm) in list) {
+          for (final (name, key, hhmm) in list) {
             final at = t.at(hhmm).subtract(Duration(minutes: lead));
             if (at.isAfter(now)) {
-              // Her hatırlatmaya farklı bir hadis / dua / özlü söz eşlik eder (gün ve vakte göre döner).
-              final q = _pool[(_dayOfYear(day) * 5 + id) % _pool.length];
-              await _schedule(id, '🕌 $name vaktine $lead dakika kaldı ($hhmm)',
-                  'Haydi namaza 🤲\n\n${q.text}\n— ${q.source}', at, _prayerChannel);
+              // Eski uygulamadaki gibi vakte özel hadis / ayet / dua (gün gün döner)
+              final quotes = approachingQuotes[key] ?? _pool;
+              final q = quotes[(_dayOfYear(day) + day.year) % quotes.length];
+              final cuma = key == 'cuma';
+              final title = cuma
+                  ? '🕌 Hayırlı Cumalar! Cuma Namazına $lead Dakika Kaldı ($hhmm)'
+                  : '🕌 $name Vaktine $lead Dakika Kaldı ($hhmm)';
+              final lead2 = cuma
+                  ? 'Abdestini tazeleyip Cuma namazı ve hutbeye yetişmek için camiye hazırlanmayı unutma. 🤲'
+                  : 'Haydi namaza 🤲';
+              await _schedule(id, title, '$lead2\n\n${q.title}: ${q.text}\n— ${q.source}', at, _prayerChannel);
             }
             id++;
           }
@@ -124,7 +150,8 @@ class Notifications {
       body,
       tz.TZDateTime.from(at, tz.local),
       NotificationDetails(android: details),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      // Tam zamanında: izin varsa kesin alarm, yoksa Android'in esnek zamanlaması
+      androidScheduleMode: _exact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }

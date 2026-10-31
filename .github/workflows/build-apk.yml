@@ -9,7 +9,8 @@ permissions:
   contents: write
 
 # Görünen sürüm: v1.0 (büyük değişiklikte "2.0" yapılır).
-# Derleme numarası (github.run_number) sadece arka planda: Android versionCode + uygulama içi güncelleme karşılaştırması.
+# Derleme numarası (BUILD_NO = son r<N> yayını + 1, v1.0 ile 1'den başladı) sadece arka planda:
+# Android versionCode + uygulama içi güncelleme karşılaştırması. Yayın etiketi r<N>.
 env:
   APP_VERSION: "1.0"
 
@@ -44,6 +45,7 @@ jobs:
               'android.permission.ACCESS_FINE_LOCATION',
               'android.permission.POST_NOTIFICATIONS',
               'android.permission.RECEIVE_BOOT_COMPLETED',
+              'android.permission.SCHEDULE_EXACT_ALARM',
           ]
           for perm in perms:
               if perm not in s:
@@ -174,10 +176,19 @@ jobs:
           grep -E '^\s*error •' analyze.txt | head -20 | while IFS= read -r l; do echo "::error::${l}"; done
           exit 0
 
+      - name: Derleme numarası (r1, r2, r3 … yalnızca resmi yayınlara göre artar)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName \
+            -q '[.[].tagName | select(test("^r[0-9]+$")) | ltrimstr("r") | tonumber] | max // 0')
+          echo "BUILD_NO=$((last + 1))" >> "$GITHUB_ENV"
+          echo "Derleme numarası: $((last + 1))"
+
       - name: APK derle
         run: |
           set +e
-          flutter build apk --release --build-number=${{ github.run_number }} --build-name=${{ env.APP_VERSION }} > build.txt 2>&1
+          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} > build.txt 2>&1
           code=$?
           tail -n 80 build.txt
           {
@@ -213,7 +224,7 @@ jobs:
             tail -n +2 RELEASE_NOTES.md
             echo
             echo "---"
-            echo "**Sürüm:** $V · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
+            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
             echo
             echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
           } > release_body.md
@@ -222,7 +233,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk-${{ github.run_number }}
+          tag_name: r${{ env.BUILD_NO }}
           name: ${{ env.RELEASE_TITLE }}
           body_path: release_body.md
           prerelease: false
