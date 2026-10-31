@@ -184,6 +184,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.7:** Ayarlar'daki "Sıradaki hatırlatma" satırı kaldırıldı.
 * **v1.6:** Ayarlar'dan vakit hatırlatması ve günün ayeti yazıları kaldırıldı (ikisi de zorunlu ve her zaman açık; "Sıradaki hatırlatma" satırı duruyor).
 * **v1.5:** Aile Havuzunda (matris ve üye listesi) ilk sırada kullanıcının kendisi, sonra Aile Reisi. Düzeltme: anlık bildirim kaydını engelleyen hata bulundu ("FirebaseCrashlytics component is not present"). Çökme raporu eklentisi (Crashlytics) kaldırıldı; Firebase artık sorunsuz açılır, uygulama kapalıyken aile bildirimleri gelir.
 * **v1.4:** Yeni İbadet Karnesi (okul karnesi mantığı, sadece kişinin kendi verisi): dönem seçimi (hafta / 30 gün / 3 ay), genel not (Pekiyi/İyi/Orta), vakit vakit karne ve en çok aksatılan vakit, şu anki ve en uzun seri, aylık takvim, kaza ilerlemesi, kişisel rozetler. Anlık bildirim hatasına dokununca ayrıntı + kopyala + tekrar dene; Firebase yedek başlatma.

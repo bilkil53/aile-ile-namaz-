@@ -1,4 +1,4 @@
-Ayarlar sadeleşti: zorunlu hatırlatmaların yazıları kaldırıldı.
+Ayarlar sadeleşti: "Sıradaki hatırlatma" satırı kaldırıldı.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,9 @@ Ayarlar sadeleşti: zorunlu hatırlatmaların yazıları kaldırıldı.
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.7**
+- Ayarlar'daki "Sıradaki hatırlatma" satırı kaldırıldı (hatırlatmalar aynen çalışır).
 
 **v1.6**
 - Ayarlar → Konum ve Bildirimler: vakit hatırlatması ve 12:00 günün ayeti satırları kaldırıldı (ikisi de zorunlu, her zaman çalışır). "Sıradaki hatırlatma" satırı duruyor.

@@ -516,20 +516,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ]),
             _divider(),
-            if (AppSettings.prayerReminders && _nextReminder.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 2, bottom: 6),
-                child: Row(children: [
-                  const Icon(Icons.alarm, size: 16, color: AppColors.prayedMint),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '$_nextReminder${_exact ? ' · tam zamanında' : ' · birkaç dk gecikebilir'}',
-                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)),
-                    ),
-                  ),
-                ]),
-              ),
             if (AppSettings.prayerReminders && !_exact)
               InkWell(
                 onTap: () async {
