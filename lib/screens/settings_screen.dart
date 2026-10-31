@@ -475,9 +475,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _switchRow('Aile bildirimleri', 'Aileden biri namaz kılınca / dua gönderince', AppSettings.familyAlerts,
                 (v) async {
               await AppSettings.setFamilyAlerts(v);
-              unawaited(v ? Push.register() : Push.unregister());
+              await Push.register();
               setState(() {});
             }),
+            if (!guest)
+              ValueListenableBuilder<String>(
+                valueListenable: Push.status,
+                builder: (_, s, __) => InkWell(
+                  onTap: Push.ok ? null : () => Push.register(),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 4),
+                    child: Row(children: [
+                      Icon(Push.ok ? Icons.notifications_active : Icons.notifications_off,
+                          size: 16, color: Push.ok ? AppColors.prayedMint : AppColors.missedCoral),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text('Anlık bildirim: $s${Push.ok ? '' : ' · tekrar denemek için dokun'}',
+                            style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
+                      ),
+                    ]),
+                  ),
+                ),
+              ),
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),

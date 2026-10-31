@@ -1,4 +1,4 @@
-Aile bildirimleri artık uygulama kapalıyken de telefona düşer (Firebase anlık bildirim).
+Anlık bildirim etkin: aile bildirimleri uygulama kapalıyken de telefona düşer; Ayarlar'da kayıt durumu görünür.
 
 ## 🌟 Kullanıcı için
 

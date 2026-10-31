@@ -24,6 +24,10 @@ class Push {
   );
 
   static bool _ready = false;
+
+  /// Ayarlar'da gösterilen durum: telefonun anlık bildirime kayıtlı olup olmadığı.
+  static final status = ValueNotifier<String>('Kontrol ediliyor…');
+  static bool ok = false;
   static String? _token;
   static StreamSubscription<String>? _refreshSub;
 
@@ -32,24 +36,34 @@ class Push {
     try {
       await Firebase.initializeApp(options: _options);
       _ready = true;
-    } catch (_) {}
+    } catch (e) {
+      _set(false, 'Firebase başlatılamadı: ${_short(e)}');
+    }
   }
 
   /// Giriş yapılmışsa ve aile bildirimleri açıksa cihazı kaydeder.
   static Future<void> register() async {
     await init();
-    if (!_ready || isGuest) return;
-    if (!AppSettings.familyAlerts) return unregister();
+    if (!_ready) return;
+    if (isGuest) return _set(false, 'Giriş yapılmadı');
+    if (!AppSettings.familyAlerts) {
+      await unregister();
+      return _set(false, 'Aile bildirimleri kapalı');
+    }
     try {
       final fm = FirebaseMessaging.instance;
       await fm.setAutoInitEnabled(true);
       final t = await fm.getToken();
-      if (t != null) await _save(t);
+      if (t == null) return _set(false, 'Cihaz adresi alınamadı');
+      await _save(t, strict: true);
       _refreshSub ??= fm.onTokenRefresh.listen(_save);
-    } catch (_) {}
+      _set(true, 'Hazır ✓ Uygulama kapalıyken de bildirim gelir');
+    } catch (e) {
+      _set(false, 'Kayıt olmadı: ${_short(e)}');
+    }
   }
 
-  static Future<void> _save(String t) async {
+  static Future<void> _save(String t, {bool strict = false}) async {
     if (isGuest) return;
     _token = t;
     try {
@@ -59,7 +73,19 @@ class Push {
         'platform': 'android',
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id,fcm_token');
-    } catch (_) {}
+    } catch (e) {
+      if (strict) rethrow;
+    }
+  }
+
+  static void _set(bool good, String text) {
+    ok = good;
+    status.value = text;
+  }
+
+  static String _short(Object e) {
+    final s = e.toString();
+    return s.length > 90 ? '${s.substring(0, 90)}…' : s;
   }
 
   /// Çıkış yaparken / aile bildirimleri kapatılınca bu cihaza bildirim gitmesin.

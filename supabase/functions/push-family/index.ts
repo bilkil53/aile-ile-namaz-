@@ -73,7 +73,21 @@ function text(type: string, who: string, prayer: string | null, message: string)
 
 Deno.serve(async (req) => {
   try {
-    const { event_id } = await req.json().catch(() => ({}));
+    const { event_id, check } = await req.json().catch(() => ({}));
+
+    // Sağlık kontrolü: anahtar var mı ve Google'dan erişim izni alınabiliyor mu? (gizli bilgi döndürmez)
+    if (check) {
+      const raw = Deno.env.get("FCM_SERVICE_ACCOUNT");
+      if (!raw) return Response.json({ configured: false });
+      try {
+        const sa = JSON.parse(raw);
+        await accessToken(sa);
+        return Response.json({ configured: true, oauth: "ok", project: sa.project_id });
+      } catch (e) {
+        return Response.json({ configured: true, oauth: "hata", detail: String(e).slice(0, 120) });
+      }
+    }
+
     if (!event_id) return new Response("event_id gerekli", { status: 400 });
 
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

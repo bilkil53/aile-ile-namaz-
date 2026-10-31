@@ -176,6 +176,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 3:** Ayarlar'da "Anlık bildirim: Hazır ✓" durumu ve tekrar deneme; sunucu anahtarı etkinleştirildi.
 * **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging). Konum her açılışta otomatik (10 sn arayla tekrar deneme); konum sadece Ayarlar'da.
 * Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.
 * Aile Reisi simgesi **🏡** (taç simgesi kaldırıldı), **başörtülü** simgeler.
