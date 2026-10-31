@@ -101,6 +101,29 @@ class Notifications {
 
   static bool _exact = false;
 
+  /// Sıradaki vakit hatırlatması: (vakit adı, bildirim zamanı, vakit saati). Kapalıysa null.
+  static Future<(String, DateTime, String)?> nextReminder() async {
+    if (!AppSettings.prayerReminders) return null;
+    final now = DateTime.now();
+    final lead = Duration(minutes: AppSettings.reminderMinutes);
+    for (var d = 0; d < 2; d++) {
+      final day = DateTime(now.year, now.month, now.day).add(Duration(days: d));
+      final t = await PrayerTimesService.forDate(day);
+      final list = [
+        ('Sabah', t.imsak),
+        (day.weekday == DateTime.friday ? 'Cuma' : 'Öğle', t.ogle),
+        ('İkindi', t.ikindi),
+        ('Akşam', t.aksam),
+        ('Yatsı', t.yatsi),
+      ];
+      for (final (name, hhmm) in list) {
+        final at = t.at(hhmm).subtract(lead);
+        if (at.isAfter(now)) return (name, at, hhmm);
+      }
+    }
+    return null;
+  }
+
   /// Önümüzdeki 3 günün hatırlatmalarını yeniden kurar.
   static Future<void> reschedule() async {
     try {

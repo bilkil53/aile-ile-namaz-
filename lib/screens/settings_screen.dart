@@ -35,6 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _gpsBusy = false;
   String _lastSync = '';
   bool _exact = true;
+  String _nextReminder = '';
 
   @override
   void initState() {
@@ -42,6 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Notifications.exactAllowed().then((v) {
       if (mounted) setState(() => _exact = v);
     });
+    _loadNextReminder();
     PackageInfo.fromPlatform().then((i) {
       if (!mounted) return;
       setState(() {
@@ -49,6 +51,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _build = int.tryParse(i.buildNumber) ?? 0;
       });
     });
+  }
+
+  Future<void> _loadNextReminder() async {
+    try {
+      final r = await Notifications.nextReminder();
+      if (!mounted) return;
+      setState(() => _nextReminder = r == null
+          ? ''
+          : 'Sıradaki hatırlatma: ${r.$1} ${r.$2.hour.toString().padLeft(2, '0')}:${r.$2.minute.toString().padLeft(2, '0')} (vakit ${r.$3})');
+    } catch (_) {}
   }
 
   void _toast(String m) {
@@ -113,7 +125,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() => _gpsBusy = false);
     _toast(ok ? 'Konum güncellendi: $msg' : msg);
-    if (ok) unawaited(Notifications.reschedule());
+    if (ok) {
+      await Notifications.reschedule();
+      unawaited(_loadNextReminder());
+    }
   }
 
   Future<void> _deleteAccount() async {
@@ -464,7 +479,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (v) await Notifications.requestPermission();
               unawaited(Notifications.reschedule());
               setState(() {});
+              unawaited(_loadNextReminder());
             }),
+            if (AppSettings.prayerReminders && _nextReminder.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 2, bottom: 6),
+                child: Row(children: [
+                  const Icon(Icons.alarm, size: 16, color: AppColors.prayedMint),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '$_nextReminder${_exact ? ' · tam zamanında' : ' · birkaç dk gecikebilir'}',
+                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)),
+                    ),
+                  ),
+                ]),
+              ),
             if (AppSettings.prayerReminders && !_exact)
               InkWell(
                 onTap: () async {

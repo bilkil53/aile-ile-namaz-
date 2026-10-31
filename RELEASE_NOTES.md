@@ -1,4 +1,4 @@
-Aile Havuzu internetsiz de açılıyor; kilit ekranı sorusu artık ilk açılışta hemen geliyor.
+Ayarlar'da sıradaki namaz hatırlatmasının saati görünüyor.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,9 @@ Aile Havuzu internetsiz de açılıyor; kilit ekranı sorusu artık ilk açılı
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**Derleme 10**
+- Ayarlar → Konum ve Bildirimler: "Sıradaki hatırlatma: Yatsı 19:20 (vakit 19:31) · tam zamanında / birkaç dk gecikebilir".
 
 **Derleme 9**
 - Aile Havuzu internet yokken ailenin son bilinen durumunu gösterir (uyarı ile); bağlantı gelince kendiliğinden yenilenir.
