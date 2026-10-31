@@ -90,7 +90,8 @@
 
 > Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
 
-### ✉️ Sürüm 34 — Öneri Yaz mail ile, gerçek veri gösterimi
+### ✉️ Sürüm 36 — Temiz başlangıç, Öneri Yaz mail ile, gerçek veri gösterimi
+* Test sürümlerinden telefonda kalan işaret önbelleği ve bekleyen kuyruk ilk açılışta bir kez temizlenir; herkes kendi işaretlemesiyle temiz başlar.
 * **Öneri Yaz** (Ayarlar) telefondaki mail uygulamasını konu ve sürüm bilgisi hazır şekilde açar.
 * Vakit saatleri yüklenmeden Bugün ekranındaki kartlar kilitli; gelecek vakitler yanlışlıkla işaretlenemez.
 * Aile İbadet Halkası matrisinde işaretlenmemiş vakitler örnek veri gibi görünmesin diye sade "—" ile gösterilir; yalnızca gerçekten işaretlenen Kıldı / Kılmadı / Muaf görünür.

@@ -43,10 +43,20 @@ class LocalStore {
     _gData = false;
   }
 
-  /// Eski sürümlerin kalıcı misafir bayraklarını temizle.
+  /// Eski sürümlerin kalıcı misafir bayraklarını ve test dönemi önbelleğini bir kez temizle.
+  /// (Test sürümlerinde telefona yazılmış işaretler ve bekleyen kuyruk tekrar buluta gitmesin.)
   static Future<void> cleanupLegacy() async {
-    await AppSettings.prefs.remove('guestMode');
-    await AppSettings.prefs.remove('guestData');
+    final p = AppSettings.prefs;
+    await p.remove('guestMode');
+    await p.remove('guestData');
+    if ((p.getInt('dataReset') ?? 0) < 1) {
+      for (final k in p.getKeys().where((k) => k.startsWith('lp_')).toList()) {
+        await p.remove(k);
+      }
+      await p.remove('lk');
+      await p.remove('queue');
+      await p.setInt('dataReset', 1);
+    }
   }
 
   // ---- Günlük namaz ----
