@@ -18,6 +18,7 @@ Future<void> main() async {
     initializeDateFormatting('tr'),
     AppSettings.init(),
   ]);
+  await LocalStore.cleanupLegacy();
   unawaited(Notifications.init());
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,

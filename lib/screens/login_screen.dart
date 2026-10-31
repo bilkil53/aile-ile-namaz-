@@ -108,10 +108,10 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
         ),
         title: const Text('Giriş Yapmadan Devam Et', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         content: const Column(mainAxisSize: MainAxisSize.min, children: [
-          _Bullet('📱', 'Kayıtların sadece bu telefonda saklanır.'),
-          _Bullet('👨‍👩‍👧', 'Aile Havuzu ve aile bildirimleri kullanılamaz.'),
-          _Bullet('⚠️', 'Uygulamayı silersen veya telefon değiştirirsen kayıtlar kaybolur.'),
-          _Bullet('☁️', 'İstediğin zaman Ayarlar\'dan giriş yapabilirsin; kayıtların buluta taşınır.'),
+          _Bullet('👀', 'Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.'),
+          _Bullet('⏳', 'İşaretlediklerin sadece bu oturumda tutulur; uygulama kapanınca silinir.'),
+          _Bullet('👨‍👩‍👧', 'Aile Havuzunda gerçek bağlantı ve aile bildirimleri için giriş gerekir.'),
+          _Bullet('☁️', 'Giriş yaparsan bu oturumda yaptıkların buluta kaydedilir.'),
         ]),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
@@ -119,7 +119,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Anladım, Devam Et'),
+            child: const Text('Gezintiye Başla'),
           ),
         ],
       ),

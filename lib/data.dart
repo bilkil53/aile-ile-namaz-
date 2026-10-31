@@ -310,18 +310,28 @@ class Repo {
   /// Misafirken girilen kayıtları giriş sonrası buluta taşır.
   static Future<void> migrateGuestData() async {
     if (isGuest || !LocalStore.hasGuestData) return;
-    for (final d in LocalStore.allDates()) {
-      final m = LocalStore.day(d);
+    for (final e0 in LocalStore.guestDays.entries) {
+      final d = e0.key;
+      final m = e0.value;
       if (m.isEmpty) continue;
+      await LocalStore.saveDay(d, m);
       await supa.from('daily_prayers').upsert(
         {'user_id': myId, 'prayer_date': d, for (final e in m.entries) e.key: e.value.code},
         onConflict: 'user_id,prayer_date',
       );
     }
-    for (final e in LocalStore.kaza().entries) {
-      await _upsertKaza(e.key, e.value.$1, e.value.$2);
+    if (LocalStore.guestKaza.isNotEmpty) {
+      // Misafirken eklenenler hesabın mevcut kaza sayılarının üzerine eklenir (silinmez).
+      final guest = Map.of(LocalStore.guestKaza);
+      final cloud = await myKaza();
+      for (final e in guest.entries) {
+        final (o0, c0) = cloud[e.key] ?? (0, 0);
+        final owed = o0 + e.value.$1, done = c0 + e.value.$2;
+        await LocalStore.saveKaza(e.key, owed, done);
+        await _upsertKaza(e.key, owed, done);
+      }
     }
-    await LocalStore.setHasGuestData(false);
+    LocalStore.clearGuest();
   }
 
   /// Kendi namaz kayıtlarım (tarih aralığı, Karne için).

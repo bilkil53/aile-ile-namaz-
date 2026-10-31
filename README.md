@@ -107,7 +107,8 @@
 
 **Güvenilirlik ve gizlilik**
 * **Çevrimdışı kayıt:** İnternet yokken işaretlenen vakit / kaza telefonda bekler, bağlantı gelince otomatik buluta gider.
-* **Giriş yapmadan kullanım:** Kayıtlar telefonda tutulur; sonradan Google ile giriş yapılırsa buluta taşınır.
+* **Hoş Geldiniz penceresi:** Giriş sayfası yerine, eski uygulamadaki gibi uygulamanın üzerinde açılan karşılama penceresi (özellik kartları + "Google ile Hızlı Giriş Yap").
+* **Gezinti modu (giriş yapmadan):** Bütün ekranlar, Aile Havuzu dahil, denenebilir. Yapılanlar **sadece bellekte** tutulur ve uygulama kapanınca silinir; telefona kalıcı kayıt yapılmaz. Google ile giriş yapılırsa o oturumdakiler buluta kaydedilir (kaza sayıları hesaptakilerin üzerine eklenir). Her açılışta karşılama penceresi tekrar gelir.
 * **Hesabımı ve verilerimi sil:** Çift onaylı; reisi olunan dolu havuzların reisliği en eski üyeye geçer.
 
 ### 🕌 Sürüm 21 — Aile Havuzu: kod hazır, ünvanları reis verir

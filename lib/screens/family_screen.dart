@@ -49,7 +49,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   void initState() {
     super.initState();
     if (isGuest) {
-      _loading = false;
+      _loadGuest();
       return;
     }
     _subscribeMe();
@@ -99,6 +99,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   String _yStr() => DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(const Duration(days: 1)));
 
   Future<void> _load() async {
+    if (isGuest) return _loadGuest();
     try {
       Repo.invalidatePools();
       var pools = await Repo.myPools();
@@ -139,6 +140,52 @@ class _FamilyScreenState extends State<FamilyScreen> {
     }
   }
 
+  // ---------- Gezinti (misafir) modu: her şey bellekte, uygulama kapanınca silinir ----------
+  final List<PoolEvent> _guestFeed = [];
+
+  Future<void> _loadGuest() async {
+    final me = Member(userId: myId, name: 'Misafir', roleTitle: 'Aile Ferdi', icon: '👤');
+    final pool = Pool(id: 'local', name: 'Aile İbadet Havuzum', ownerId: myId, inviteCode: 'EMB-······');
+    final t = await Repo.dayPrayers([myId], todayStr());
+    final y = await Repo.dayPrayers([myId], _yStr());
+    if (!mounted) return;
+    setState(() {
+      _pools = [pool];
+      _members = [me];
+      _myName = 'Misafir';
+      _today = t;
+      _yesterday = y;
+      _loading = false;
+    });
+  }
+
+  /// Bulut gerektiren işlemlerde giriş penceresi.
+  Future<void> _needLogin(String what) async {
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        icon: const Text('🔐', style: TextStyle(fontSize: 34)),
+        title: const Text('Google Girişi Gerekir', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: Text(
+          '$what için Google ile giriş yapmalısın.\n\n'
+          'Şu an gezinti modundasın: yaptığın işaretlemeler sadece bu oturumda tutulur ve uygulama kapanınca silinir. '
+          'Giriş yaparsan bu oturumdakiler buluta kaydedilir.',
+          style: const TextStyle(fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Gezinmeye Devam')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Google ile Giriş Yap'),
+          ),
+        ],
+      ),
+    );
+    if (go == true) await LocalStore.setGuestMode(false);
+  }
+
   void _toast(String m) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
@@ -177,6 +224,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   /// "Bağlantıyı Teyit Et": sunucuya sorup havuz / istek durumunu bildirir.
   Future<void> _verifyLink() async {
+    if (isGuest) return _needLogin('Aile bağlantısını sorgulamak');
     setState(() => _checkingLink = true);
     final before = _members.length;
     await _load();
@@ -223,6 +271,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Future<void> _join(String input) async {
     final v = input.trim();
     if (v.isEmpty) return;
+    if (isGuest) return _needLogin('Bir aile havuzuna katılmak');
     try {
       // Unvanı ve simgeyi onaylarken Aile Reisi belirler.
       final ok = await Repo.requestJoin(v, 'Aile Ferdi', '👥');
@@ -268,6 +317,19 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to?.shownName));
     if (text == null || text.trim().isEmpty || _pool == null) return;
     final msg = to == null ? text.trim() : '${to.shownName} için: ${text.trim()}';
+    if (isGuest) {
+      setState(() => _guestFeed.insert(
+          0,
+          PoolEvent(
+              id: _guestFeed.length,
+              senderId: myId,
+              type: 'DUA',
+              prayer: null,
+              message: msg,
+              createdAt: DateTime.now())));
+      _toast('Dua bu oturumda kaydedildi 🤲 Ailene gitmesi için giriş yap.');
+      return;
+    }
     try {
       await Repo.sendDua(_pool!.id, msg.length > 280 ? msg.substring(0, 280) : msg);
       _toast('Dua gönderildi 🤲');
@@ -311,7 +373,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isGuest) return _guestCard();
     if (_loading) return const Center(child: CircularProgressIndicator());
     final pool = _pool;
     return RefreshIndicator(
@@ -319,6 +380,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
+          if (isGuest) ...[_guestBanner(), const SizedBox(height: 12)],
           _profileCard(),
           const SizedBox(height: 12),
           _hero(),
@@ -463,34 +525,37 @@ class _FamilyScreenState extends State<FamilyScreen> {
     );
   }
 
-  Widget _guestCard() => ListView(padding: const EdgeInsets.all(16), children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
-          child: Column(children: [
-            const Text('👨‍👩‍👧‍👦', style: TextStyle(fontSize: 44)),
-            const SizedBox(height: 10),
-            const Text('Aile Havuzu İçin Google Girişi Gerekir',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 8),
-            Text(
-              'Şu an Bireysel Mod\'dasın ve kayıtların sadece bu telefonda. Ailenle aynı havuzda buluşmak, '
-              'birbirinizin vakitlerini görmek ve dua göndermek için Google ile giriş yap. '
-              'Telefondaki kayıtların otomatik olarak buluta taşınır.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), height: 1.4),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.emerald),
-              onPressed: () => LocalStore.setGuestMode(false),
-              icon: const Icon(Icons.login),
-              label: const Text('Google ile Giriş Yap', style: TextStyle(fontWeight: FontWeight.bold)),
+  Widget _guestBanner() => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.goldContainer,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.gold),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Row(children: [
+            Text('👀', style: TextStyle(fontSize: 20)),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text('Gezinti Modu',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
             ),
           ]),
-        ),
-      ]);
+          const SizedBox(height: 4),
+          const Text(
+            'Aile Havuzunu deneyebilirsin; yaptıkların sadece bu oturumda tutulur ve uygulama kapanınca silinir. '
+            'Ailenle gerçekten bağlanmak ve kayıtlarını buluta almak için giriş yap.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.35),
+          ),
+          const SizedBox(height: 10),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+            onPressed: () => LocalStore.setGuestMode(false),
+            icon: const Icon(Icons.login, size: 18),
+            label: const Text('Google ile Giriş Yap & Buluta Kaydet', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ]),
+      );
 
   Widget _profileCard() {
     final family = _members.length > 1;
@@ -507,7 +572,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(_myName.isNotEmpty ? _myName : 'Aile Ferdi',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            Text('${me?.roleTitle ?? 'Aile Ferdi'} · Google Hesabı Bağlı ✓',
+            Text('${me?.roleTitle ?? 'Aile Ferdi'} · ${isGuest ? 'Gezinti modu (giriş yapılmadı)' : 'Google Hesabı Bağlı ✓'}',
                 style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ]),
         ),
@@ -720,6 +785,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             IconButton(
               tooltip: 'Kopyala',
               onPressed: () async {
+                if (isGuest) return _needLogin('Davet kodu oluşturmak');
                 await Clipboard.setData(ClipboardData(
                     text: 'Aile ile Namaz uygulamasında aile havuzumuza katıl! '
                         'Davet kodu: ${pool.displayCode}'));
@@ -730,6 +796,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             IconButton(
               tooltip: 'Yeni kod',
               onPressed: () async {
+                if (isGuest) return _needLogin('Davet kodu oluşturmak');
                 if (await _confirm('Eski kod geçersiz olacak. Yeni kod üretilsin mi?') != true) return;
                 try {
                   await Repo.regenerateCode(pool.id);
@@ -1012,6 +1079,29 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Widget _feed() {
+    if (isGuest) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Son Hareketler (bu oturum)',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        const SizedBox(height: 8),
+        _whiteCard(
+          child: _guestFeed.isEmpty
+              ? const Text('Henüz bir hareket yok. Uygulama kapanınca bu liste silinir.',
+                  style: TextStyle(color: AppColors.textMuted))
+              : Column(children: [
+                  for (final e in _guestFeed)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(children: [
+                        Expanded(child: Text(_describe(e), style: const TextStyle(fontSize: 13))),
+                        Text(DateFormat('HH:mm', 'tr').format(e.createdAt),
+                            style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                      ]),
+                    ),
+                ]),
+        ),
+      ]);
+    }
     final stream = _events;
     if (stream == null) return const SizedBox.shrink();
     return Column(

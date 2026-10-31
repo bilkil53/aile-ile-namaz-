@@ -292,7 +292,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _divider(),
             _row(
               'Veritabanı Durumu',
-              Text(guest ? 'Yerel (Telefonda) 📱' : 'Bulut Senkronize ☁️',
+              Text(guest ? 'Kaydedilmiyor (Gezinti) 👀' : 'Bulut Senkronize ☁️',
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.prayedMint)),
             ),
             const SizedBox(height: 8),
@@ -308,15 +308,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Icon(guest ? Icons.phone_android : Icons.cloud_done, color: AppColors.prayedMint),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(guest ? 'Kayıtların Bu Telefonda Saklanıyor' : 'Hesaba Bağlı Bulut Yedekleme Aktif',
+                    child: Text(guest ? 'Gezinti Modu: Kalıcı Kayıt Yok' : 'Hesaba Bağlı Bulut Yedekleme Aktif',
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ]),
                 const SizedBox(height: 8),
                 Text(
                   guest
-                      ? 'Giriş yapmadığın için kıldı/kılmadı işaretlerin ve kaza sayıların sadece bu telefonda duruyor. '
-                          'Uygulamayı silersen veya telefon değiştirirsen kaybolur. Google ile giriş yaparsan hepsi buluta taşınır.'
+                      ? 'Giriş yapmadığın için kıldı/kılmadı işaretlerin, kaza sayıların ve Aile Havuzunda denediklerin '
+                          'sadece bu oturumda tutuluyor; uygulama kapanınca silinir. Google ile giriş yaparsan bu oturumdakiler buluta kaydedilir.'
                       : 'Kıldı/kılmadı işaretlerin, kaza namazların ve tüm ibadet geçmişin Google hesabına bağlı olarak '
                           'buluta yedekleniyor. Uygulamayı silsen veya telefon değiştirsen bile aynı hesapla giriş yaptığında '
                           'bütün kayıtların geri gelir. İnternet yokken işaretlediklerin telefonda bekler, bağlantı gelince gönderilir.',
