@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import '../content/daily_content.dart';
 import '../data.dart';
 import '../local_store.dart';
 import '../models.dart';
+import '../settings.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
 
@@ -63,6 +65,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   void dispose() {
     _debounce?.cancel();
     _ticker?.cancel();
+    _offlineRetry?.cancel();
     if (_poolChannel != null) supa.removeChannel(_poolChannel!);
     if (_meChannel != null) supa.removeChannel(_meChannel!);
     _joinCtrl.dispose();
@@ -129,7 +132,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (isGuest) return _loadGuest();
     try {
       Repo.invalidatePools();
-      var pools = await Repo.myPools();
+      var pools = await Repo.myPools().timeout(const Duration(seconds: 8));
       if (pools.isEmpty) {
         // Herkesin kendi havuzu ve davet kodu otomatik hazır
         await Repo.ensureMyPool();
@@ -160,11 +163,76 @@ class _FamilyScreenState extends State<FamilyScreen> {
         _outgoing = r[4] as List<(String, String, String, DateTime)>;
         _myName = r[5] as String;
         _loading = false;
+        _offline = false;
       });
+      _offlineRetry?.cancel();
+      _offlineRetry = null;
       _syncTicker();
+      unawaited(_saveSnapshot());
     } catch (_) {
+      // İnternet yok: son bilinen aile durumunu göster, bağlantı gelince kendiliğinden yenile
+      await _loadSnapshot();
       if (mounted) setState(() => _loading = false);
+      _offlineRetry ??= Timer.periodic(const Duration(seconds: 15), (_) => _load());
     }
+  }
+
+  // ---------- Çevrimdışı: son bilinen aile durumu (telefonda) ----------
+  bool _offline = false;
+  Timer? _offlineRetry;
+
+  static Map<String, String> _codes(Map<String, PrayerStatus> m) => {for (final e in m.entries) e.key: e.value.code};
+
+  Future<void> _saveSnapshot() async {
+    final pool = _pool;
+    if (pool == null) return;
+    final snap = {
+      'date': todayStr(),
+      'pool': {'id': pool.id, 'name': pool.name, 'owner_id': pool.ownerId, 'invite_code': pool.inviteCode},
+      'members': [
+        for (final m in _members) {'user_id': m.userId, 'name': m.name, 'role_title': m.roleTitle, 'icon': m.icon},
+      ],
+      'today': {for (final e in _today.entries) e.key: _codes(e.value)},
+      'yesterday': {for (final e in _yesterday.entries) e.key: _codes(e.value)},
+      'kaza': _kaza,
+      'myName': _myName,
+    };
+    await AppSettings.prefs.setString('familySnapshot', jsonEncode(snap));
+  }
+
+  Future<void> _loadSnapshot() async {
+    final raw = AppSettings.prefs.getString('familySnapshot');
+    if (raw == null || !mounted) return;
+    try {
+      final s = jsonDecode(raw) as Map<String, dynamic>;
+      Map<String, Map<String, PrayerStatus>> days(Object? v) => {
+            for (final e in ((v ?? {}) as Map<String, dynamic>).entries)
+              e.key: {
+                for (final p in (e.value as Map<String, dynamic>).entries) p.key: PrayerStatusX.parse(p.value as String?)
+              },
+          };
+      final sameDay = s['date'] == todayStr();
+      final p = s['pool'] as Map<String, dynamic>;
+      setState(() {
+        _offline = true;
+        _pools = [Pool.fromMap(p)];
+        _members = [
+          for (final m in (s['members'] as List).cast<Map<String, dynamic>>())
+            Member(userId: m['user_id'], name: m['name'] ?? '', roleTitle: m['role_title'] ?? 'Aile Ferdi', icon: m['icon'] ?? '👥'),
+        ];
+        // Gün değiştiyse dünkü tablo = kaydedilen "bugün"
+        _today = sameDay ? days(s['today']) : {};
+        _yesterday = sameDay ? days(s['yesterday']) : days(s['today']);
+        // Kendi işaretlerim her zaman telefondaki en güncel hâliyle
+        _today = {..._today, myId: LocalStore.day(todayStr())};
+        _yesterday = {..._yesterday, myId: LocalStore.day(_yStr())};
+        _kaza = {
+          for (final e in ((s['kaza'] ?? {}) as Map<String, dynamic>).entries)
+            e.key: (e.value as List).map((x) => (x as num).toInt()).toList(),
+        };
+        _myName = s['myName'] as String? ?? '';
+      });
+    } catch (_) {}
   }
 
   // ---------- Gezinti (misafir) modu: her şey bellekte, uygulama kapanınca silinir ----------
@@ -420,6 +488,21 @@ class _FamilyScreenState extends State<FamilyScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           if (isGuest) ...[_guestBanner(), const SizedBox(height: 12)],
+          if (_offline && !isGuest) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(14)),
+              child: const Row(children: [
+                Icon(Icons.wifi_off, color: Color(0xFF78350F), size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('İnternet yok: ailenin son bilinen durumu gösteriliyor. Bağlantı gelince kendiliğinden yenilenir.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 12),
+          ],
           _profileCard(),
           const SizedBox(height: 12),
           _hero(),

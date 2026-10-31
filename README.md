@@ -183,6 +183,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 9:** Aile Havuzu internetsiz de açılır (ailenin son bilinen durumu + "İnternet yok" uyarısı, bağlantı gelince kendiliğinden yenilenir). Kilit ekranı ve cinsiyet soruları internet beklemeden hemen sorulur; açılıştaki ağ işleri arka plana alındı.
 * **Derleme 8:** Kıldı/kılmadı: aileye bildirim 15 sn, buluta yazma 20 sn sonra (son duruma göre). İlk açılışta "Telefon kilitliyken bildirim yazısı görünsün mü?" sorusu. Cinsiyet seçimi (Ayarlar + ünvandan anlaşılmıyorsa bir kez sorulur): Muaf sadece kadınlarda.
 * **Derleme 7:** İnternet yokken uygulama açılışta takılmıyor (oturum telefondan yüklenir, en fazla 3 sn beklenir); ad ve kayıtlar çevrimdışı telefondan gösterilir, ağ isteklerine zaman aşımı eklendi.
 * **Derleme 6:** Kıldı/kılmadı buluta da 5 saniye sonra yazılır (aile matrisi ve bildirim son duruma göre); internet yoksa telefonda bekler, 20 saniyede bir arka planda tekrar denenir. Erkek ünvan/simgelerde "Muaf" seçeneği yok. Bildirimlerde kişinin simgesi (ör. "🧕🏻 Kızın kaza namazı kıldı"). Ayarlar'da hangi aile bildirimlerinin alınacağı (namaz / kaza / dua) ve kilit ekranında içerik gösterimi.

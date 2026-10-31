@@ -44,14 +44,17 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       }
       if (!isGuest) {
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
-        // Misafirken girilenleri ve çevrimdışı bekleyenleri buluta gönder
-        try {
-          await Repo.migrateGuestData();
-        } catch (_) {}
-        await Repo.syncNow();
-        _listenFamily();
-        // Uygulama kapalıyken de aile bildirimleri için cihazı kaydet (FCM)
-        unawaited(Push.register());
+        // Ağ işlerini arka planda başlat (internet yavaş/yoksa ekranı bekletmez)
+        unawaited(() async {
+          try {
+            await Repo.migrateGuestData().timeout(const Duration(seconds: 20));
+          } catch (_) {}
+          await Repo.syncNow();
+          await _listenFamily();
+          // Uygulama kapalıyken de aile bildirimleri için cihazı kaydet (FCM)
+          await Push.register();
+        }());
+        // Bir kez sorulan sorular hemen (internet beklemeden)
         if (mounted) await _firstRunQuestions();
       }
       // Konum otomatik (GPS) → vakitler → hatırlatmalar

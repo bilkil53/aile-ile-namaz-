@@ -370,9 +370,10 @@ class Repo {
           await supa.from('daily_prayers').upsert(
             {'user_id': myId, 'prayer_date': o['date'], o['key'] as String: o['status']},
             onConflict: 'user_id,prayer_date',
-          );
+          ).timeout(const Duration(seconds: 10));
         } else if (o['t'] == 'kaza') {
-          await _upsertKaza(o['type'] as String, (o['o'] as num).toInt(), (o['c'] as num).toInt());
+          await _upsertKaza(o['type'] as String, (o['o'] as num).toInt(), (o['c'] as num).toInt())
+              .timeout(const Duration(seconds: 10));
         }
         q.removeAt(i);
         sent++;

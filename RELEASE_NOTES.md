@@ -1,4 +1,4 @@
-Kıldı/kılmadı 15 sn sonra aileye, 20 sn sonra buluta; kilit ekranı ve cinsiyet tercihleri.
+Aile Havuzu internetsiz de açılıyor; kilit ekranı sorusu artık ilk açılışta hemen geliyor.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,10 @@ Kıldı/kılmadı 15 sn sonra aileye, 20 sn sonra buluta; kilit ekranı ve cinsi
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**Derleme 9**
+- Aile Havuzu internet yokken ailenin son bilinen durumunu gösterir (uyarı ile); bağlantı gelince kendiliğinden yenilenir.
+- Kilit ekranı ve cinsiyet soruları internet beklemeden hemen sorulur.
 
 **Derleme 8**
 - Kıldı/kılmadı: aileye bildirim 15 saniye, buluta kayıt 20 saniye sonra (son duruma göre, tek sefer). İnternet yoksa ikisi de bağlantı gelince arka planda gider.
