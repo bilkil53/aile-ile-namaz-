@@ -1,4 +1,4 @@
-# 👨‍👩‍👧‍👦 Aile ile Namaz — v1.0
+# 👨‍👩‍👧‍👦 Aile ile Namaz — v1
 
 <p align="center">
   <b>Aile Havuzu & İbadet Halkası · Diyanet Vakitleri · Kaza Takibi · İbadet Karnesi · Kıble Pusulası</b>
@@ -33,7 +33,7 @@
 
 **Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
-**Sürüm:** Uygulamada ve GitHub'da sadece **v1.0** yazar; yayınlar tarih ve saatle ayrılır (ör. *v1.0 — 31.10.2026 12:45*). Büyük bir değişiklikte **v2.0**'a geçilir. Arka planda derleme numarası tutulur (v1.0 ile **1**'den başladı, her resmi yayında bir artar; Android güncellemeyi bununla tanır), ekranda görünmez.
+**Sürüm:** Her yayın bir artar: **v1.1, v1.2, v1.3 …** (yayın başlığında tarih ve saat de yazar). Büyük bir değişiklikte **v2.x**'e geçilir. Arka planda derleme numarası tutulur (v1.0 ile **1**'den başladı, her resmi yayında bir artar; Android güncellemeyi bununla tanır), ekranda görünmez.
 
 ---
 
@@ -185,6 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.1 (derleme 13):** Sürüm adları v1.1, v1.2 … biçiminde. Düzeltme: "Anlık bildirim: Firebase başlatılamadı" — Firebase iki kez başlatılmaya çalışılıyordu; artık mevcut olan kullanılıyor, anlık bildirimler çalışır.
 * **Derleme 12:** Düzeltme: küçük (işlemci türüne göre) APK'larda Android sürüm kodu 3000+N olduğu için uygulama içi güncelleme yeni sürümü görmüyordu; karşılaştırma artık derleme numarasıyla yapılıyor. Bir kez elle kurulum gerekir (aşağıya bakın).
 * **Derleme 11:** Cinsiyeti Aile Reisi verir: katılımı onaylarken ve ünvan değiştirirken ünvan + simge + cinsiyet (🧔 Erkek / 🧕 Kadın); reis "Aile Reisi" seçerse kendi cinsiyetini de seçer (Baba/Anne'de otomatik). Muaf buna göre gösterilir; kullanıcıya sorulan cinsiyet penceresi ve Ayarlar'daki seçim kaldırıldı.
 * **Derleme 10:** Ayarlar'da "Sıradaki hatırlatma: Yatsı 19:20 (vakit 19:31)" satırı ve hatırlatmanın tam zamanında mı yoksa gecikmeli mi geleceği bilgisi.

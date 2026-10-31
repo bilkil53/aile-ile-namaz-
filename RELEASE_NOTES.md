@@ -1,4 +1,4 @@
-Düzeltme: uygulama içi güncelleme yeniden çalışıyor (bir kez elle kurulum gerekir).
+Düzeltme: anlık bildirim (Firebase) başlatılamıyordu; sürüm adları artık v1.1, v1.2 …
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,10 @@ Düzeltme: uygulama içi güncelleme yeniden çalışıyor (bir kez elle kurulum
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.1**
+- Düzeltme: Ayarlar'daki "Anlık bildirim: Firebase başlatılamadı" hatası. Firebase iki kez başlatılmaya çalışılıyordu; artık mevcut olan kullanılıyor, uygulama kapalıyken aile bildirimleri gelir.
+- Sürüm adları v1.1, v1.2, v1.3 … biçiminde ilerler.
 
 **Derleme 12**
 - Düzeltme: işlemci türüne göre APK'larda Android sürüm kodu 3000+N olduğundan güncelleme kontrolü yeni sürümü görmüyordu; artık derleme numarasıyla karşılaştırılıyor. Derleme 6–11 kullananlar bu sürümü bir kez elle kurmalı (arm64-v8a APK).
@@ -71,7 +75,7 @@ Düzeltme: uygulama içi güncelleme yeniden çalışıyor (bir kez elle kurulum
 
 ## 🛠 Teknik ayrıntılar
 
-**Uygulama:** Flutter (Dart 3), Material 3. Paket adı `com.bilkil53.aile_ile_namaz`. Görünen sürüm `1.0`; `versionCode` = derleme numarası (v1.0 ile **1**'den başladı, yalnızca resmi yayınlarda artar; yayın etiketi `r<N>`). Android güncellemeyi ve uygulama içi güncelleme kontrolü bununla çalışır.
+**Uygulama:** Flutter (Dart 3), Material 3. Paket adı `com.bilkil53.aile_ile_namaz`. Görünen sürüm `1.N` (derleme 13 = v1.1); `versionCode` = derleme numarası (v1.0 ile **1**'den başladı, yalnızca resmi yayınlarda artar; yayın etiketi `r<N>`). Android güncellemeyi ve uygulama içi güncelleme kontrolü bununla çalışır.
 
 **Paketler:** supabase_flutter ^2.8 · google_sign_in ^6.2 · geolocator ^13 · geocoding ^4 · sensors_plus ^6.1 · flutter_local_notifications ^18 (+ timezone, core library desugaring 2.1.4) · shared_preferences ^2.3 · package_info_plus ^8 · url_launcher ^6.3 · share_plus ^10.1 · open_filex ^4.6 · path_provider ^2.1 · intl ^0.19.
 

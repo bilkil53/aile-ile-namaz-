@@ -8,11 +8,12 @@ on:
 permissions:
   contents: write
 
-# Görünen sürüm: v1.0 (büyük değişiklikte "2.0" yapılır).
+# Görünen sürüm: v1.<N> (N = derleme 13'ten itibaren 1, 2, 3 …). Büyük değişiklikte APP_MAJOR "2" yapılır.
 # Derleme numarası (BUILD_NO = son r<N> yayını + 1, v1.0 ile 1'den başladı) sadece arka planda:
 # Android versionCode + uygulama içi güncelleme karşılaştırması. Yayın etiketi r<N>.
 env:
-  APP_VERSION: "1.0"
+  APP_MAJOR: "1"
+  MINOR_BASE: "12"
 
 jobs:
   build:
@@ -218,6 +219,9 @@ jobs:
           last=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName \
             -q '[.[].tagName | select(test("^r[0-9]+$")) | ltrimstr("r") | tonumber] | max // 0')
           echo "BUILD_NO=$((last + 1))" >> "$GITHUB_ENV"
+          # Görünen sürüm: v1.1, v1.2, v1.3 … (derleme 13 = v1.1)
+          minor=$((last + 1 - ${{ env.MINOR_BASE }})); [ "$minor" -lt 0 ] && minor=0
+          echo "APP_VERSION=${{ env.APP_MAJOR }}.$minor" >> "$GITHUB_ENV"
           echo "Derleme numarası: $((last + 1))"
 
       - name: APK derle

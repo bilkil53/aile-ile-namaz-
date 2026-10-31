@@ -36,7 +36,15 @@ class Push {
   static Future<void> init() async {
     if (_ready || defaultTargetPlatform != TargetPlatform.android) return;
     try {
-      await Firebase.initializeApp(options: _options);
+      // google-services.json (derlemede eklenir) Android tarafında varsayılan uygulamayı zaten açar.
+      // Ayarlarla ikinci kez açmaya çalışmak "duplicate-app" hatası verir; önce mevcut olanı kullan.
+      if (Firebase.apps.isEmpty) {
+        try {
+          await Firebase.initializeApp();
+        } catch (_) {
+          await Firebase.initializeApp(options: _options);
+        }
+      }
       _ready = true;
       // Çökme raporları (Firebase Crashlytics): hata olursa geliştiriciye anonim rapor gider
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
