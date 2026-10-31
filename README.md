@@ -60,6 +60,7 @@
 ### 3. 📿 Kaza Takibi (Mahremiyet Korumalı)
 * **Kalan Kaza Borcu / Kılınan Kaza** kutuları ve ilerleme çubuğu.
 * 6 vakit (vitir dahil): "Farz: 4 Rekat | Kılınan: X", **− / Borç / +**, **Kaza Kıldım** veya **Kaza Borcu Yok (Elhamdülillah)**.
+* **Sıfırla:** Tüm kaza kayıtlarını sıfırlar; iki kez onay ister (ikincisinde "SIFIRLA" yazılır).
 * **Toplu Ekle:** **Yıl** (hızlı: 1, 2, 3, 5, 10, 15, 20 yıl; 1 yıl = 365 gün) veya **gün** olarak.
 * **Aile Fertleri Kaza Durumu (Detaysız):** Aile yalnızca toplamı görür; hangi vakit olduğu sadece sahibine açıktır.
 
@@ -176,7 +177,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
-* **Derleme 3:** Ayarlar'da "Anlık bildirim: Hazır ✓" durumu ve tekrar deneme; sunucu anahtarı etkinleştirildi.
+* **Derleme 3:** Kaza kayıtlarını sıfırlama (iki aşamalı onay). Ayarlar'da "Anlık bildirim: Hazır ✓" durumu ve tekrar deneme; sunucu anahtarı etkinleştirildi.
 * **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging). Konum her açılışta otomatik (10 sn arayla tekrar deneme); konum sadece Ayarlar'da.
 * Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.
 * Aile Reisi simgesi **🏡** (taç simgesi kaldırıldı), **başörtülü** simgeler.

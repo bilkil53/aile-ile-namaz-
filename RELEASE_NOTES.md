@@ -21,6 +21,7 @@ Anlık bildirim etkin: aile bildirimleri uygulama kapalıyken de telefona düşe
 **Kaza**
 - Kalan / Kılınan kutuları, vakit başına −/Borç/+, Kaza Kıldım.
 - **Toplu Ekle: yıl** (1–20 yıl hızlı düğmeler, 1 yıl = 365 gün) **veya gün**.
+- **Kaza kayıtlarını sıfırla:** iki kez onay ister (ikincisinde "SIFIRLA" yazılır).
 - Aile yalnızca toplamı görür (mahremiyet korumalı).
 
 **Karne**

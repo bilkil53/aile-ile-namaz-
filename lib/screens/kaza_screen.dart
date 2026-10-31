@@ -92,6 +92,62 @@ class _KazaScreenState extends State<KazaScreen> {
     _toast(days % 365 == 0 ? 'Her vakte ${days ~/ 365} yıllık ($days gün) kaza eklendi.' : 'Her vakte $days gün eklendi.');
   }
 
+  /// Kaza kayıtlarını sıfırla: yanlışlıkla olmasın diye iki kez onay ister.
+  Future<void> _reset() async {
+    final first = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        icon: const Icon(Icons.restart_alt, color: AppColors.missed, size: 32),
+        title: const Text('Kaza kayıtları sıfırlansın mı?'),
+        content: const Text('Bütün vakitlerdeki kaza borcun ve kılınan kaza sayıların 0 olacak.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Devam'),
+          ),
+        ],
+      ),
+    );
+    if (first != true || !mounted) return;
+    final ctrl = TextEditingController();
+    final second = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Son onay'),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Bu işlem geri alınamaz. Onaylamak için aşağıya SIFIRLA yaz.'),
+            const SizedBox(height: 10),
+            TextField(
+              controller: ctrl,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'SIFIRLA'),
+              onChanged: (_) => setD(() {}),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
+              onPressed: ctrl.text.trim().toUpperCase() == 'SIFIRLA' ? () => Navigator.pop(ctx, true) : null,
+              child: const Text('Sıfırla'),
+            ),
+          ],
+        ),
+      ),
+    );
+    ctrl.dispose();
+    if (second != true) return;
+    for (final (t, _, _, _) in _types) {
+      await _set(t, 0, 0);
+    }
+    _toast('Kaza kayıtların sıfırlandı.');
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
@@ -193,6 +249,11 @@ class _KazaScreenState extends State<KazaScreen> {
             onPressed: _bulkAdd,
             icon: const Icon(Icons.playlist_add),
             label: const Text('Toplu Ekle (yıl veya gün)'),
+          ),
+          TextButton.icon(
+            onPressed: _reset,
+            icon: const Icon(Icons.restart_alt, size: 18, color: AppColors.missed),
+            label: const Text('Kaza kayıtlarını sıfırla', style: TextStyle(color: AppColors.missed)),
           ),
           const SizedBox(height: 12),
           for (final t in _types) ...[_row(t), const SizedBox(height: 10)],
