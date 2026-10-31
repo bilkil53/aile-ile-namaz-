@@ -190,7 +190,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
       'date': todayStr(),
       'pool': {'id': pool.id, 'name': pool.name, 'owner_id': pool.ownerId, 'invite_code': pool.inviteCode},
       'members': [
-        for (final m in _members) {'user_id': m.userId, 'name': m.name, 'role_title': m.roleTitle, 'icon': m.icon},
+        for (final m in _members)
+          {'user_id': m.userId, 'name': m.name, 'role_title': m.roleTitle, 'icon': m.icon, 'gender': m.gender},
       ],
       'today': {for (final e in _today.entries) e.key: _codes(e.value)},
       'yesterday': {for (final e in _yesterday.entries) e.key: _codes(e.value)},
@@ -218,7 +219,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
         _pools = [Pool.fromMap(p)];
         _members = [
           for (final m in (s['members'] as List).cast<Map<String, dynamic>>())
-            Member(userId: m['user_id'], name: m['name'] ?? '', roleTitle: m['role_title'] ?? 'Aile Ferdi', icon: m['icon'] ?? '👥'),
+            Member(
+                userId: m['user_id'],
+                name: m['name'] ?? '',
+                roleTitle: m['role_title'] ?? 'Aile Ferdi',
+                icon: m['icon'] ?? '👥',
+                gender: m['gender'] as String?),
         ];
         // Gün değiştiyse dünkü tablo = kaydedilen "bugün"
         _today = sameDay ? days(s['today']) : {};
@@ -394,9 +400,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Future<void> _approve(JoinRequest r) async {
     final who = r.name.isNotEmpty ? r.name : 'Bir aile ferdi';
-    final res = await showDialog<(String, String, String?)>(
+    final me = _members.where((m) => m.userId == myId).firstOrNull;
+    final res = await showDialog<_TitleResult>(
       context: context,
       builder: (_) => _TitleDialog(
+        initialOwnerGender: me?.gender,
         title: '🤝 $who havuzuna katılmak istiyor',
         subtitle: 'Sana göre unvanını ve simgesini seç:',
         initialTitle: 'Aile Ferdi',
@@ -407,11 +415,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
       ),
     );
     if (res == null) return;
-    final (title, icon, owner) = res;
     try {
       await Repo.approveWithRoles(r.id,
-          memberRole: title, memberIcon: icon, ownerRole: owner, ownerIcon: ownerTitles[owner]);
-      _toast('🎉 $title aile havuzuna katıldı!');
+          memberRole: res.title,
+          memberIcon: res.icon,
+          ownerRole: res.owner,
+          ownerIcon: ownerTitles[res.owner],
+          memberGender: res.gender,
+          ownerGender: res.ownerGender);
+      _toast('🎉 ${res.title} aile havuzuna katıldı!');
       await _load();
     } catch (e) {
       _toast(_err(e));
@@ -451,18 +463,19 @@ class _FamilyScreenState extends State<FamilyScreen> {
     try {
       switch (action) {
         case 'role':
-          final res = await showDialog<(String, String, String?)>(
+          final res = await showDialog<_TitleResult>(
             context: context,
             builder: (_) => _TitleDialog(
               title: m.name.isNotEmpty ? m.name : _label(m),
               subtitle: 'Sana göre unvanı ve simgesi:',
               initialTitle: m.roleTitle,
               initialIcon: m.icon,
+              initialGender: m.gender,
               confirm: 'Kaydet',
             ),
           );
           if (res == null) return;
-          await Repo.setMemberRole(pool.id, m.userId, res.$1, res.$2);
+          await Repo.setMemberRole(pool.id, m.userId, res.title, res.icon, gender: res.gender);
         case 'owner':
           if (await _confirm('Aile Reisliği ${_label(m)} kişisine devredilsin mi? Bunu geri alamazsın.') != true) return;
           await Repo.transferOwnership(pool.id, m.userId);
@@ -1283,7 +1296,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
 // ======================= Diyaloglar =======================
 
 /// Aile Reisinin kullandığı ünvan + simge seçici (ünvanlar reise göre).
+class _TitleResult {
+  final String title, icon;
+  final String? owner, gender, ownerGender;
+  const _TitleResult(this.title, this.icon, this.owner, this.gender, this.ownerGender);
+}
+
 class _TitleDialog extends StatefulWidget {
+  final String? initialGender;
+  final String? initialOwnerGender;
   final String title;
   final String subtitle;
   final String initialTitle;
@@ -1299,6 +1320,8 @@ class _TitleDialog extends StatefulWidget {
     required this.confirm,
     this.askOwner = false,
     this.initialOwner = 'Aile Reisi',
+    this.initialGender,
+    this.initialOwnerGender,
   });
 
   @override
@@ -1309,6 +1332,23 @@ class _TitleDialogState extends State<_TitleDialog> {
   late String _title = widget.initialTitle;
   late String _icon = widget.initialIcon;
   late String _owner = widget.initialOwner;
+  late String? _gender = widget.initialGender ?? _genderOf(widget.initialTitle);
+  late String? _ownerGender = widget.initialOwnerGender;
+
+  static String? _genderOf(String title) =>
+      femaleTitles.contains(title) ? 'f' : (maleTitles.contains(title) ? 'm' : null);
+
+  Widget _genderRow(String label, String? value, ValueChanged<String> onPick) => Padding(
+        padding: const EdgeInsets.only(top: 6, bottom: 4),
+        child: Row(children: [
+          Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
+          for (final (code, text) in const [('m', '🧔 Erkek'), ('f', '🧕 Kadın')])
+            Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: ChoiceChip(label: Text(text), selected: value == code, onSelected: (_) => onPick(code)),
+            ),
+        ]),
+      );
   late final _ctrl =
       TextEditingController(text: reisTitles.containsKey(widget.initialTitle) ? '' : widget.initialTitle);
 
@@ -1339,6 +1379,8 @@ class _TitleDialogState extends State<_TitleDialog> {
                     onSelected: (_) => setState(() => _owner = e.key),
                   ),
               ]),
+              if (_owner == 'Aile Reisi')
+                _genderRow('Senin cinsiyetin', _ownerGender, (g) => setState(() => _ownerGender = g)),
               const Divider(height: 22),
             ],
             Text(widget.subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
@@ -1354,6 +1396,7 @@ class _TitleDialogState extends State<_TitleDialog> {
                     _ctrl.clear();
                     _title = e.key;
                     _icon = e.value;
+                    _gender = _genderOf(e.key) ?? _gender;
                   }),
                 ),
             ]),
@@ -1364,6 +1407,7 @@ class _TitleDialogState extends State<_TitleDialog> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 4),
+            _genderRow('Cinsiyeti (Muaf için)', _gender, (g) => setState(() => _gender = g)),
             const Text('Simgesi', style: TextStyle(fontWeight: FontWeight.bold)),
             for (final g in iconGroups.entries) ...[
               const SizedBox(height: 6),
@@ -1394,7 +1438,9 @@ class _TitleDialogState extends State<_TitleDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
         FilledButton(
           onPressed: () => Navigator.pop(
-              context, (custom.isNotEmpty ? custom : _title, _icon, widget.askOwner ? _owner : null)),
+              context,
+              _TitleResult(custom.isNotEmpty ? custom : _title, _icon, widget.askOwner ? _owner : null, _gender,
+                  widget.askOwner ? _ownerGender : null)),
           child: Text(widget.confirm),
         ),
       ],

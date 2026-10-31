@@ -40,7 +40,7 @@
 ### 1. 🕌 Bugün — Vakitler ve Günlük İbadet
 * **Selamün aleyküm** karşılaması ve tarih. Konum uygulama her açıldığında **otomatik** alınır (alınamazsa 10 sn sonra tekrar, en fazla 3 deneme); konum bilgisi ve yenileme sadece **Ayarlar**'da.
 * **SIRADAKİ VAKİT** kartı: geri sayım ve günün 6 vakti (İmsak, Güneş, Öğle/Cuma, İkindi, Akşam, Yatsı).
-* **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor** (Muaf sadece kadınlarda; cinsiyet Ayarlar'dan seçilir, ünvandan anlaşılmıyorsa bir kez sorulur). Aileye bildirim 15 sn, buluta kayıt 20 sn sonra gider; internet yoksa telefonda bekler ve otomatik gönderilir. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
+* **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor** (Muaf sadece kadınlarda; cinsiyeti Aile Reisi ünvanla birlikte verir). Aileye bildirim 15 sn, buluta kayıt 20 sn sonra gider; internet yoksa telefonda bekler ve otomatik gönderilir. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
 * **← Dün / Bugün** geçişi: unuttuğun dünkü vakitleri işaretleyebilirsin.
 * **Günün Ayeti / Hadisi** (Arapça metin + Diyanet meali).
 * **🧭 Kıble Pusulası:** İnternet gerektirmez; ivme + manyetik sensörle Kâbe yönü.
@@ -157,7 +157,7 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 
 Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function `supabase/functions/push-family` → FCM HTTP v1. Gizli ayar `FCM_SERVICE_ACCOUNT` (Supabase Edge Function secret, Firebase hizmet hesabı JSON'u); repoda yoktur.
 
-Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix`.
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis`.
 
 ### Derleme ve dallar
 * `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0 — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).
@@ -183,6 +183,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 11:** Cinsiyeti Aile Reisi verir: katılımı onaylarken ve ünvan değiştirirken ünvan + simge + cinsiyet (🧔 Erkek / 🧕 Kadın); reis "Aile Reisi" seçerse kendi cinsiyetini de seçer (Baba/Anne'de otomatik). Muaf buna göre gösterilir; kullanıcıya sorulan cinsiyet penceresi ve Ayarlar'daki seçim kaldırıldı.
 * **Derleme 10:** Ayarlar'da "Sıradaki hatırlatma: Yatsı 19:20 (vakit 19:31)" satırı ve hatırlatmanın tam zamanında mı yoksa gecikmeli mi geleceği bilgisi.
 * **Derleme 9:** Aile Havuzu internetsiz de açılır (ailenin son bilinen durumu + "İnternet yok" uyarısı, bağlantı gelince kendiliğinden yenilenir). Kilit ekranı ve cinsiyet soruları internet beklemeden hemen sorulur; açılıştaki ağ işleri arka plana alındı.
 * **Derleme 8:** Kıldı/kılmadı: aileye bildirim 15 sn, buluta yazma 20 sn sonra (son duruma göre). İlk açılışta "Telefon kilitliyken bildirim yazısı görünsün mü?" sorusu. Cinsiyet seçimi (Ayarlar + ünvandan anlaşılmıyorsa bir kez sorulur): Muaf sadece kadınlarda.

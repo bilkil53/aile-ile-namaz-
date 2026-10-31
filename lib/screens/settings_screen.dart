@@ -518,27 +518,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ]),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(children: [
-                const Expanded(
-                  child: Text('Cinsiyet (Muaf seçeneği için)',
-                      style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
-                ),
-                for (final (code, label) in const [('m', '🧔 Erkek'), ('f', '🧕 Kadın')])
-                  Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: ChoiceChip(
-                      label: Text(label),
-                      selected: AppSettings.gender == code,
-                      onSelected: (_) async {
-                        await AppSettings.setGender(code);
-                        setState(() {});
-                      },
-                    ),
-                  ),
-              ]),
-            ),
             _switchRow('Günün ayeti / hadisi', 'Her gün 12:00\'de', AppSettings.dailyContent, (v) async {
               await AppSettings.setDailyContent(v);
               if (v) await Notifications.requestPermission();

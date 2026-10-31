@@ -1,4 +1,4 @@
-Ayarlar'da sıradaki namaz hatırlatmasının saati görünüyor.
+Cinsiyeti Aile Reisi ünvanla birlikte veriyor; Muaf buna göre.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,10 @@ Ayarlar'da sıradaki namaz hatırlatmasının saati görünüyor.
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**Derleme 11**
+- Aile Reisi katılımı onaylarken ve ünvan değiştirirken cinsiyet de seçer (🧔 Erkek / 🧕 Kadın). Kendi ünvanı "Aile Reisi" ise kendi cinsiyetini de seçer; Baba ve Anne'de otomatik.
+- "Muaf" seçeneği bu bilgiye göre: sadece kadınlarda.
 
 **Derleme 10**
 - Ayarlar → Konum ve Bildirimler: "Sıradaki hatırlatma: Yatsı 19:20 (vakit 19:31) · tam zamanında / birkaç dk gecikebilir".
@@ -72,7 +76,7 @@ Ayarlar'da sıradaki namaz hatırlatmasının saati görünüyor.
 - Tablolar: profiles, pools, pool_members, join_requests, daily_prayers, kaza_prayers, kaza_summary, pool_events, devices.
 - RPC'ler `security definer`, yalnızca `authenticated` rolüne açık; yardımcılar `private` şemasında: ensure_my_pool, request_join (tek bekleyen istek, 5 dk, deneme sınırı, EMB öneki), approve_join_with_roles (reis ünvanı yalnızca Aile Reisi/Baba/Anne), set_member_role, transfer_ownership, remove_member, regenerate_invite_code, delete_my_account.
 - Realtime: pool_events, daily_prayers, join_requests, pool_members, kaza_summary.
-- Migration'lar 01–10 (son: `10_reis_icon_house`).
+- Migration'lar 01–15 (son: `15_member_gender_by_reis`: `pool_members.gender`, onay ve ünvan fonksiyonlarına cinsiyet parametresi).
 
 **Giriş:** Google Sign-In (Android OAuth istemcisi + sabit SHA-1) → ID token → `auth.signInWithIdToken`. Başarısızsa OAuth tarayıcı akışı (`prompt=select_account`, dönüş `io.supabase.aileilenamaz://login-callback/`).
 

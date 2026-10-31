@@ -80,12 +80,14 @@ const reisTitles = {
 };
 
 /// Erkek ünvan/simgeler: bu kişilerde "Muaf" seçeneği gösterilmez (Aile Reisi erkek kabul edilir).
+const femaleTitles = {'Anne', 'Kızı', 'Annesi', 'Ninesi', 'Gelini'};
 const maleTitles = {'Aile Reisi', 'Baba', 'Oğlu', 'Babası', 'Dedesi', 'Damadı'};
 const maleIcons = {'🧔', '👨', '👴', '👱‍♂️', '👦', '🏡'};
 const femaleIcons = {'🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿', '👩', '👵', '👱‍♀️', '👧'};
 
 /// Muaf seçeneği bu kişi için geçerli mi? Bilinmiyorsa (bireysel mod) gösterilir.
-bool canBeExcused(String role, String icon) {
+bool canBeExcused(String role, String icon, [String? gender]) {
+  if (gender != null) return gender == 'f';
   if (femaleIcons.contains(icon) || role == 'Anne') return true;
   if (maleTitles.contains(role) || maleIcons.contains(icon)) return false;
   return true;
@@ -151,11 +153,15 @@ class Member {
   final String roleTitle;
   final String icon;
 
+  /// 'm' / 'f' / null — Aile Reisi verir; "Muaf" seçeneği için.
+  final String? gender;
+
   Member({
     required this.userId,
     required this.name,
     required this.roleTitle,
     required this.icon,
+    this.gender,
   });
 
   factory Member.fromMap(Map<String, dynamic> m) {
@@ -166,6 +172,7 @@ class Member {
       name: name,
       roleTitle: m['role_title'] as String? ?? 'Aile Ferdi',
       icon: m['icon'] as String? ?? '👥',
+      gender: m['gender'] as String?,
     );
   }
 

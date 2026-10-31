@@ -46,7 +46,7 @@ class Repo {
   static Future<List<Member>> members(String poolId) async {
     final rows = await supa
         .from('pool_members')
-        .select('user_id, role_title, icon, profiles(display_name)')
+        .select('user_id, role_title, icon, gender, profiles(display_name)')
         .eq('pool_id', poolId)
         .order('joined_at');
     return rows.map<Member>((r) => Member.fromMap(r)).toList();
@@ -65,13 +65,20 @@ class Repo {
 
   /// Reis onaylarken iki tarafın rolünü birden belirler.
   static Future<void> approveWithRoles(String requestId,
-      {required String memberRole, required String memberIcon, String? ownerRole, String? ownerIcon}) =>
+      {required String memberRole,
+      required String memberIcon,
+      String? ownerRole,
+      String? ownerIcon,
+      String? memberGender,
+      String? ownerGender}) =>
       supa.rpc('approve_join_with_roles', params: {
         'p_request': requestId,
         'p_member_role': memberRole,
         'p_member_icon': memberIcon,
         'p_owner_role': ownerRole,
         'p_owner_icon': ownerIcon,
+        'p_member_gender': memberGender,
+        'p_owner_gender': ownerGender,
       });
 
   /// Kendi havuzum yoksa otomatik oluşturur (davet kodu hazır gelir).
@@ -97,8 +104,9 @@ class Repo {
     ];
   }
 
-  static Future<void> setMemberRole(String poolId, String userId, String role, String icon) =>
-      supa.rpc('set_member_role', params: {'p_pool': poolId, 'p_user': userId, 'p_role': role, 'p_icon': icon});
+  static Future<void> setMemberRole(String poolId, String userId, String role, String icon, {String? gender}) =>
+      supa.rpc('set_member_role',
+          params: {'p_pool': poolId, 'p_user': userId, 'p_role': role, 'p_icon': icon, 'p_gender': gender});
 
   /// Reis havuzu tamamen kapatır (üyelik ve olaylar silinir).
   static Future<void> deletePool(String poolId) async {
@@ -122,8 +130,6 @@ class Repo {
 
   /// Bu kullanıcı "Muaf" işaretleyebilir mi? (erkek ünvan/simgede hayır)
   static Future<bool> canExcuse() async {
-    final g = AppSettings.gender;
-    if (g != null) return g == 'f';
     if (isGuest) return true;
     try {
       final pools = await myPools().timeout(const Duration(seconds: 6));
@@ -131,7 +137,7 @@ class Repo {
       final me = (await members(pools.first.id).timeout(const Duration(seconds: 6)))
           .where((m) => m.userId == myId)
           .firstOrNull;
-      return me == null || canBeExcused(me.roleTitle, me.icon);
+      return me == null || canBeExcused(me.roleTitle, me.icon, me.gender);
     } catch (_) {
       return true;
     }

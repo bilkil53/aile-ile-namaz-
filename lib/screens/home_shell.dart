@@ -73,7 +73,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     }
   }
 
-  /// Bir kez sorulan sorular: kilit ekranında bildirim içeriği ve (gerekirse) cinsiyet.
+  /// Bir kez sorulan soru: kilit ekranında bildirim içeriği.
   Future<void> _firstRunQuestions() async {
     final p = AppSettings.prefs;
     if (!(p.getBool('askedLockScreen') ?? false)) {
@@ -104,33 +104,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       await p.setBool('askedLockScreen', true);
       unawaited(Push.register());
     }
-    if (!mounted || AppSettings.gender != null) return;
-    // Ünvandan cinsiyet anlaşılmıyorsa (ör. Aile Reisi, Eşi, Kardeşi) bir kez sor
-    final me = await Repo.myMember();
-    if (me == null || !mounted) return;
-    const clear = {'Baba', 'Oğlu', 'Babası', 'Dedesi', 'Damadı', 'Anne', 'Kızı', 'Annesi', 'Ninesi', 'Gelini'};
-    if (clear.contains(me.roleTitle)) return;
-    final g = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Cinsiyetin', style: TextStyle(fontSize: 18)),
-        content: Text(
-          'Ünvanın "${me.roleTitle}". Namaz takibinde "Muaf" seçeneği sadece kadınlarda gösterilir. '
-          'Bu bilgi sadece telefonunda tutulur; Ayarlar\'dan değiştirebilirsin.',
-        ),
-        actions: [
-          OutlinedButton(onPressed: () => Navigator.pop(ctx, 'f'), child: const Text('🧕 Kadın')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
-            onPressed: () => Navigator.pop(ctx, 'm'),
-            child: const Text('🧔 Erkek'),
-          ),
-        ],
-      ),
-    );
-    if (g != null) await AppSettings.setGender(g);
   }
 
   @override

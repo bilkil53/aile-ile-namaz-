@@ -38,9 +38,5 @@ class AppSettings {
   static bool get lockScreen => _p.getBool('lockScreen') ?? true;
   static Future<void> setNotify(String key, bool v) => _p.setBool(key, v);
 
-  /// Cinsiyet ('m' erkek / 'f' kadın): "Muaf" seçeneği yalnızca kadınlarda gösterilir.
-  static String? get gender => _p.getString('gender');
-  static Future<void> setGender(String g) => _p.setString('gender', g);
-
   static int get reminderMinutes => _p.getInt('reminderMinutes') ?? 11;
 }
