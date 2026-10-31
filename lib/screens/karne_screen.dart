@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../content/daily_content.dart';
 import '../data.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
 
-/// İbadet Karnesi (eski uygulamadaki düzen): haftalık başarı, 7 günlük grafik,
-/// günün vakit detayı, gerçek veriyle hesaplanan rozetler ve Birlikte Secde.
+/// İbadet Karnesi: sadece kişinin KENDİ gelişimi (aile verisi yok), okul karnesi mantığıyla.
+/// Dönem seçimi → genel not → vakit vakit karne (en çok aksatılan vakit) → seri → aylık takvim
+/// → kaza ilerlemesi → kişisel rozetler.
 class KarneScreen extends StatefulWidget {
   const KarneScreen({super.key});
 
@@ -17,15 +17,15 @@ class KarneScreen extends StatefulWidget {
   State<KarneScreen> createState() => _KarneScreenState();
 }
 
+enum _Period { week, month, quarter }
+
 class _KarneScreenState extends State<KarneScreen> {
   Map<String, Map<String, PrayerStatus>> _data = {};
-  Map<String, Map<String, Map<String, PrayerStatus>>> _family = {};
-  List<String> _familyIds = [];
-  int _kazaDone = 0;
+  Map<String, (int, int)> _kaza = {};
   String _name = '';
   String _version = '';
   bool _loading = true;
-  late DateTime _selected = DateTime.now();
+  _Period _period = _Period.week;
 
   @override
   void initState() {
@@ -38,227 +38,268 @@ class _KarneScreenState extends State<KarneScreen> {
 
   Future<void> _load() async {
     final now = DateTime.now();
-    final from = now.subtract(const Duration(days: 29));
     try {
       final r = await Future.wait<dynamic>([
-        Repo.myRange(from, now),
+        Repo.myRange(now.subtract(const Duration(days: 89)), now),
         Repo.myKaza(),
         Repo.myDisplayName(),
       ]);
-      final kaza = r[1] as Map<String, (int, int)>;
       if (!mounted) return;
       setState(() {
         _data = r[0] as Map<String, Map<String, PrayerStatus>>;
-        _kazaDone = kaza.values.fold(0, (a, v) => a + v.$2);
+        _kaza = r[1] as Map<String, (int, int)>;
         _name = r[2] as String;
       });
-      if (!isGuest) {
-        final pools = await Repo.myPools();
-        if (pools.isNotEmpty) {
-          final members = await Repo.members(pools.first.id);
-          final ids = members.map((m) => m.userId).where((id) => id != myId).toList();
-          final fam = ids.isEmpty ? <String, Map<String, Map<String, PrayerStatus>>>{} : await Repo.rangeFor(ids, from, now);
-          if (mounted) {
-            setState(() {
-              _familyIds = ids;
-              _family = fam;
-            });
-          }
-        }
-      }
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Karne yüklenemedi.')));
-      }
+      // çevrimdışı: eldeki veriyle göster
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   String _k(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
-  int _prayedOn(DateTime d) => prayerKeys.where((k) => _data[_k(d)]?[k] == PrayerStatus.prayed).length;
+  PrayerStatus _st(DateTime d, String key) => _data[_k(d)]?[key] ?? PrayerStatus.none;
 
-  /// Ailemden en az biriyle aynı vakti kıldığım sayı (son 7 gün).
-  int _together(List<DateTime> days) {
-    var n = 0;
+  /// Dönemin günleri (bugün dahil, eskiden yeniye).
+  List<DateTime> get _days {
+    final n = switch (_period) { _Period.week => 7, _Period.month => 30, _Period.quarter => 90 };
+    final t = DateTime.now();
+    final today = DateTime(t.year, t.month, t.day);
+    return [for (var i = n - 1; i >= 0; i--) today.subtract(Duration(days: i))];
+  }
+
+  /// Muaf günler hesaba katılmaz: başarı = kılınan / (toplam − muaf).
+  (int prayed, int total) _score(Iterable<DateTime> days, [String? key]) {
+    var p = 0, t = 0;
     for (final d in days) {
-      final key = _k(d);
-      for (final p in prayerKeys) {
-        if (_data[key]?[p] != PrayerStatus.prayed) continue;
-        final fam = _family[key] ?? {};
-        if (_familyIds.any((id) => fam[id]?[p] == PrayerStatus.prayed)) n++;
+      for (final k in key == null ? prayerKeys : [key]) {
+        final s = _st(d, k);
+        if (s == PrayerStatus.excused) continue;
+        t++;
+        if (s == PrayerStatus.prayed) p++;
       }
     }
-    return n;
+    return (p, t);
+  }
+
+  (String, Color) _grade(int pct) => pct >= 90
+      ? ('Pekiyi', AppColors.emerald)
+      : pct >= 75
+          ? ('İyi', const Color(0xFF2E7D32))
+          : pct >= 50
+              ? ('Orta', AppColors.gold)
+              : ('Gayret et', AppColors.missed);
+
+  bool _fullDay(DateTime d) =>
+      prayerKeys.every((k) => _st(d, k) == PrayerStatus.prayed || _st(d, k) == PrayerStatus.excused) &&
+      prayerKeys.any((k) => _st(d, k) == PrayerStatus.prayed);
+
+  (int current, int best) _streaks() {
+    final t = DateTime.now();
+    final today = DateTime(t.year, t.month, t.day);
+    var cur = 0;
+    // Bugün henüz tamamlanmadıysa seri dünden sayılır
+    var start = _fullDay(today) ? 0 : 1;
+    for (var i = start; i < 90; i++) {
+      if (_fullDay(today.subtract(Duration(days: i)))) {
+        cur++;
+      } else {
+        break;
+      }
+    }
+    var best = 0, run = 0;
+    for (var i = 89; i >= 0; i--) {
+      if (_fullDay(today.subtract(Duration(days: i)))) {
+        run++;
+        if (run > best) best = run;
+      } else {
+        run = 0;
+      }
+    }
+    return (cur, best);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    final today = DateTime.now();
-    final days7 = [for (var i = 6; i >= 0; i--) today.subtract(Duration(days: i))];
-    final week = days7.fold<int>(0, (a, d) => a + _prayedOn(d));
-    final weekPct = (week / 35 * 100).round();
-    final together = _together(days7);
-    final hasFamily = _familyIds.isNotEmpty;
-
-    // Rozetler (son 7 gün)
-    final fajr7 = days7.where((d) => _data[_k(d)]?['fajr'] == PrayerStatus.prayed).length;
-    final fullDays = days7.where((d) => _prayedOn(d) == 5).length;
+    final days = _days;
+    final (p, t) = _score(days);
+    final pct = t == 0 ? 0 : (p * 100 / t).round();
+    final (grade, gradeColor) = _grade(pct);
+    final perPrayer = {for (final k in prayerKeys) k: _score(days, k)};
+    String? weakest;
+    var weakPct = 101;
+    for (final k in prayerKeys) {
+      final (pp, tt) = perPrayer[k]!;
+      if (tt == 0) continue;
+      final v = (pp * 100 / tt).round();
+      if (v < weakPct) {
+        weakPct = v;
+        weakest = k;
+      }
+    }
+    final (curStreak, bestStreak) = _streaks();
+    var owed = 0, done = 0;
+    for (final v in _kaza.values) {
+      owed += v.$1;
+      done += v.$2;
+    }
+    final kazaPct = owed == 0 ? 0.0 : (done / owed).clamp(0.0, 1.0).toDouble();
+    final week = _days.length == 7 ? days : [for (var i = 6; i >= 0; i--) DateTime.now().subtract(Duration(days: i))];
+    final fajrWeek = week.where((d) => _st(d, 'fajr') == PrayerStatus.prayed).length;
+    final (wp, wt) = _score(week);
+    final weekPct = wt == 0 ? 0 : (wp * 100 / wt).round();
     final badges = [
-      ('🌅', 'Sabah Namazı Muhafızı', 'Son 7 günün en az 5\'inde sabah namazını kıl', fajr7 >= 5, '$fajr7/5'),
-      ('🏆', '5\'te 5 Sadakati', 'Bir günün 5 vaktini de eksiksiz kıl', fullDays >= 1, '$fullDays gün'),
-      ('📿', 'Kaza Avcısı', 'En az 10 kaza namazı eda et', _kazaDone >= 10, '$_kazaDone/10'),
-      ('🤝', 'İbadet Kardeşliği', 'Ailenle aynı vakitte 10 kez secde et', together >= 10, '$together/10'),
-      ('⭐', 'İstikrar Yıldızı', 'Haftalık başarı oranını %80 ve üzerine çıkar', weekPct >= 80, '%$weekPct'),
+      ('🌅', 'Sabah Namazı Muhafızı', 'Son 7 günün en az 5\'inde sabah namazı', fajrWeek >= 5, '$fajrWeek/5'),
+      ('🏆', '5\'te 5 Sadakati', 'Bir günün 5 vaktini eksiksiz kıl', bestStreak >= 1, bestStreak >= 1 ? 'Kazanıldı' : '0/1'),
+      ('🔥', '7 Gün Serisi', '7 gün üst üste 5 vakit', bestStreak >= 7, '${bestStreak.clamp(0, 7)}/7'),
+      ('🌙', '30 Gün Serisi', '30 gün üst üste 5 vakit', bestStreak >= 30, '${bestStreak.clamp(0, 30)}/30'),
+      ('📿', 'Kaza Avcısı', 'En az 10 kaza namazı eda et', done >= 10, '${done.clamp(0, 10)}/10'),
+      ('⭐', 'İstikrar Yıldızı', 'Haftalık başarı %80 ve üzeri', weekPct >= 80, '%$weekPct'),
     ];
-    final sel = _data[_k(_selected)] ?? {};
-    final hadis = dailyQuotes().firstWhere((q) => q.category.contains('Hadis'), orElse: () => dailyQuotes().first);
 
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
-          // ---------- Başlık + haftalık başarı ----------
+          // ---------- Başlık + dönem + genel not ----------
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('${_name.isNotEmpty ? _name : 'Aile Ferdi'} · Karnesi',
+              Text('${_name.isNotEmpty ? _name : 'İbadet'} · Karnesi',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text('Haftalık Namaz Başarısı',
-                  style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
+              const SizedBox(height: 10),
+              SegmentedButton<_Period>(
+                style: SegmentedButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.12),
+                  foregroundColor: Colors.white,
+                  selectedBackgroundColor: Colors.white,
+                  selectedForegroundColor: AppColors.emerald,
+                ),
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: _Period.week, label: Text('Bu hafta')),
+                  ButtonSegment(value: _Period.month, label: Text('30 gün')),
+                  ButtonSegment(value: _Period.quarter, label: Text('3 ay')),
+                ],
+                selected: {_period},
+                onSelectionChanged: (s) => setState(() => _period = s.first),
+              ),
               const SizedBox(height: 14),
               Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text('%$weekPct',
-                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(width: 8),
+                Text('%$pct', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(width: 10),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 9),
-                  child: Text('Başarı Oranı',
-                      style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                    child: Text(grade, style: TextStyle(fontWeight: FontWeight.bold, color: gradeColor)),
+                  ),
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text('$p / $t vakit',
+                      style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85))),
                 ),
               ]),
-              const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: week / 35,
+                  value: pct / 100,
                   minHeight: 8,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
                   color: AppColors.prayedMint,
                 ),
               ),
-              const SizedBox(height: 14),
-              Row(children: [
-                _stat('$week/35', 'Kılınan Vakit'),
-                _stat('$_kazaDone', 'Eda Edilen Kaza'),
-                _stat(hasFamily ? 'Aile' : 'Tekil', 'Aile Uyumu'),
-              ]),
+              const SizedBox(height: 6),
+              Text('Muaf işaretlenen vakitler hesaba katılmaz.',
+                  style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
             ]),
           ),
           const SizedBox(height: 14),
 
-          // ---------- 7 günlük grafik ----------
+          // ---------- Vakit vakit karne ----------
           _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('📊 Son 7 Gün', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-            const Text('Bir güne dokun, vakit detayını gör',
-                style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 130,
-              child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                for (final d in days7)
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selected = d),
-                      behavior: HitTestBehavior.opaque,
-                      child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                        Text('${_prayedOn(d)}',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-                        const SizedBox(height: 3),
-                        Container(
-                          width: 22,
-                          height: 8 + 72 * _prayedOn(d) / 5,
-                          decoration: BoxDecoration(
-                            color: _k(d) == _k(_selected)
-                                ? AppColors.gold
-                                : (_prayedOn(d) == 5 ? AppColors.emerald : AppColors.emeraldLight.withValues(alpha: 0.6)),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(_k(d) == _k(today) ? 'Bugün' : DateFormat('EEE', 'tr').format(d),
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: _k(d) == _k(_selected) ? FontWeight.bold : FontWeight.normal,
-                                color: AppColors.textPrimary)),
-                        Text(DateFormat('d MMM', 'tr').format(d),
-                            style: const TextStyle(fontSize: 9, color: AppColors.textMuted)),
-                      ]),
-                    ),
-                  ),
-              ]),
-            ),
-          ])),
-          const SizedBox(height: 14),
-
-          // ---------- Seçili günün vakit detayı ----------
-          _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(
-              _k(_selected) == _k(today)
-                  ? '🕌 Bugünün Vakit Detayı'
-                  : '🕌 ${DateFormat('d MMMM EEEE', 'tr').format(_selected)} Vakit Detayı',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+            const Text('📋 Vakit Vakit Karne', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
             for (final k in prayerKeys)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(children: [
-                  PrayerIcon(k, size: 18, color: AppColors.emerald, background: AppColors.emeraldContainer),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('${prayerLabels[k]} Namazı',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                      Text(prayerSubtitles[k]!, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                    ]),
-                  ),
-                  _status(sel[k] ?? PrayerStatus.none),
-                ]),
+              Builder(builder: (_) {
+                final (pp, tt) = perPrayer[k]!;
+                final v = tt == 0 ? 0 : (pp * 100 / tt).round();
+                final (g, c) = _grade(v);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(children: [
+                    PrayerIcon(k, size: 16, color: AppColors.emerald, background: AppColors.emeraldContainer),
+                    const SizedBox(width: 10),
+                    SizedBox(width: 56, child: Text(prayerLabels[k]!, style: const TextStyle(fontWeight: FontWeight.w600))),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                            value: v / 100, minHeight: 8, color: c, backgroundColor: AppColors.segmentInactive),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 92,
+                      child: Text('$pp/$tt · $g',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: c)),
+                    ),
+                  ]),
+                );
+              }),
+            if (weakest != null && weakPct < 100) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(12)),
+                child: Text(
+                  '💡 En çok aksattığın vakit: ${prayerLabels[weakest]} (%$weakPct). Bu vakte biraz daha özen gösterebilirsin.',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF78350F)),
+                ),
               ),
+            ],
           ])),
           const SizedBox(height: 14),
 
-          // ---------- Birlikte Secde ----------
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
-            child: Row(children: [
-              const Text('🤲', style: TextStyle(fontSize: 30)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Birlikte Secde',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-                  Text(
-                    hasFamily
-                        ? 'Bu hafta ailenle aynı vakitte $together kez secde ettin.'
-                        : 'Aile havuzuna biri katıldığında ortak vakitleriniz burada sayılır.',
-                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)),
-                  ),
-                ]),
-              ),
-              if (hasFamily)
-                Text('$together',
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.prayedMint)),
-            ]),
-          ),
+          // ---------- Seri ----------
+          Row(children: [
+            Expanded(child: _tile('🔥', '$curStreak gün', 'Şu anki seri')),
+            const SizedBox(width: 10),
+            Expanded(child: _tile('🏅', '$bestStreak gün', 'En uzun seri (3 ay)')),
+          ]),
           const SizedBox(height: 14),
 
-          // ---------- Rozetler ----------
+          // ---------- Aylık takvim ----------
+          _card(_calendar()),
+          const SizedBox(height: 14),
+
+          // ---------- Kaza ilerlemesi ----------
+          _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('📿 Kaza İlerlemen', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            if (owed == 0)
+              const Text('Kayıtlı kaza borcun yok.', style: TextStyle(color: AppColors.textSecondary))
+            else ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                    value: kazaPct, minHeight: 10, color: AppColors.emerald, backgroundColor: AppColors.segmentInactive),
+              ),
+              const SizedBox(height: 6),
+              Text('$done / $owed eda edildi · %${(kazaPct * 100).round()} · kalan ${owed - done}',
+                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            ],
+          ])),
+          const SizedBox(height: 14),
+
+          // ---------- Kişisel rozetler ----------
           const Text('🏅 Manevi Rozetler',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 8),
@@ -272,7 +313,7 @@ class _KarneScreenState extends State<KarneScreen> {
                 border: Border.all(color: earned ? AppColors.gold : AppColors.cardBorder),
               ),
               child: Row(children: [
-                Opacity(opacity: earned ? 1 : 0.35, child: Text(emoji, style: const TextStyle(fontSize: 28))),
+                Opacity(opacity: earned ? 1 : 0.35, child: Text(emoji, style: const TextStyle(fontSize: 26))),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -280,35 +321,111 @@ class _KarneScreenState extends State<KarneScreen> {
                     Text(desc, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                   ]),
                 ),
-                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  Text(earned ? 'Kazanıldı ✓' : 'Kilitli 🔒',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: earned ? const Color(0xFF78350F) : AppColors.textMuted)),
-                  Text(progress, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                ]),
+                Text(earned ? 'Kazanıldı ✓' : progress,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: earned ? const Color(0xFF78350F) : AppColors.textMuted)),
               ]),
             ),
-          const SizedBox(height: 6),
-
-          // ---------- Günün Hadisi ----------
-          _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('📖 Günün Hadis-i Şerifi', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Text(hadis.text, style: const TextStyle(fontSize: 13, height: 1.45, fontStyle: FontStyle.italic)),
-            const SizedBox(height: 4),
-            Text(hadis.source, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-          ])),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Center(
-            child: Text('Aile ile Namaz v$_version',
+            child: Text('Karne sadece senin kayıtlarından hazırlanır · Aile ile Namaz v$_version',
                 style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
           ),
         ],
       ),
     );
   }
+
+  /// Bu ayın takvimi: her gün renkli kare (5/5 koyu yeşil, kısmi açık, kılınmadı kırmızı, boş gri).
+  Widget _calendar() {
+    final now = DateTime.now();
+    final first = DateTime(now.year, now.month, 1);
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final lead = first.weekday - 1; // Pazartesi başlar
+    Color colorFor(DateTime d) {
+      if (d.isAfter(now)) return Colors.transparent;
+      final prayed = prayerKeys.where((k) => _st(d, k) == PrayerStatus.prayed).length;
+      final missed = prayerKeys.where((k) => _st(d, k) == PrayerStatus.missed).length;
+      if (_fullDay(d)) return AppColors.emerald;
+      if (prayed > 0) return AppColors.prayedMint;
+      if (missed > 0) return AppColors.missedCoral;
+      return AppColors.segmentInactive;
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('🗓 ${DateFormat('MMMM y', 'tr').format(now)}',
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 10),
+      Row(children: [
+        for (final w in const ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'])
+          Expanded(
+              child: Text(w,
+                  textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppColors.textMuted))),
+      ]),
+      const SizedBox(height: 4),
+      GridView.count(
+        crossAxisCount: 7,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
+        children: [
+          for (var i = 0; i < lead; i++) const SizedBox(),
+          for (var d = 1; d <= daysInMonth; d++)
+            Builder(builder: (_) {
+              final day = DateTime(now.year, now.month, d);
+              final c = colorFor(day);
+              final today = d == now.day;
+              return Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: c,
+                  borderRadius: BorderRadius.circular(6),
+                  border: today ? Border.all(color: AppColors.gold, width: 2) : null,
+                ),
+                child: Text('$d',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: c == AppColors.emerald ? Colors.white : AppColors.textPrimary)),
+              );
+            }),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Wrap(spacing: 10, runSpacing: 4, children: [
+        _legend(AppColors.emerald, '5 vakit'),
+        _legend(AppColors.prayedMint, 'Kısmen'),
+        _legend(AppColors.missedCoral, 'Kılınmadı'),
+        _legend(AppColors.segmentInactive, 'İşaretsiz'),
+      ]),
+    ]);
+  }
+
+  Widget _legend(Color c, String t) => Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 12, height: 12, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(3))),
+        const SizedBox(width: 4),
+        Text(t, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+      ]);
+
+  Widget _tile(String emoji, String value, String label) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.cardBorder),
+        ),
+        child: Row(children: [
+          Text(emoji, style: const TextStyle(fontSize: 26)),
+          const SizedBox(width: 10),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+          ]),
+        ]),
+      );
 
   Widget _card(Widget child) => Container(
         padding: const EdgeInsets.all(14),
@@ -319,25 +436,4 @@ class _KarneScreenState extends State<KarneScreen> {
         ),
         child: child,
       );
-
-  Widget _stat(String value, String label) => Expanded(
-        child: Column(children: [
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85))),
-        ]),
-      );
-
-  Widget _status(PrayerStatus s) {
-    final (bg, fg) = switch (s) {
-      PrayerStatus.prayed => (AppColors.emeraldContainer, AppColors.emerald),
-      PrayerStatus.missed => (const Color(0xFFFEE2E2), AppColors.missed),
-      PrayerStatus.excused => (const Color(0xFFF3F4F6), AppColors.textSecondary),
-      PrayerStatus.none => (const Color(0xFFF3F4F6), AppColors.textMuted),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
-      child: Text('${s.emoji} ${s.label}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: fg)),
-    );
-  }
 }

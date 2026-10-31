@@ -1,4 +1,4 @@
-Düzeltme: uygulama kapalıyken aile bildirimleri (Firebase başlatma); dua gönderiminde önizleme.
+Yeni İbadet Karnesi: okul karnesi gibi, sadece senin kayıtların.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,10 @@ Düzeltme: uygulama kapalıyken aile bildirimleri (Firebase başlatma); dua gön
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.4**
+- Yeni İbadet Karnesi (aile verisi yok): hafta / 30 gün / 3 ay; genel not; vakit vakit karne ve en çok aksatılan vakit; seri; aylık takvim; kaza ilerlemesi; kişisel rozetler (yeni: 7 ve 30 Gün Serisi).
+- Anlık bildirim hatasında ayrıntı penceresi (kopyala / tekrar dene) ve yedek başlatma.
 
 **v1.3**
 - Düzeltme: "Firebase başlatılamadı" — Firebase aynı anda iki yerden başlatılmaya çalışılıyordu (yarış). Artık tek sefer başlatılır, sessizce 3 kez denenir; olmazsa Ayarlar'da uyarı ve "tekrar dene".
@@ -67,7 +71,7 @@ Düzeltme: uygulama kapalıyken aile bildirimleri (Firebase başlatma); dua gön
 - Aile yalnızca toplamı görür (mahremiyet korumalı).
 
 **Karne**
-- Haftalık başarı oranı, 7 günlük tarihli grafik, vakit detayı, Birlikte Secde, gerçek veriyle 5 rozet, günün hadisi.
+- Okul karnesi: dönem seçimi, genel not, vakit vakit karne, seri, aylık takvim, kaza ilerlemesi, kişisel rozetler. Sadece kişinin kendi verisi.
 
 **Bildirimler ve Ayarlar**
 - Vakitten **11 dk önce** hatırlatma; eski uygulamadaki gibi **vakte özel** hadis / ayet / dua (Sabah, Öğle, İkindi, Akşam, Yatsı için ayrı ayrı). Her gün 12:00 günün ayeti.

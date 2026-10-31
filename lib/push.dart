@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show PlatformException;
 
 import 'data.dart';
 import 'settings.dart';
@@ -23,7 +24,18 @@ class Push {
     appId: '1:736837751684:android:dc1c39574b3dcbd945c3d1',
     messagingSenderId: '736837751684',
     projectId: 'aile-ile-namaz-d437f',
+    storageBucket: 'aile-ile-namaz-d437f.firebasestorage.app',
   );
+
+  /// Son hatanın ayrıntısı (Ayarlar'da dokununca gösterilir; destek için).
+  static String lastErrorDetail = '';
+
+  static String _detail(Object e) {
+    if (e is PlatformException) {
+      return 'code: ${e.code}\nmessage: ${e.message}\ndetails: ${e.details}\nstack: ${e.stacktrace ?? ''}';
+    }
+    return e.toString();
+  }
 
   static bool _ready = false;
 
@@ -48,8 +60,10 @@ class Push {
           try {
             // google-services.json ile Android tarafında hazırlanan varsayılan uygulama
             await Firebase.initializeApp();
-          } on FirebaseException catch (e) {
-            if (e.code != 'duplicate-app') {
+          } catch (e) {
+            if (!(e is FirebaseException && e.code == 'duplicate-app')) {
+              lastErrorDetail = _detail(e);
+              // Yedek: aynı ayarlarla elle başlat
               await Firebase.initializeApp(options: _options);
             }
           }
@@ -64,6 +78,7 @@ class Push {
         }
       } catch (e) {
         lastError = e;
+        lastErrorDetail = '${lastErrorDetail.isEmpty ? '' : '$lastErrorDetail\n\n--- yedek deneme ---\n'}${_detail(e)}';
       }
       if (!_ready && attempt < 3) await Future<void>.delayed(const Duration(seconds: 5));
     }
@@ -109,6 +124,7 @@ class Push {
       _refreshSub ??= fm.onTokenRefresh.listen(_save);
       _set(true, 'Hazır ✓ Uygulama kapalıyken de bildirim gelir');
     } catch (e) {
+      lastErrorDetail = _detail(e);
       _set(false, 'Kayıt olmadı: ${_short(e)}');
     }
   }

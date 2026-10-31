@@ -63,6 +63,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {}
   }
 
+  /// Anlık bildirim hatası: ayrıntı + kopyala + tekrar dene (destek için).
+  Future<void> _pushProblem() async {
+    final detail = Push.lastErrorDetail.isEmpty ? Push.status.value : Push.lastErrorDetail;
+    final again = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Anlık bildirim hatası', style: TextStyle(fontSize: 17)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: SelectableText(detail.length > 3000 ? detail.substring(0, 3000) : detail,
+                style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: detail));
+              if (ctx.mounted) Navigator.pop(ctx, false);
+              _toast('Hata ayrıntısı kopyalandı. Geliştiriciye gönderebilirsin.');
+            },
+            child: const Text('Kopyala'),
+          ),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tekrar dene')),
+        ],
+      ),
+    );
+    if (again == true) await Push.register();
+  }
+
   void _toast(String m) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
@@ -541,7 +571,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ValueListenableBuilder<String>(
                 valueListenable: Push.status,
                 builder: (_, s, __) => InkWell(
-                  onTap: Push.ok ? null : () => Push.register(),
+                  onTap: Push.ok ? null : _pushProblem,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 2, bottom: 4),
                     child: Row(children: [

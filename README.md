@@ -66,12 +66,12 @@
 * **Toplu Ekle:** **Yıl** (hızlı: 1, 2, 3, 5, 10, 15, 20 yıl; 1 yıl = 365 gün) veya **gün** olarak.
 * **Aile Fertleri Kaza Durumu (Detaysız):** Aile yalnızca toplamı görür; hangi vakit olduğu sadece sahibine açıktır.
 
-### 4. 🏆 İbadet Karnesi
-* **Haftalık başarı oranı**, Kılınan Vakit (x/35), Eda Edilen Kaza, Aile Uyumu.
-* Tarihli **7 günlük grafik** (güne dokun → vakit detayı) ve **Bugünün Vakit Detayı**.
-* **Birlikte Secde:** Ailenle aynı vakti kıldığın sayı (gerçek veriden).
-* **5 manevi rozet** (gerçek veriden): Sabah Namazı Muhafızı, 5'te 5 Sadakati, Kaza Avcısı, İbadet Kardeşliği, İstikrar Yıldızı.
-* **Günün Hadis-i Şerifi.**
+### 4. 🏆 İbadet Karnesi (sadece kendi verin)
+* Okul karnesi gibi: **Bu hafta / 30 gün / 3 ay** seçimi, başarı oranı ve not (**Pekiyi, İyi, Orta, Gayret et**). Muaf vakitler hesaba katılmaz.
+* **Vakit vakit karne:** Sabah, Öğle, İkindi, Akşam, Yatsı ayrı ayrı; **en çok aksattığın vakit** uyarısı.
+* **Seri:** Şu anki ve en uzun 5 vakit serisi.
+* **Aylık takvim:** Ayın her günü renkli (5 vakit / kısmen / kılınmadı / işaretsiz).
+* **Kaza ilerlemen** ve **kişisel rozetler** (Sabah Namazı Muhafızı, 5'te 5, 7 ve 30 Gün Serisi, Kaza Avcısı, İstikrar Yıldızı).
 
 ### 5. 🔔 Bildirimler
 * Her vakitten **11 dakika önce** hatırlatma; eski uygulamadaki gibi **vakte özel** hadis / ayet / dua.
@@ -185,6 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.4:** Yeni İbadet Karnesi (okul karnesi mantığı, sadece kişinin kendi verisi): dönem seçimi (hafta / 30 gün / 3 ay), genel not (Pekiyi/İyi/Orta), vakit vakit karne ve en çok aksatılan vakit, şu anki ve en uzun seri, aylık takvim, kaza ilerlemesi, kişisel rozetler. Anlık bildirim hatasına dokununca ayrıntı + kopyala + tekrar dene; Firebase yedek başlatma.
 * **v1.3:** Anlık bildirim (Firebase) başlatma düzeltmesi: aynı anda iki kez başlatma yarışı giderildi, sessizce 3 kez denenir, olmazsa Ayarlar'da uyarı. Dua penceresinde boş gönderimde hangi duanın gideceği önizlenir. Ayarlar'a "GitHub'da yıldız ver ⭐".
 * **v1.2:** Akrabalık hitapları her kullanıcıya göre (Reis: "Kızın"; Eşi: "Eşin (Aile Reisi)", "Kızın"; Kızı: "Baban (Aile Reisi)", "Annen"; ayrıca Kardeşin, Ninen, Amcan/Dayın…). Havuzu kapatma ve havuzdan ayrılma tek pencerede 1. ve 2. onay ister. Vakit hatırlatması (11 dk önce) ve 12:00 günün ayeti/hadisi bildirimi zorunlu; Ayarlar'da kapatma anahtarı yok.
 * **v1.1 (derleme 13):** Sürüm adları v1.1, v1.2 … biçiminde. Düzeltme: "Anlık bildirim: Firebase başlatılamadı" — Firebase iki kez başlatılmaya çalışılıyordu; artık mevcut olan kullanılıyor, anlık bildirimler çalışır.
