@@ -21,10 +21,16 @@ Future<void> main() async {
   ]);
   await LocalStore.cleanupLegacy();
   unawaited(Notifications.init());
-  await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseKey,
-  );
+  // İnternet yokken uygulama açılışta beklemesin: oturum telefondan yüklenir, süresi dolmuş
+  // oturumun yenilenmesi bağlantı gelince arka planda tamamlanır. En fazla 3 sn beklenir.
+  try {
+    await Supabase.initialize(
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseKey,
+    ).timeout(const Duration(seconds: 3));
+  } catch (_) {
+    // Çevrimdışı / zaman aşımı: istemci hazır, uygulama yerel verilerle açılır
+  }
   unawaited(Push.init());
   runApp(const App());
 }

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'local_store.dart';
+import 'settings.dart';
 import 'models.dart';
 
 SupabaseClient get supa => Supabase.instance.client;
@@ -109,9 +110,11 @@ class Repo {
   static Future<bool> canExcuse() async {
     if (isGuest) return true;
     try {
-      final pools = await myPools();
+      final pools = await myPools().timeout(const Duration(seconds: 6));
       if (pools.isEmpty) return true;
-      final me = (await members(pools.first.id)).where((m) => m.userId == myId).firstOrNull;
+      final me = (await members(pools.first.id).timeout(const Duration(seconds: 6)))
+          .where((m) => m.userId == myId)
+          .firstOrNull;
       return me == null || canBeExcused(me.roleTitle, me.icon);
     } catch (_) {
       return true;
@@ -123,10 +126,21 @@ class Repo {
   static Future<String> myDisplayName() async {
     if (_myName != null) return _myName!;
     if (isGuest) return 'Misafir';
-    final p = await supa.from('profiles').select('display_name').eq('id', myId).maybeSingle();
-    final n = (p?['display_name'] as String? ?? '').trim();
-    _myName = n.isNotEmpty ? n : (supa.auth.currentUser?.email ?? '').split('@').first;
-    return _myName!;
+    try {
+      final p = await supa
+          .from('profiles')
+          .select('display_name')
+          .eq('id', myId)
+          .maybeSingle()
+          .timeout(const Duration(seconds: 6));
+      final n = (p?['display_name'] as String? ?? '').trim();
+      _myName = n.isNotEmpty ? n : (supa.auth.currentUser?.email ?? '').split('@').first;
+      await AppSettings.prefs.setString('myName', _myName!);
+      return _myName!;
+    } catch (_) {
+      // Çevrimdışı: son bilinen ad
+      return AppSettings.prefs.getString('myName') ?? '';
+    }
   }
 
   static Future<void> reject(String requestId) =>
@@ -156,7 +170,8 @@ class Repo {
           .from('daily_prayers')
           .select()
           .eq('prayer_date', date)
-          .inFilter('user_id', userIds);
+          .inFilter('user_id', userIds)
+          .timeout(const Duration(seconds: 8));
       final out = <String, Map<String, PrayerStatus>>{};
       for (final r in rows) {
         out[r['user_id'] as String] = {

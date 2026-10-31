@@ -1,4 +1,4 @@
-Bildirim tercihleri, simgeli bildirimler, 5 saniyelik kayıt ve çevrimdışı arka plan gönderimi.
+Düzeltme: internet yokken uygulama açılmıyordu; artık telefondaki kayıtlarla anında açılıyor.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,9 @@ Bildirim tercihleri, simgeli bildirimler, 5 saniyelik kayıt ve çevrimdışı a
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**Çevrimdışı açılış (derleme 7)**
+- İnternet yokken uygulama takılmadan açılır; oturum telefondan yüklenir, bağlantı gelince arka planda yenilenir. Ad ve namaz kayıtları telefondan gösterilir.
 
 **Bildirim ve kayıt (derleme 6)**
 - Kıldı/kılmadı işareti buluta ve aileye 5 saniye sonra, son duruma göre gider; internet yoksa telefonda bekler, bağlantı gelince arka planda gönderilir.
