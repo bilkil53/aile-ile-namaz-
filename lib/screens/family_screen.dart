@@ -48,7 +48,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
   int _idx(int len) => (_sel >= 0 && _sel < len) ? _sel : 0;
   Pool? get _pool => _pools.isEmpty ? null : _pools[_idx(_pools.length)];
   bool get _isOwner => _pool?.ownerId == myId;
-  String _label(Member m) => m.labelFor(viewerIsReis: _isOwner);
+  /// Bu kişinin BENİM ekranımdaki hitabı (akrabalığa göre: Kızın, Baban (Aile Reisi), Annen…).
+  String _label(Member m) {
+    final me = _members.where((x) => x.userId == myId).firstOrNull;
+    final reis = _members.where((x) => x.userId == _pool?.ownerId).firstOrNull;
+    if (me == null) return m.labelFor(viewerIsReis: _isOwner);
+    return kinLabel(viewer: me, target: m, reis: reis);
+  }
 
   @override
   void initState() {
@@ -357,6 +363,54 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return 'İşlem yapılamadı. İnternet bağlantını kontrol et.';
   }
 
+  /// Yanlışlıkla basılmasın: tek pencerede iki ayrı onay kutusu işaretlenmeden düğme açılmaz.
+  Future<bool> _doubleConfirm({
+    required String title,
+    required String text,
+    required String first,
+    required String second,
+    required String yes,
+  }) async {
+    var a = false, b = false;
+    final r = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          icon: const Icon(Icons.warning_amber_rounded, color: AppColors.missed, size: 32),
+          title: Text(title, style: const TextStyle(fontSize: 18)),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(text, style: const TextStyle(fontSize: 13, height: 1.4)),
+            const SizedBox(height: 10),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: a,
+              onChanged: (v) => setD(() => a = v ?? false),
+              title: Text('1. onay: $first', style: const TextStyle(fontSize: 13)),
+            ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: b,
+              onChanged: a ? (v) => setD(() => b = v ?? false) : null,
+              title: Text('2. onay: $second', style: const TextStyle(fontSize: 13)),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
+              onPressed: a && b ? () => Navigator.pop(ctx, true) : null,
+              child: Text(yes),
+            ),
+          ],
+        ),
+      ),
+    );
+    return r == true;
+  }
+
   Future<bool?> _confirm(String text, {String yes = 'Evet'}) => showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -554,9 +608,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
             if (_isOwner && _members.length > 1)
               TextButton.icon(
                 onPressed: () async {
-                  if (await _confirm('Havuz kapatılırsa tüm üyeler çıkarılır ve havuz kayıtları silinir. Emin misin?',
-                          yes: 'Havuzu Kapat') !=
-                      true) return;
+                  if (!await _doubleConfirm(
+                    title: 'Havuzu Kapat & Sıfırla',
+                    text: 'Havuz kapatılırsa bütün aile fertleri havuzdan çıkarılır; ünvanlar, dua ve hareket kayıtları silinir. '
+                        'Herkesin kendi namaz ve kaza kayıtları kendi hesabında kalır.',
+                    first: 'Tüm üyelerin havuzdan çıkarılacağını anladım',
+                    second: 'Havuzu kapatmak istiyorum',
+                    yes: 'Havuzu Kapat',
+                  )) return;
                   try {
                     await Repo.deletePool(pool.id);
                     _sel = 0;
@@ -975,7 +1034,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ),
           TextButton(
             onPressed: () async {
-              if (await _confirm('Havuzdan ayrılmak istediğine emin misin?', yes: 'Evet, Ayrıl') != true) return;
+              if (!await _doubleConfirm(
+                title: 'Havuzdan Ayrıl',
+                text: 'Ayrılırsan ailen senin namaz durumunu artık göremez, sen de onlarınkini göremezsin. '
+                    'Kendi namaz ve kaza kayıtların hesabında kalır. Tekrar katılmak için Aile Reisinden yeni onay gerekir.',
+                first: 'Ailemin durumunu artık göremeyeceğimi anladım',
+                second: 'Havuzdan ayrılmak istiyorum',
+                yes: 'Evet, Ayrıl',
+              )) return;
               try {
                 await Repo.leavePool(pool.id);
                 _sel = 0;

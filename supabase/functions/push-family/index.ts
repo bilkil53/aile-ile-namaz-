@@ -20,6 +20,48 @@ const PRAYERS: Record<string, string> = {
   FAJR: "Sabah", DHUHR: "Öğle", ASR: "İkindi", MAGHRIB: "Akşam", ISHA: "Yatsı", WITR: "Vitir",
 };
 
+
+// Akrabalık hitabı: ünvanlar reise göre saklanır; her alıcı göndereni KENDİSİNE göre görür.
+// (Uygulamadaki lib/models.dart kinLabel ile aynı kurallar.)
+type M = { user_id: string; role_title: string; icon: string | null; gender: string | null };
+const FEMALE = new Set(["Anne", "Kızı", "Annesi", "Ninesi", "Gelini"]);
+const MALE = new Set(["Aile Reisi", "Baba", "Oğlu", "Babası", "Dedesi", "Damadı"]);
+const genderOf = (m: M) => m.gender ?? (FEMALE.has(m.role_title) ? "f" : MALE.has(m.role_title) ? "m" : null);
+
+function kinLabel(viewer: M, target: M, reis: M | undefined): string {
+  const t = target.role_title || "Aile ferdin";
+  if (reis && viewer.user_id === reis.user_id) return POSSESSIVE[t] ?? t;
+  const reisG = reis ? genderOf(reis) : null;
+  let tg = genderOf(target);
+  if (!tg && t === "Eşi" && reisG) tg = reisG === "m" ? "f" : "m";
+  const pick = (m: string, f: string, n: string) => (tg === "f" ? f : tg === "m" ? m : n);
+  const v = viewer.role_title;
+  if (reis && target.user_id === reis.user_id) {
+    const r: Record<string, string> = {
+      "Eşi": "Eşin", "Oğlu": pick("Baban", "Annen", "Ebeveynin"), "Kızı": pick("Baban", "Annen", "Ebeveynin"),
+      "Annesi": pick("Oğlun", "Kızın", "Çocuğun"), "Babası": pick("Oğlun", "Kızın", "Çocuğun"),
+      "Kardeşi": "Kardeşin", "Torunu": pick("Deden", "Ninen", "Büyüğün"),
+      "Gelini": pick("Kayınpederin", "Kayınvaliden", "Kayınbüyüğün"), "Damadı": pick("Kayınpederin", "Kayınvaliden", "Kayınbüyüğün"),
+      "Dedesi": "Torunun", "Ninesi": "Torunun",
+    };
+    return r[v] ? `${r[v]} (${t})` : t;
+  }
+  const reisMale = reisG === "m";
+  const table: Record<string, Record<string, string>> = {
+    "Eşi": { "Oğlu": "Oğlun", "Kızı": "Kızın", "Torunu": "Torunun", "Gelini": "Gelinin", "Damadı": "Damadın", "Annesi": "Kayınvaliden", "Babası": "Kayınpederin" },
+    "Oğlu": { "Eşi": pick("Baban", "Annen", "Ebeveynin"), "Oğlu": "Kardeşin", "Kızı": "Kardeşin", "Annesi": "Ninen", "Babası": "Deden",
+      "Kardeşi": reisMale ? pick("Amcan", "Halan", "Amcan / Halan") : pick("Dayın", "Teyzen", "Dayın / Teyzen"), "Gelini": "Yengen", "Damadı": "Enişten" },
+    "Annesi": { "Annesi": "Eşin", "Babası": "Eşin", "Eşi": pick("Damadın", "Gelinin", "Gelinin"), "Oğlu": "Torunun", "Kızı": "Torunun", "Torunu": "Torunun", "Kardeşi": pick("Oğlun", "Kızın", "Çocuğun") },
+    "Kardeşi": { "Annesi": "Annen", "Babası": "Baban", "Kardeşi": "Kardeşin", "Oğlu": "Yeğenin", "Kızı": "Yeğenin", "Eşi": pick("Enişten", "Yengen", "Yengen") },
+    "Gelini": { "Eşi": pick("Kayınpederin", "Kayınvaliden", "Kayınbüyüğün"), "Torunu": pick("Oğlun", "Kızın", "Çocuğun") },
+    "Torunu": { "Eşi": pick("Deden", "Ninen", "Büyüğün") },
+  };
+  table["Kızı"] = table["Oğlu"]; table["Babası"] = table["Annesi"]; table["Damadı"] = table["Gelini"];
+  const rel = table[v]?.[t];
+  if (rel) return rel;
+  return POSSESSIVE[t] && t !== "Aile Ferdi" ? `Aile Reisinin ${t}` : t;
+}
+
 function b64url(data: ArrayBuffer | string): string {
   const bytes = typeof data === "string" ? new TextEncoder().encode(data) : new Uint8Array(data);
   let s = "";
@@ -106,7 +148,7 @@ Deno.serve(async (req) => {
 
     const [{ data: pool }, { data: members }] = await Promise.all([
       db.from("pools").select("owner_id").eq("id", ev.pool_id).single(),
-      db.from("pool_members").select("user_id, role_title, icon").eq("pool_id", ev.pool_id),
+      db.from("pool_members").select("user_id, role_title, icon, gender").eq("pool_id", ev.pool_id),
     ]);
     const sender = (members ?? []).find((m) => m.user_id === ev.sender_id);
     const recipients = (members ?? []).map((m) => m.user_id).filter((id) => id !== ev.sender_id);
@@ -122,12 +164,13 @@ Deno.serve(async (req) => {
     if (!devices?.length) return Response.json({ sent: 0, reason: "cihaz yok" });
 
     const token = await accessToken(sa);
-    const role = sender?.role_title || "Aile ferdin";
     const icon = sender?.icon ? `${sender.icon} ` : "";
+    const reis = (members ?? []).find((m) => m.user_id === pool?.owner_id) as M | undefined;
     let sent = 0;
     await Promise.all(devices.map(async (d) => {
-      // Reis "Kızın / Oğlun" görür, diğerleri "Kızı / Oğlu"
-      const who = icon + (d.user_id === pool?.owner_id ? (POSSESSIVE[role] ?? role) : role);
+      // Alıcıya göre akrabalık hitabı: reis "Kızın", kızı "Baban (Aile Reisi)" / "Annen" …
+      const viewer = (members ?? []).find((m) => m.user_id === d.user_id) as M | undefined;
+      const who = icon + (sender && viewer ? kinLabel(viewer, sender as M, reis) : (sender?.role_title || "Aile ferdin"));
       const t = text(ev.event_type, who, ev.prayer, ev.message ?? "");
       if (!t) return;
       const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {

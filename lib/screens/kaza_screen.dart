@@ -28,7 +28,8 @@ class _KazaScreenState extends State<KazaScreen> {
 
   Map<String, (int, int)> _data = {};
   List<Member> _family = [];
-  bool _iAmReis = false;
+  Member? _me;
+  Member? _reis;
   Map<String, List<int>> _familyKaza = {};
   bool _loading = true;
 
@@ -47,10 +48,13 @@ class _KazaScreenState extends State<KazaScreen> {
         if (pools.isNotEmpty) {
           final members = await Repo.members(pools.first.id);
           final others = members.where((m) => m.userId != myId).toList();
+          final me = members.where((m) => m.userId == myId).firstOrNull;
+          final reis = members.where((m) => m.userId == pools.first.ownerId).firstOrNull;
           final k = await Repo.kazaSummary(others.map((m) => m.userId).toList());
           if (mounted) {
             setState(() {
-              _iAmReis = pools.first.ownerId == myId;
+              _me = me;
+              _reis = reis;
               _family = others;
               _familyKaza = k;
             });
@@ -213,7 +217,7 @@ class _KazaScreenState extends State<KazaScreen> {
                     child: Row(children: [
                       Text(m.icon, style: const TextStyle(fontSize: 20)),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(m.labelFor(viewerIsReis: _iAmReis), style: const TextStyle(fontWeight: FontWeight.w600))),
+                      Expanded(child: Text(_me == null ? m.shownName : kinLabel(viewer: _me!, target: m, reis: _reis), style: const TextStyle(fontWeight: FontWeight.w600))),
                       Builder(builder: (_) {
                         final k = _familyKaza[m.userId];
                         final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);

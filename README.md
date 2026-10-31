@@ -185,7 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
-* **v1.2:** Vakit hatırlatması (11 dk önce) ve 12:00 günün ayeti/hadisi bildirimi zorunlu; Ayarlar'da kapatma anahtarı yok.
+* **v1.2:** Akrabalık hitapları her kullanıcıya göre (Reis: "Kızın"; Eşi: "Eşin (Aile Reisi)", "Kızın"; Kızı: "Baban (Aile Reisi)", "Annen"; ayrıca Kardeşin, Ninen, Amcan/Dayın…). Havuzu kapatma ve havuzdan ayrılma tek pencerede 1. ve 2. onay ister. Vakit hatırlatması (11 dk önce) ve 12:00 günün ayeti/hadisi bildirimi zorunlu; Ayarlar'da kapatma anahtarı yok.
 * **v1.1 (derleme 13):** Sürüm adları v1.1, v1.2 … biçiminde. Düzeltme: "Anlık bildirim: Firebase başlatılamadı" — Firebase iki kez başlatılmaya çalışılıyordu; artık mevcut olan kullanılıyor, anlık bildirimler çalışır.
 * **Derleme 12:** Düzeltme: küçük (işlemci türüne göre) APK'larda Android sürüm kodu 3000+N olduğu için uygulama içi güncelleme yeni sürümü görmüyordu; karşılaştırma artık derleme numarasıyla yapılıyor. Bir kez elle kurulum gerekir (aşağıya bakın).
 * **Derleme 11:** Cinsiyeti Aile Reisi verir: katılımı onaylarken ve ünvan değiştirirken ünvan + simge + cinsiyet (🧔 Erkek / 🧕 Kadın); reis "Aile Reisi" seçerse kendi cinsiyetini de seçer (Baba/Anne'de otomatik). Muaf buna göre gösterilir; kullanıcıya sorulan cinsiyet penceresi ve Ayarlar'daki seçim kaldırıldı.

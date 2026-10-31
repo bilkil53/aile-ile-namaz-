@@ -1,4 +1,4 @@
-Vakit hatırlatması ve 12:00 günün ayeti bildirimi artık zorunlu.
+Herkes aile fertlerini kendine göre akrabalık hitabıyla görüyor; vakit hatırlatması zorunlu; kapatma/ayrılmada çift onay.
 
 ## 🌟 Kullanıcı için
 
@@ -19,6 +19,8 @@ Vakit hatırlatması ve 12:00 günün ayeti bildirimi artık zorunlu.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
 **v1.2**
+- Akrabalık hitapları her kullanıcıya göre: Aile Reisi "Kızın, Eşin"; Eşi "Eşin (Aile Reisi), Kızın"; Kızı "Baban (Aile Reisi), Annen, Kardeşin"; ayrıca Ninen, Deden, Amcan/Halan, Dayın/Teyzen, Yengen, Enişten, Kayınvaliden… Bildirim metinleri de buna göre.
+- Havuzu kapatma ve havuzdan ayrılma: tek pencerede 1. onay ve 2. onay kutusu işaretlenmeden yapılamaz.
 - Vakit hatırlatması (her vakitten 11 dk önce, vakte özel hadis/dua ile) ve her gün 12:00'deki günün ayeti/hadisi bildirimi zorunlu; Ayarlar'da kapatma anahtarı kaldırıldı.
 
 **v1.1**

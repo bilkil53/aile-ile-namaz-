@@ -242,3 +242,91 @@ class PoolEvent {
         createdAt: DateTime.parse(m['created_at'] as String).toLocal(),
       );
 }
+
+// ---------------------------------------------------------------------------
+// Akrabalık hitapları: ünvanlar Aile Reisine göre saklanır ("Kızı", "Eşi").
+// Her kullanıcı diğerlerini KENDİSİNE göre görür:
+//   Reis → "Kızın", "Eşin"; Eşi → "Eşin (Aile Reisi)", "Kızın"; Kızı → "Baban (Aile Reisi)", "Annen".
+// ---------------------------------------------------------------------------
+
+String? genderOf(Member m) =>
+    m.gender ?? (femaleTitles.contains(m.roleTitle) ? 'f' : (maleTitles.contains(m.roleTitle) ? 'm' : null));
+
+/// [viewer] ekranında [target] kişisinin hitabı. [reis] havuzun Aile Reisi.
+String kinLabel({required Member viewer, required Member target, required Member? reis}) {
+  if (viewer.userId == target.userId) return target.shownName;
+  if (reis != null && viewer.userId == reis.userId) return titleFor(target.shownName, viewerIsReis: true);
+  final reisG = reis == null ? null : genderOf(reis);
+  var tg = genderOf(target);
+  // Reisin eşi: cinsiyeti verilmemişse reisin karşı cinsi kabul edilir
+  if (tg == null && target.roleTitle == 'Eşi' && reisG != null) tg = reisG == 'm' ? 'f' : 'm';
+  String pick(String m, String f, String n) => tg == 'f' ? f : (tg == 'm' ? m : n);
+  final v = viewer.roleTitle;
+
+  if (reis != null && target.userId == reis.userId) {
+    final rel = switch (v) {
+      'Eşi' => 'Eşin',
+      'Oğlu' || 'Kızı' => pick('Baban', 'Annen', 'Ebeveynin'),
+      'Annesi' || 'Babası' => pick('Oğlun', 'Kızın', 'Çocuğun'),
+      'Kardeşi' => 'Kardeşin',
+      'Torunu' => pick('Deden', 'Ninen', 'Büyüğün'),
+      'Gelini' || 'Damadı' => pick('Kayınpederin', 'Kayınvaliden', 'Kayınbüyüğün'),
+      'Dedesi' || 'Ninesi' => 'Torunun',
+      _ => null,
+    };
+    return rel == null ? target.shownName : '$rel (${target.shownName})';
+  }
+
+  final t = target.roleTitle;
+  final reisMale = reisG == 'm';
+  final String? rel = switch (v) {
+    'Eşi' => switch (t) {
+        'Oğlu' => 'Oğlun',
+        'Kızı' => 'Kızın',
+        'Torunu' => 'Torunun',
+        'Gelini' => 'Gelinin',
+        'Damadı' => 'Damadın',
+        'Annesi' => 'Kayınvaliden',
+        'Babası' => 'Kayınpederin',
+        _ => null,
+      },
+    'Oğlu' || 'Kızı' => switch (t) {
+        'Eşi' => pick('Baban', 'Annen', 'Ebeveynin'),
+        'Oğlu' || 'Kızı' => 'Kardeşin',
+        'Annesi' => 'Ninen',
+        'Babası' => 'Deden',
+        'Kardeşi' => reisMale ? pick('Amcan', 'Halan', 'Amcan / Halan') : pick('Dayın', 'Teyzen', 'Dayın / Teyzen'),
+        'Gelini' => 'Yengen',
+        'Damadı' => 'Enişten',
+        _ => null,
+      },
+    'Annesi' || 'Babası' => switch (t) {
+        'Annesi' || 'Babası' => 'Eşin',
+        'Eşi' => pick('Damadın', 'Gelinin', 'Gelinin'),
+        'Oğlu' || 'Kızı' || 'Torunu' => 'Torunun',
+        'Kardeşi' => pick('Oğlun', 'Kızın', 'Çocuğun'),
+        _ => null,
+      },
+    'Kardeşi' => switch (t) {
+        'Annesi' => 'Annen',
+        'Babası' => 'Baban',
+        'Kardeşi' => 'Kardeşin',
+        'Oğlu' || 'Kızı' => 'Yeğenin',
+        'Eşi' => pick('Enişten', 'Yengen', 'Yengen'),
+        _ => null,
+      },
+    'Gelini' || 'Damadı' => switch (t) {
+        'Eşi' => pick('Kayınpederin', 'Kayınvaliden', 'Kayınbüyüğün'),
+        'Torunu' => pick('Oğlun', 'Kızın', 'Çocuğun'),
+        _ => null,
+      },
+    'Torunu' => switch (t) {
+        'Eşi' => pick('Deden', 'Ninen', 'Büyüğün'),
+        _ => null,
+      },
+    _ => null,
+  };
+  if (rel != null) return rel;
+  // İlişki çıkarılamıyorsa reise göre yaz: "Aile Reisinin Kızı"
+  return reisTitles.containsKey(t) && t != 'Aile Ferdi' ? 'Aile Reisinin $t' : target.shownName;
+}

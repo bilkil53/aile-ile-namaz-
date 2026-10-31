@@ -117,8 +117,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   Future<void> _listenFamily() async {
     try {
       for (final p in await Repo.myPools()) {
-        for (final m in await Repo.members(p.id)) {
-          _names[m.userId] = '${m.icon} ${m.labelFor(viewerIsReis: p.ownerId == myId)}';
+        final ms = await Repo.members(p.id);
+        final me = ms.where((x) => x.userId == myId).firstOrNull;
+        final reis = ms.where((x) => x.userId == p.ownerId).firstOrNull;
+        for (final m in ms) {
+          _names[m.userId] = '${m.icon} ${me == null ? m.labelFor(viewerIsReis: p.ownerId == myId) : kinLabel(viewer: me, target: m, reis: reis)}';
         }
       }
     } catch (_) {}
