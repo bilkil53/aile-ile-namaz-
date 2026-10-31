@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -784,13 +785,25 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 3)),
             ),
             IconButton(
+              tooltip: 'Paylaş',
+              onPressed: () async {
+                if (isGuest) return _needLogin('Davet kodu oluşturmak');
+                await Share.share(
+                  '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
+                  'Davet kodu: ${pool.displayCode}\n'
+                  '(Kodu 5 dakika içinde onaylarım.)\n\n'
+                  'Uygulama: https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz.apk',
+                  subject: 'Aile Havuzu davet kodu',
+                );
+              },
+              icon: const Icon(Icons.share, color: Colors.white),
+            ),
+            IconButton(
               tooltip: 'Kopyala',
               onPressed: () async {
                 if (isGuest) return _needLogin('Davet kodu oluşturmak');
-                await Clipboard.setData(ClipboardData(
-                    text: 'Aile ile Namaz uygulamasında aile havuzumuza katıl! '
-                        'Davet kodu: ${pool.displayCode}'));
-                _toast('Davet mesajı kopyalandı.');
+                await Clipboard.setData(ClipboardData(text: pool.displayCode));
+                _toast('Kod kopyalandı: ${pool.displayCode}');
               },
               icon: const Icon(Icons.copy, color: Colors.white),
             ),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -438,10 +439,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _divider(),
             InkWell(
               onTap: () async {
-                await Clipboard.setData(const ClipboardData(
-                    text: 'Aile ile Namaz — ailenle birlikte namaz takibi. İndir: '
-                        '$_repo/releases/latest/download/aile-ile-namaz.apk'));
-                _toast('İndirme linki kopyalandı. Ailene gönderebilirsin.');
+                // Telefonun paylaşım penceresi: WhatsApp, Gmail, Mesajlar, Telegram…
+                await Share.share(
+                  '🕌 Aile ile Namaz — ailenle birlikte namaz takibi, kaza takibi ve aile havuzu.\n\n'
+                  'Android için indir: $_repo/releases/latest/download/aile-ile-namaz.apk',
+                  subject: 'Aile ile Namaz uygulaması',
+                );
               },
               child: _row('Uygulamayı paylaş', const Icon(Icons.share, color: Colors.white), icon: Icons.favorite),
             ),

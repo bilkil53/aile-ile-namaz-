@@ -90,6 +90,10 @@
 
 > Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
 
+### 📤 Sürüm 32 — Paylaşım penceresi, yumuşak vakit simgeleri
+* **Uygulamayı paylaş** (Ayarlar) ve **davet kodu paylaş** (Aile Havuzu) artık telefonun paylaşım penceresini açıyor: WhatsApp, Gmail, Mesajlar, Telegram vb. Davet mesajında EMB kodu ve indirme linki hazır gelir. Kopyala düğmesi sadece kodu kopyalar.
+* Vakit simgeleri emoji yerine eski uygulamadaki ince çizgili simgeler: gün doğumu, güneş, yarım güneş, ay-bulut, hilal.
+
 ### 🌙 Sürüm 27 — Eski tasarım geri döndü, Hoş Geldiniz penceresi, gezinti modu, EMB kodları, 5 dakikalık onay
 **Aile Havuzu**
 * Davet kodları artık **EMB-123456** biçiminde. Uygulamayı kuran herkes **"Aile Ferdi"** olarak başlar (Bireysel Mod).
