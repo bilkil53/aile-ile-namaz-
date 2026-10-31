@@ -46,9 +46,9 @@
 * **🧭 Kıble Pusulası:** İnternet gerektirmez; ivme + manyetik sensörle Kâbe yönünü gösterir.
 
 ### 2. 👨‍👩‍👧‍👦 Aile Havuzu • İbadet Halkası
-* **Aile Havuzumu Başlat** → sana özel **8 karakterli davet kodu** (örn. `K7QM-3XPA`). Kodu kopyalayıp ailenle paylaş.
-* **Katılma:** Aile fertleri kodu girer, unvanını seçer (Eşi, Oğlu, Kızı, Annesi…). İstek **24 saat** geçerlidir, istenirse iptal edilir.
-* **Reis onayı:** Reisin ekranında 🔔 onay kartı açılır. **"Onayla & Rol Seç"** ile reis hem kendi hem katılanın unvanını belirler.
+* Giriş yaptığında **sana özel 8 karakterli davet kodu** (örn. `K7QM-3XPA`) hazırdır. Kodu kopyalayıp ailenle paylaş.
+* **Katılma:** Aile fertleri sadece kodu girer. İstek **24 saat** geçerlidir, istenirse iptal edilir.
+* **Reis onayı:** Reisin ekranında 🔔 onay kartı açılır. **"Onayla & Rol Seç"** ile reis katılana *kendine göre* ünvan (Eşi, Oğlu, Kızı…) ve simge verir.
 * **Ortak Matris:** Tüm ailenin 5 vakit durumu (vakit × kişi) tek tabloda; **Dün / Bugün** karşılaştırması.
 * **🤲 Aileye Dua Gönder:** Hazır dualar ve tebrikler ya da kendi duan.
 * **Havuzdaki Bireyler:** 👑 Aile Reisi / 👥 Aile Ferdi rozetleri, bugünkü x/5, kaza özeti, **Tebrik Et & Dua Gönder**.
@@ -90,7 +90,15 @@
 
 > Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
 
-### 🕌 Sürüm 17 — Gizlilik ve README
+### 🕌 Sürüm 21 — Aile Havuzu: kod hazır, ünvanları reis verir
+* **"Aile Havuzumu Başlat" adımı kaldırıldı:** Giriş yapan herkesin kendi havuzu ve davet kodu otomatik hazır gelir (eski v1.14 gibi).
+* **Katılım:** Katılan kişi sadece davet kodunu girer; ünvan sorulmaz.
+* **Ünvanlar Aile Reisine göre:** Reis onaylarken katılana *kendine göre* ünvan (Eşi, Oğlu, Kızı, Annesi, Babası…) ve simge verir. Sonradan da yalnızca reis değiştirebilir.
+* Simge grupları: Kadın/Anne/Eş, Erkek/Baba/Eş, Çocuk & Bebek, Diğer.
+* Reisin ünvanı sabit **"👑 Aile Reisi"**; reislik devredilince ünvanlar da devredilir.
+* Başka bir aileye katılıp onaylanınca kişinin boş kendi havuzu otomatik kaldırılır (tek aile görünür).
+
+### Sürüm 17 — Gizlilik ve README
 * Katılım **sadece reis davet koduyla**; e-posta ile katılma kaldırıldı.
 * Davet mesajından ve tanıtım/gizlilik sayfalarından e-posta adresleri kaldırıldı.
 * Kullanıcıların e-posta adresleri veritabanında diğer kullanıcılara tamamen kapatıldı.
