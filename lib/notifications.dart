@@ -83,7 +83,10 @@ class Notifications {
           for (final (name, hhmm) in list) {
             final at = t.at(hhmm).subtract(Duration(minutes: lead));
             if (at.isAfter(now)) {
-              await _schedule(id, '$name vakti yaklaşıyor', '$lead dakika sonra $name ($hhmm). Haydi namaza 🤲', at, _prayerChannel);
+              // Her hatırlatmaya farklı bir hadis / dua / özlü söz eşlik eder (gün ve vakte göre döner).
+              final q = _pool[(_dayOfYear(day) * 5 + id) % _pool.length];
+              await _schedule(id, '🕌 $name vaktine $lead dakika kaldı ($hhmm)',
+                  'Haydi namaza 🤲\n\n${q.text}\n— ${q.source}', at, _prayerChannel);
             }
             id++;
           }
@@ -101,14 +104,26 @@ class Notifications {
     }
   }
 
+  static final _pool = [...hadisler, ...dualar, ...ozluSozler];
+  static int _dayOfYear(DateTime d) => d.difference(DateTime(d.year, 1, 1)).inDays + 1;
+
   static Future<void> _schedule(int id, String title, String body, DateTime at,
       AndroidNotificationDetails channel) {
+    // Uzun metin bildirimde açılınca tamamı görünsün
+    final details = AndroidNotificationDetails(
+      channel.channelId,
+      channel.channelName,
+      channelDescription: channel.channelDescription,
+      importance: channel.importance,
+      priority: channel.priority,
+      styleInformation: BigTextStyleInformation(body, contentTitle: title),
+    );
     return _plugin.zonedSchedule(
       id,
       title,
       body,
       tz.TZDateTime.from(at, tz.local),
-      NotificationDetails(android: channel),
+      NotificationDetails(android: details),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );

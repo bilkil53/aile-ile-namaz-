@@ -51,7 +51,7 @@
 * **Reis onayı:** Reisin ekranında 🔔 onay kartı açılır. **"Onayla & Rol Seç"** ile reis katılana *kendine göre* ünvan (Eşi, Oğlu, Kızı…) ve simge verir.
 * **Ortak Matris:** Tüm ailenin 5 vakit durumu (vakit × kişi) tek tabloda; **Dün / Bugün** karşılaştırması.
 * **🤲 Aileye Dua Gönder:** Hazır dualar ve tebrikler ya da kendi duan.
-* **Havuzdaki Bireyler:** 👑 Aile Reisi / 👥 Aile Ferdi rozetleri, bugünkü x/5, kaza özeti, **Tebrik Et & Dua Gönder**.
+* **Havuzdaki Bireyler:** 🏡 Aile Reisi / 👥 Aile Ferdi rozetleri, bugünkü x/5, kaza özeti, **Tebrik Et & Dua Gönder**.
 * **Reis yetkileri:** Unvan/simge değiştirme, reisliği devretme, üyeyi çıkarma, kodu yenileme, **Havuzu Kapat & Sıfırla**.
 * **Canlı:** Biri namaz kıldığında, katıldığında veya dua gönderdiğinde ekran anında güncellenir.
 
@@ -90,6 +90,11 @@
 
 > Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
 
+### 🏡 Sürüm 38 — Vakit hatırlatmasında hadis/dua, başörtülü simgeler
+* **Vakit hatırlatması 11 dakika önce** gelir ve her bildirimde farklı bir **hadis, dua veya özlü söz** bulunur (bildirime dokununca tamamı açılır).
+* **Aile Reisi simgesi 🏡** (taç/kral simgesi kaldırıldı). Reisin seçebileceği ünvanlar: 🏡 Aile Reisi, 🧔 Baba, 🧕 Anne.
+* **Başörtülü simgeler:** Simge seçiminde yeni "Başörtülü" grubu (6 ten rengi). Eşi, Kızı, Annesi, Gelini, Ninesi ünvanları varsayılan olarak başörtülü simgeyle gelir.
+
 ### ✉️ Sürüm 36 — Temiz başlangıç, Öneri Yaz mail ile, gerçek veri gösterimi
 * Test sürümlerinden telefonda kalan işaret önbelleği ve bekleyen kuyruk ilk açılışta bir kez temizlenir; herkes kendi işaretlemesiyle temiz başlar.
 * **Öneri Yaz** (Ayarlar) telefondaki mail uygulamasını konu ve sürüm bilgisi hazır şekilde açar.
@@ -103,7 +108,7 @@
 ### 🌙 Sürüm 27 — Eski tasarım geri döndü, Hoş Geldiniz penceresi, gezinti modu, EMB kodları, 5 dakikalık onay
 **Aile Havuzu**
 * Davet kodları artık **EMB-123456** biçiminde. Uygulamayı kuran herkes **"Aile Ferdi"** olarak başlar (Bireysel Mod).
-* Reis, katılımı onaylarken **kendi ünvanını** (👑 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer.
+* Reis, katılımı onaylarken **kendi ünvanını** (🏡 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer.
 * Katılım isteği **5 dakika** içinde onaylanmalı; bu sürede ikinci istek gönderilemez. İki tarafta da canlı geri sayım.
 * **"Bağlantıyı Teyit Et 🔄"** düğmesi: sunucudan bağlantı / istek durumunu sorgular. BEKLEMEDE / AKTİF rozeti.
 * Profil kartı (Bireysel Mod / Aile Modu), **"Bugün Aile Başarısı: x / y Vakit (%)"**, vakit simgeli ortak matris, "◄ Dünü Gör".
@@ -126,7 +131,7 @@
 * **Katılım:** Katılan kişi sadece davet kodunu girer; ünvan sorulmaz.
 * **Ünvanlar Aile Reisine göre:** Reis onaylarken katılana *kendine göre* ünvan (Eşi, Oğlu, Kızı, Annesi, Babası…) ve simge verir. Sonradan da yalnızca reis değiştirebilir.
 * Simge grupları: Kadın/Anne/Eş, Erkek/Baba/Eş, Çocuk & Bebek, Diğer.
-* Reisin ünvanı sabit **"👑 Aile Reisi"**; reislik devredilince ünvanlar da devredilir.
+* Reisin ünvanı sabit **"🏡 Aile Reisi"**; reislik devredilince ünvanlar da devredilir.
 * Başka bir aileye katılıp onaylanınca kişinin boş kendi havuzu otomatik kaldırılır (tek aile görünür).
 
 ### Sürüm 17 — Gizlilik ve README

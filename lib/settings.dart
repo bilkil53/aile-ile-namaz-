@@ -31,5 +31,5 @@ class AppSettings {
   static bool get familyAlerts => _p.getBool('familyAlerts') ?? true;
   static Future<void> setFamilyAlerts(bool v) => _p.setBool('familyAlerts', v);
 
-  static int get reminderMinutes => _p.getInt('reminderMinutes') ?? 10;
+  static int get reminderMinutes => _p.getInt('reminderMinutes') ?? 11;
 }

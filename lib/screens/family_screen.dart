@@ -1032,7 +1032,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(isMe ? '${m.shownName} (sen)' : m.shownName,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                Text(isOwner ? '• 👑 Havuz Yöneticisi' : '• 👥 Aile Ferdi',
+                Text(isOwner ? '• 🏡 Havuz Yöneticisi' : '• 👥 Aile Ferdi',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,

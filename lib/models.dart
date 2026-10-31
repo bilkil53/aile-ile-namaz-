@@ -61,30 +61,31 @@ const prayerSubtitles = {
 };
 
 /// Reisin kendi unvanı (katılım onayında seçer).
-const ownerTitles = {'Aile Reisi': '👑', 'Baba': '🧔', 'Anne': '🧕'};
+const ownerTitles = {'Aile Reisi': '🏡', 'Baba': '🧔', 'Anne': '🧕'};
 
 /// Unvanlar Aile Reisine göredir (reisin eşi, oğlu, kızı…). Reisin unvanı sabit: "Aile Reisi".
 const reisTitles = {
   'Eşi': '🧕',
   'Oğlu': '👦',
-  'Kızı': '👧',
-  'Annesi': '👵',
+  'Kızı': '🧕🏻',
+  'Annesi': '🧕🏽',
   'Babası': '🧔',
   'Kardeşi': '🧒',
   'Torunu': '👶',
-  'Gelini': '👩',
+  'Gelini': '🧕🏼',
   'Damadı': '👨',
   'Dedesi': '👴',
-  'Ninesi': '👵',
+  'Ninesi': '🧕🏾',
   'Aile Ferdi': '👥',
 };
 
 /// Reisin seçebileceği simgeler (eski uygulamadaki gruplar).
 const iconGroups = <String, List<String>>{
-  'Kadın / Anne / Eş': ['🧕', '👩', '👵', '👱‍♀️'],
+  'Başörtülü': ['🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿'],
+  'Kadın / Anne / Eş': ['👩', '👵', '👱‍♀️', '👧'],
   'Erkek / Baba / Eş': ['🧔', '👨', '👴', '👱‍♂️'],
   'Çocuk & Bebek': ['👦', '👧', '🧒', '👶'],
-  'Diğer': ['👤', '👥', '🌟', '🕌'],
+  'Diğer': ['🏡', '👤', '👥', '🌟', '🕌'],
 };
 
 class Pool {
