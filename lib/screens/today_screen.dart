@@ -11,6 +11,7 @@ import '../notifications.dart';
 import '../prayer_times.dart';
 import '../settings.dart';
 import '../theme.dart';
+import '../widgets/prayer_icon.dart';
 import '../widgets/qibla_card.dart';
 
 /// "Bugün" sekmesi: karşılama, SIRADAKİ VAKİT, günün ayeti, vakit kartları, kıble.
@@ -504,7 +505,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
-                child: Text(prayerEmoji[key] ?? '🕌', style: const TextStyle(fontSize: 20)),
+                child: PrayerIcon(key, size: 20, color: Colors.white.withValues(alpha: 0.92)),
               ),
               const SizedBox(width: 12),
               Expanded(

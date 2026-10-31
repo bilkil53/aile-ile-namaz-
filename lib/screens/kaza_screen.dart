@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../data.dart';
 import '../models.dart';
 import '../theme.dart';
+import '../widgets/prayer_icon.dart';
 
 /// Kaza namazı takibi (eski uygulamadaki düzen).
 /// Hangi vakit kaza edildiği sadece sahibine görünür; aile yalnızca toplamı görür.
@@ -233,7 +234,7 @@ class _KazaScreenState extends State<KazaScreen> {
       );
 
   Widget _row((String, String, String, String) t) {
-    final (type, label, emoji, rekat) = t;
+    final (type, label, _, rekat) = t;
     final (owed, done) = _of(type);
     final left = owed > done ? owed - done : 0;
     return Container(
@@ -250,7 +251,7 @@ class _KazaScreenState extends State<KazaScreen> {
             height: 42,
             alignment: Alignment.center,
             decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
-            child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            child: PrayerIcon(type, size: 22, color: AppColors.emerald),
           ),
           const SizedBox(width: 10),
           Expanded(

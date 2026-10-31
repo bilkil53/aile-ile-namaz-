@@ -42,7 +42,7 @@ const prayerLabels = {
   'witr': 'Vitir',
 };
 
-/// Vakit simgeleri (eski uygulamadaki gibi).
+/// Vakit emojileri (sadece bildirim metinlerinde; ekranda widgets/prayer_icon.dart kullanılır).
 const prayerEmoji = {
   'fajr': '🌅',
   'dhuhr': '☀️',

@@ -10,6 +10,7 @@ import '../data.dart';
 import '../local_store.dart';
 import '../models.dart';
 import '../theme.dart';
+import '../widgets/prayer_icon.dart';
 
 /// Aile Havuzu • İbadet Halkası (eski uygulama v1.14–v1.18 akışı).
 class FamilyScreen extends StatefulWidget {
@@ -940,8 +941,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     child: Row(children: [
                       SizedBox(
                         width: 72,
-                        child: Text('${prayerEmoji[k]} ${prayerLabels[k]}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                        child: Row(children: [
+                          PrayerIcon(k, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+                          const SizedBox(width: 5),
+                          Text(prayerLabels[k]!,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                        ]),
                       ),
                       for (final m in _members)
                         SizedBox(width: colW, child: Center(child: _cell(data[m.userId]?[k] ?? PrayerStatus.none))),

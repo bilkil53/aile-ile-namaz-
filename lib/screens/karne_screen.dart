@@ -7,6 +7,7 @@ import '../data.dart';
 import '../models.dart';
 import '../settings.dart';
 import '../theme.dart';
+import '../widgets/prayer_icon.dart';
 
 /// İbadet Karnesi (eski uygulamadaki düzen): haftalık başarı, 7 günlük grafik,
 /// günün vakit detayı, gerçek veriyle hesaplanan rozetler ve Birlikte Secde.
@@ -217,7 +218,7 @@ class _KarneScreenState extends State<KarneScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 5),
                 child: Row(children: [
-                  Text(prayerEmoji[k]!, style: const TextStyle(fontSize: 22)),
+                  PrayerIcon(k, size: 18, color: AppColors.emerald, background: AppColors.emeraldContainer),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
