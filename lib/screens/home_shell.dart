@@ -65,7 +65,7 @@ class _HomeShellState extends State<HomeShell> {
     try {
       for (final p in await Repo.myPools()) {
         for (final m in await Repo.members(p.id)) {
-          _names[m.userId] = m.shownName;
+          _names[m.userId] = m.labelFor(viewerIsReis: p.ownerId == myId);
         }
       }
     } catch (_) {}

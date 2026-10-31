@@ -289,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(14)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Yeni Sürüm Hazır: $_latest',
+                  Text('Yeni Sürüm Hazır 🎉',
                       style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
                   if (_notes.isNotEmpty)
                     Text(_notes, style: const TextStyle(fontSize: 12, color: Color(0xFF78350F))),

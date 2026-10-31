@@ -1,4 +1,4 @@
-# 👨‍👩‍👧‍👦 Aile ile Namaz
+# 👨‍👩‍👧‍👦 Aile ile Namaz — v1.0
 
 <p align="center">
   <b>Aile Havuzu & İbadet Halkası · Diyanet Vakitleri · Kaza Takibi · İbadet Karnesi · Kıble Pusulası</b>
@@ -9,10 +9,10 @@
     <img src="https://img.shields.io/badge/İndir-Aile%20ile%20Namaz%20(APK)-0E5A4A?style=for-the-badge&logo=android&logoColor=white" alt="APK İndir" />
   </a>
   <a href="https://github.com/bilkil53/aile-ile-namaz-/releases/latest">
-    <img src="https://img.shields.io/github/v/release/bilkil53/aile-ile-namaz-?style=for-the-badge&color=0E5A4A&label=Son%20Sürüm" alt="Son Sürüm" />
+    <img src="https://img.shields.io/github/v/release/bilkil53/aile-ile-namaz-?style=for-the-badge&color=0E5A4A&label=Son%20Sürüm&display_name=release" alt="Son Sürüm" />
   </a>
-  <img src="https://img.shields.io/badge/Tema-Çam%20Yeşili%20%230E5A4A-0E5A4A?style=for-the-badge" alt="Tema" />
-  <img src="https://img.shields.io/badge/Flutter-Android%20%2B%20iOS-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
+  <img src="https://img.shields.io/badge/Flutter-Android-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20RLS-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
   <img src="https://img.shields.io/badge/Vakitler-T.C.%20Diyanet%20Yöntemi-green?style=for-the-badge" alt="Diyanet" />
 </p>
 
@@ -27,166 +27,164 @@
 
 1. Telefonda linke dokun, APK insin.
 2. İnen dosyayı aç; Android "bilinmeyen kaynaklardan yükleme" izni isterse ver.
-3. **Google ile giriş yap** — telefondaki Gmail hesabını seçmen yeterli.
+3. Açılan **Hoş Geldiniz** penceresinde **Google ile Hızlı Giriş Yap**'a dokun ve telefondaki Gmail hesabını seç. İstersen **Giriş Yapmadan Devam Et** ile önce gezinebilirsin.
 
-**Güncellemeler otomatik:** Uygulama her açılışta yeni sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in güncelleme ekranı açılır. Verilerin ve girişin korunur.
+**Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
-> Eski (Kotlin) sürümden geçiyorsan bir defalık eski uygulamayı kaldırıp bu sürümü kur; imza anahtarı farklıdır.
+**Sürüm numarası:** `v1.0.<derleme no>` (ör. `v1.0.40`). Büyük bir değişiklikte `v2.0.x`'e geçilir; derleme numarası hep artar, bu yüzden güncellemeler kesintisiz çalışır.
 
 ---
 
 ## 🌟 Özellikler
 
 ### 1. 🕌 Bugün — Vakitler ve Günlük İbadet
-* **Selamün aleyküm** karşılaması, tarih ve bulunduğun **ilçe/il** (GPS ile otomatik).
-* **SIRADAKİ VAKİT** kartı: kalan süre geri sayımı ve günün 6 vakti (İmsak, Güneş, Öğle/Cuma, İkindi, Akşam, Yatsı).
-* **5 vakit kartı:** Dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor** sırasıyla ilerler. Vakti girmemiş namaz 🔒 kilitlidir.
-* **Dün / Bugün** geçişi: unuttuğun dünkü vakitleri işaretleyebilirsin.
+* **Selamün aleyküm** karşılaması, tarih ve bulunduğun **ilçe/il** (GPS ile otomatik; şehir seçmek gerekmez).
+* **SIRADAKİ VAKİT** kartı: geri sayım ve günün 6 vakti (İmsak, Güneş, Öğle/Cuma, İkindi, Akşam, Yatsı).
+* **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor**. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
+* **← Dün / Bugün** geçişi: unuttuğun dünkü vakitleri işaretleyebilirsin.
 * **Günün Ayeti / Hadisi** (Arapça metin + Diyanet meali).
-* **🧭 Kıble Pusulası:** İnternet gerektirmez; ivme + manyetik sensörle Kâbe yönünü gösterir.
+* **🧭 Kıble Pusulası:** İnternet gerektirmez; ivme + manyetik sensörle Kâbe yönü.
 
 ### 2. 👨‍👩‍👧‍👦 Aile Havuzu • İbadet Halkası
-* Giriş yaptığında **sana özel 8 karakterli davet kodu** (örn. `K7QM-3XPA`) hazırdır. Kodu kopyalayıp ailenle paylaş.
-* **Katılma:** Aile fertleri sadece kodu girer. İstek **24 saat** geçerlidir, istenirse iptal edilir.
-* **Reis onayı:** Reisin ekranında 🔔 onay kartı açılır. **"Onayla & Rol Seç"** ile reis katılana *kendine göre* ünvan (Eşi, Oğlu, Kızı…) ve simge verir.
-* **Ortak Matris:** Tüm ailenin 5 vakit durumu (vakit × kişi) tek tabloda; **Dün / Bugün** karşılaştırması.
-* **🤲 Aileye Dua Gönder:** Hazır dualar ve tebrikler ya da kendi duan.
-* **Havuzdaki Bireyler:** 🏡 Aile Reisi / 👥 Aile Ferdi rozetleri, bugünkü x/5, kaza özeti, **Tebrik Et & Dua Gönder**.
-* **Reis yetkileri:** Unvan/simge değiştirme, reisliği devretme, üyeyi çıkarma, kodu yenileme, **Havuzu Kapat & Sıfırla**.
-* **Canlı:** Biri namaz kıldığında, katıldığında veya dua gönderdiğinde ekran anında güncellenir.
+* Uygulamayı kuran herkes **Aile Ferdi** olarak başlar (**Bireysel Mod**). Giriş yapınca **EMB-123456** biçiminde davet kodun otomatik hazırdır.
+* **Davet kodunu paylaş:** Telefonun paylaşım penceresiyle WhatsApp, Gmail, Mesajlar… (mesajda kod ve indirme linki hazır).
+* **Katılma:** Aile ferdi sadece kodu girer. **Aynı anda tek istek** gönderilebilir; istek **5 dakika** içinde onaylanmazsa düşer. İki tarafta canlı geri sayım.
+* **Reis onayı:** Reis, onaylarken **kendi ünvanını** (🏡 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer (Eşi, Oğlu, Kızı, Annesi, Babası, Kardeşi, Torunu, Gelini, Damadı, Dedesi, Ninesi). Başörtülü simgeler (6 ten rengi) dahil.
+* **Sahiplik hissi:** Reis, aile fertlerini **"Kızın, Oğlun, Eşin"** olarak görür; diğer üyeler ünvanı reise göre ("Kızı, Oğlu") görür.
+* **Bağlantıyı Teyit Et 🔄:** Sunucudan bağlantı / istek durumunu sorgular. **BEKLEMEDE / AKTİF** rozeti, **Bireysel Mod / Aile Modu** profil kartı.
+* **Ortak Matris:** Ailenin 5 vakit durumu (vakit × kişi), **"Bugün Aile Başarısı: x / y Vakit (%)"**, **◄ Dünü Gör**. Yalnızca gerçekten işaretlenen vakitler görünür; boş vakitler "—".
+* **🤲 Aileye Dua Gönder**, üye kartında **Tebrik Et & Dua Gönder**, **Son Hareketler** akışı.
+* **Reis yetkileri:** Ünvan/simge değiştirme, reisliği devretme, üyeyi çıkarma, kodu yenileme, **Havuzu Kapat & Sıfırla**.
+* **Aile bildirimleri:** Aileden biri namaz kılınca, kaza eda edince, dua gönderince veya katılınca bildirim. Kıldı/kılmadı işaretinden **5 saniye sonra** son duruma göre **tek** bildirim gider.
 
 ### 3. 📿 Kaza Takibi (Mahremiyet Korumalı)
-* Toplam borç, kalan, eda edilen ve ilerleme çubuğu.
-* 6 vakit (vitir dahil) için **+ / −** ve **Kıldım** düğmeleri; **toplu borç ekleme** (gün sayısıyla).
-* **Hangi vakti kaza ettiğin sadece sende görünür;** aile yalnızca toplamı görür.
+* **Kalan Kaza Borcu / Kılınan Kaza** kutuları ve ilerleme çubuğu.
+* 6 vakit (vitir dahil): "Farz: 4 Rekat | Kılınan: X", **− / Borç / +**, **Kaza Kıldım** veya **Kaza Borcu Yok (Elhamdülillah)**.
+* **Toplu Ekle:** **Yıl** (hızlı: 1, 2, 3, 5, 10, 15, 20 yıl; 1 yıl = 365 gün) veya **gün** olarak.
+* **Aile Fertleri Kaza Durumu (Detaysız):** Aile yalnızca toplamı görür; hangi vakit olduğu sadece sahibine açıktır.
 
 ### 4. 🏆 İbadet Karnesi
-* Son 7 günün tablosu, haftalık hedef (x/35), son 30 gün yüzdesi ve **tam gün serisi**.
+* **Haftalık başarı oranı**, Kılınan Vakit (x/35), Eda Edilen Kaza, Aile Uyumu.
+* Tarihli **7 günlük grafik** (güne dokun → vakit detayı) ve **Bugünün Vakit Detayı**.
+* **Birlikte Secde:** Ailenle aynı vakti kıldığın sayı (gerçek veriden).
+* **5 manevi rozet** (gerçek veriden): Sabah Namazı Muhafızı, 5'te 5 Sadakati, Kaza Avcısı, İbadet Kardeşliği, İstikrar Yıldızı.
+* **Günün Hadis-i Şerifi.**
 
 ### 5. 🔔 Bildirimler
-* Her vakitten **10 dakika önce** hatırlatma.
+* Her vakitten **11 dakika önce** hatırlatma; her bildirimde farklı bir **hadis, dua veya özlü söz**.
 * Her gün **12:00**'de günün ayeti / hadisi.
-* Bildirimler telefonda zamanlanır; Ayarlar'dan açılıp kapatılabilir.
+* **Aile bildirimleri** (5 sn gecikmeli, tek bildirim). Hepsi Ayarlar'dan açılıp kapatılabilir.
+
+### 6. ⚙️ Ayarlar
+* Sürüm + **Güncel / Yeni Sürüm** rozeti, **Güncellemeleri Kontrol Et**, uygulama içi kurulum.
+* **Veritabanı Durumu:** Bulut Senkronize ☁️ / Gezinti 👀, **Şimdi Yedekle**, bekleyen kayıt sayısı.
+* Konum (GPS), hatırlatma anahtarları, **Uygulamayı paylaş** (paylaşım penceresi), **Öneri Yaz** (mail uygulaması), gizlilik politikası, **Hesabımı ve verilerimi sil**.
+
+### 7. 👀 Gezinti Modu (giriş yapmadan)
+* Bütün ekranlar, Aile Havuzu dahil, denenebilir. Yapılanlar **sadece bellekte** tutulur; uygulama kapanınca silinir.
+* Giriş yapılırsa o oturumdakiler buluta kaydedilir (kaza sayıları hesaptakilerin üzerine eklenir).
 
 ---
 
 ## 🔒 Güvenlik ve Gizlilik
 
-| Konu | Eski sürüm (Kotlin) | Yeni sürüm |
+| Konu | Eski sürüm (Kotlin) | v1.0 |
 |---|---|---|
-| Aile verisi | Herkese açık ntfy kanalları (kodu bilen herkes okuyabiliyordu) | Supabase + satır düzeyi güvenlik (RLS): sadece havuz üyeleri görür |
-| Davet kodu | `REIS-00XXXX` (tahmin edilebilir) | 8 karakter rastgele kod + saatte 20 deneme sınırı + reis onayı |
-| E-posta | Kanallarda dolaşıyordu | Hiçbir kullanıcı diğerinin e-postasını göremez |
-| Kaza detayı | — | Veritabanı kuralıyla sadece sahibine açık |
-| Unvan değiştirme | Herkes | Sadece Aile Reisi |
+| Aile verisi | Herkese açık ntfy kanalları | Supabase + satır düzeyi güvenlik (RLS): sadece havuz üyeleri görür |
+| Davet kodu | `REIS-00XXXX` (tahmin edilebilir) | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre, reis onayı |
+| E-posta | Kanallarda dolaşıyordu | `profiles.email` sütununa istemci erişimi kapalı; hiçbir kullanıcı diğerinin e-postasını göremez |
+| Kaza detayı | — | Veritabanı kuralıyla sadece sahibine açık; aile `kaza_summary` toplamını görür |
+| Ünvan değiştirme | Herkes | Sadece Aile Reisi (sunucu fonksiyonunda kontrol) |
 | Konum | — | Sadece telefonda; sunucuya gönderilmez |
+| Misafir verisi | — | Telefona yazılmaz, sadece bellekte |
+| Hesap silme | — | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
 | İmza anahtarı | — | GitHub Secrets'ta; repoda değil |
 
 📄 [Gizlilik Politikası](https://bilkil53.github.io/aile-ile-namaz-/privacy.html)
 
 ---
 
-## 📋 Sürüm Değişiklik Günlüğü
+## 📦 Teknik Mimari
 
-> Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
+| Katman | Kullanılan |
+|---|---|
+| Uygulama | Flutter (Dart 3), Material 3, tek kod tabanı |
+| Arka uç | Supabase — PostgreSQL 15, Row Level Security, Auth, Realtime (Frankfurt / eu-central-1) |
+| Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
+| Vakitler | aladhan.com, method 13 (Diyanet) → önbellek → çevrimdışı yerel hesap; 81 il koordinatı |
+| Konum | geolocator (son bilinen → anlık konum), geocoding (İlçe, İl), 3 saatte bir otomatik |
+| Bildirim | flutter_local_notifications (zamanlanmış, 3 gün ileri) + Realtime ile aile olayları |
+| Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
+| Güncelleme | GitHub Releases API → APK uygulama içinde indirilir → open_filex ile kurulum |
+| Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → imzalı release APK → GitHub Releases |
 
-### 🏡 Sürüm 38 — Vakit hatırlatmasında hadis/dua, başörtülü simgeler
-* **Vakit hatırlatması 11 dakika önce** gelir ve her bildirimde farklı bir **hadis, dua veya özlü söz** bulunur (bildirime dokununca tamamı açılır).
-* **Aile Reisi simgesi 🏡** (taç/kral simgesi kaldırıldı). Reisin seçebileceği ünvanlar: 🏡 Aile Reisi, 🧔 Baba, 🧕 Anne.
-* **Başörtülü simgeler:** Simge seçiminde yeni "Başörtülü" grubu (6 ten rengi). Eşi, Kızı, Annesi, Gelini, Ninesi ünvanları varsayılan olarak başörtülü simgeyle gelir.
+### Paketler
+`supabase_flutter ^2.8` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
 
-### ✉️ Sürüm 36 — Temiz başlangıç, Öneri Yaz mail ile, gerçek veri gösterimi
-* Test sürümlerinden telefonda kalan işaret önbelleği ve bekleyen kuyruk ilk açılışta bir kez temizlenir; herkes kendi işaretlemesiyle temiz başlar.
-* **Öneri Yaz** (Ayarlar) telefondaki mail uygulamasını konu ve sürüm bilgisi hazır şekilde açar.
-* Vakit saatleri yüklenmeden Bugün ekranındaki kartlar kilitli; gelecek vakitler yanlışlıkla işaretlenemez.
-* Aile İbadet Halkası matrisinde işaretlenmemiş vakitler örnek veri gibi görünmesin diye sade "—" ile gösterilir; yalnızca gerçekten işaretlenen Kıldı / Kılmadı / Muaf görünür.
-
-### 📤 Sürüm 32 — Paylaşım penceresi, yumuşak vakit simgeleri
-* **Uygulamayı paylaş** (Ayarlar) ve **davet kodu paylaş** (Aile Havuzu) artık telefonun paylaşım penceresini açıyor: WhatsApp, Gmail, Mesajlar, Telegram vb. Davet mesajında EMB kodu ve indirme linki hazır gelir. Kopyala düğmesi sadece kodu kopyalar.
-* Vakit simgeleri emoji yerine eski uygulamadaki ince çizgili simgeler: gün doğumu, güneş, yarım güneş, ay-bulut, hilal.
-
-### 🌙 Sürüm 27 — Eski tasarım geri döndü, Hoş Geldiniz penceresi, gezinti modu, EMB kodları, 5 dakikalık onay
-**Aile Havuzu**
-* Davet kodları artık **EMB-123456** biçiminde. Uygulamayı kuran herkes **"Aile Ferdi"** olarak başlar (Bireysel Mod).
-* Reis, katılımı onaylarken **kendi ünvanını** (🏡 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer.
-* Katılım isteği **5 dakika** içinde onaylanmalı; bu sürede ikinci istek gönderilemez. İki tarafta da canlı geri sayım.
-* **"Bağlantıyı Teyit Et 🔄"** düğmesi: sunucudan bağlantı / istek durumunu sorgular. BEKLEMEDE / AKTİF rozeti.
-* Profil kartı (Bireysel Mod / Aile Modu), **"Bugün Aile Başarısı: x / y Vakit (%)"**, vakit simgeli ortak matris, "◄ Dünü Gör".
-* **Aile bildirimleri:** Aileden biri namaz kılınca, kaza eda edince, dua gönderince telefona bildirim gelir (Ayarlar'dan kapatılabilir). Kıldı/kılmadı işaretinden **5 saniye sonra** son duruma göre tek bildirim gider; hızlı değiştirmeler aileye fazla bildirim göndermez.
-
-**Ekranlar (eski uygulamanın tasarımı)**
-* Vakitler simgelerle: 🌅 Sabah · ☀️ Öğle · ⛅ İkindi · 🌇 Akşam · 🌌 Yatsı.
-* **Kaza:** "Kalan Kaza Borcu / Kılınan Kaza" kutuları, "Farz: 4 Rekat | Kılınan: X", −/Borç/+ , "Kaza Kıldım" / "Kaza Borcu Yok (Elhamdülillah)", aile fertlerinin detaysız kaza durumu.
-* **Karne:** Haftalık başarı oranı, Kılınan Vakit / Eda Edilen Kaza / Aile Uyumu, tarihli 7 günlük grafik (güne dokun → vakit detayı), **Birlikte Secde** sayacı ve gerçek veriyle hesaplanan 5 rozet (Sabah Namazı Muhafızı, 5'te 5 Sadakati, Kaza Avcısı, İbadet Kardeşliği, İstikrar Yıldızı), Günün Hadis-i Şerifi.
-* **Ayarlar:** Uygulama Bilgileri kartı: sürüm + Güncel/Yeni Sürüm rozeti, Güncellemeleri Kontrol Et, Veritabanı Durumu (Bulut / Yerel), Şimdi Yedekle, Geliştirici, Proje & Kaynak Kod, Öneri Yaz; konum ve bildirim anahtarları, uygulamayı paylaş, gizlilik.
-
-**Güvenilirlik ve gizlilik**
-* **Çevrimdışı kayıt:** İnternet yokken işaretlenen vakit / kaza telefonda bekler, bağlantı gelince otomatik buluta gider.
-* **Hoş Geldiniz penceresi:** Giriş sayfası yerine, eski uygulamadaki gibi uygulamanın üzerinde açılan karşılama penceresi (özellik kartları + "Google ile Hızlı Giriş Yap").
-* **Gezinti modu (giriş yapmadan):** Bütün ekranlar, Aile Havuzu dahil, denenebilir. Yapılanlar **sadece bellekte** tutulur ve uygulama kapanınca silinir; telefona kalıcı kayıt yapılmaz. Google ile giriş yapılırsa o oturumdakiler buluta kaydedilir (kaza sayıları hesaptakilerin üzerine eklenir). Her açılışta karşılama penceresi tekrar gelir.
-* **Hesabımı ve verilerimi sil:** Çift onaylı; reisi olunan dolu havuzların reisliği en eski üyeye geçer.
-
-### 🕌 Sürüm 21 — Aile Havuzu: kod hazır, ünvanları reis verir
-* **"Aile Havuzumu Başlat" adımı kaldırıldı:** Giriş yapan herkesin kendi havuzu ve davet kodu otomatik hazır gelir (eski v1.14 gibi).
-* **Katılım:** Katılan kişi sadece davet kodunu girer; ünvan sorulmaz.
-* **Ünvanlar Aile Reisine göre:** Reis onaylarken katılana *kendine göre* ünvan (Eşi, Oğlu, Kızı, Annesi, Babası…) ve simge verir. Sonradan da yalnızca reis değiştirebilir.
-* Simge grupları: Kadın/Anne/Eş, Erkek/Baba/Eş, Çocuk & Bebek, Diğer.
-* Reisin ünvanı sabit **"🏡 Aile Reisi"**; reislik devredilince ünvanlar da devredilir.
-* Başka bir aileye katılıp onaylanınca kişinin boş kendi havuzu otomatik kaldırılır (tek aile görünür).
-
-### Sürüm 17 — Gizlilik ve README
-* Katılım **sadece reis davet koduyla**; e-posta ile katılma kaldırıldı.
-* Davet mesajından ve tanıtım/gizlilik sayfalarından e-posta adresleri kaldırıldı.
-* Kullanıcıların e-posta adresleri veritabanında diğer kullanıcılara tamamen kapatıldı.
-* Bu ayrıntılı README ve sürüm günlüğü eklendi.
-
-### Sürüm 16 — Aile Havuzu (eski tasarım + v1.13–v1.18 revizeleri)
-* Ortak matris, Dün/Bugün, Aileye Dua Gönder, bireyler kartları.
-* Bekleyen talep kartı ve iptal, 24 saat geçerlilik.
-* Reis onaylarken iki tarafın unvanını birlikte belirler; unvan yetkisi reiste.
-* Havuzu Kapat & Sıfırla, Havuzdan Ayrıl.
-* **Konum GPS ile otomatik** (ilçe, il); şehir seçimi kaldırıldı.
-* Kullanıcı adı tüm sekmelerde aynı.
-
-### Sürüm 13 — Eski uygulamanın tüm yapısı
-* Diyanet yöntemiyle vakitler, SIRADAKİ VAKİT, vakti girmeyen namaz kilidi, Dün/Bugün.
-* Kaza, Karne, Kıble pusulası, günün ayeti/hadisi, vakit hatırlatmaları, Ayarlar.
-
-### Sürüm 10 — Uygulama içi güncelleme
-* APK uygulamanın içinde iner, Android güncelleme ekranı açılır.
-
-### Sürüm 9 — Çam yeşili tasarım
-* Eski uygulamanın renkleri, üst bar, alt menü ve Bugün ekranı.
-
-### Sürüm 6–8 — Telefondan hesap seçerek giriş
-* Tarayıcı açılmadan, telefondaki Gmail hesabıyla giriş; kalıcı imza anahtarı.
-
-### Sürüm 2 — İlk Flutter sürümü
-* Google ile giriş, aile havuzu, yönetici onayı, namaz takibi.
-
----
-
-## 📦 Proje Mimarisi
-
-* **Uygulama:** Flutter (Dart) — Android ve iOS tek kod
-* **Arka uç:** Supabase (PostgreSQL + RLS, Auth, Realtime) — Frankfurt
-* **Giriş:** Google (telefondaki hesap seçimi; yedek olarak tarayıcı)
-* **Vakitler:** Diyanet yöntemi (aladhan.com, method 13) + çevrimdışı yerel hesap
-* **Derleme:** GitHub Actions → imzalı APK → GitHub Releases
-* **Dallar:** `dev` (test derlemesi, yayınlanmaz) → `main` (yayın)
+### Kod yapısı
+```
+lib/
+  main.dart            AuthGate: oturum → HomeShell, yoksa gezinti + Hoş Geldiniz penceresi
+  config.dart          Supabase URL, publishable anahtar, Google web client ID
+  data.dart            Repo: tüm Supabase sorguları ve RPC'ler, çevrimdışı kuyruk, misafir aktarımı
+  local_store.dart     Önbellek, bekleme kuyruğu, bellekteki misafir verisi
+  models.dart          PrayerStatus, Pool, Member, JoinRequest, PoolEvent, ünvanlar
+  prayer_times.dart    Diyanet vakitleri, 81 il, kıble açısı
+  location.dart        GPS → ilçe/il
+  notifications.dart   Vakit hatırlatmaları, günün içeriği, aile bildirimleri
+  update_checker.dart  GitHub Releases'tan uygulama içi güncelleme
+  screens/             today, family, kaza, karne, settings, login (Hoş Geldiniz), home_shell
+  widgets/             prayer_icon (vakit simgeleri), qibla_card (pusula)
+  content/             günlük ayet, hadis, dua, özlü söz, tebrikler
+```
 
 ### Veritabanı
-`profiles`, `pools` (owner = Aile Reisi), `pool_members`, `join_requests`, `daily_prayers`,
-`kaza_prayers` (sadece sahibi), `kaza_summary` (üyeler toplamı görür), `pool_events`, `devices`.
+Tablolar: `profiles`, `pools` (owner = Aile Reisi, `invite_code` EMB…), `pool_members` (ünvan + simge), `join_requests` (5 dk), `daily_prayers`, `kaza_prayers` (sadece sahibi), `kaza_summary` (üyeler toplamı görür), `pool_events` (aile akışı + bildirim), `devices`.
 
-Sunucu fonksiyonları: `create_pool`, `request_join`, `approve_join_with_roles`, `reject_join`,
-`cancel_join_request`, `my_outgoing_requests`, `leave_pool`, `remove_member`, `transfer_ownership`,
-`set_member_role`, `regenerate_invite_code`.
+Sunucu fonksiyonları (`security definer`, sadece `authenticated`): `ensure_my_pool`, `create_pool`, `request_join`, `approve_join_with_roles`, `reject_join`, `cancel_join_request`, `my_outgoing_requests`, `leave_pool`, `remove_member`, `transfer_ownership`, `set_member_role`, `regenerate_invite_code`, `delete_my_account`. Yardımcı fonksiyonlar `private` şemasında.
+
+Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_members`, `kaza_summary`.
+
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house`.
+
+### Derleme ve dallar
+* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (`v1.0.N`, etiket `apk-N`).
+* Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
+* İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
 
 ### Geliştiriciler için
 ```bash
-flutter create . --org com.bilkil53 --project-name aile_ile_namaz --platforms android,ios
+flutter create . --org com.bilkil53 --project-name aile_ile_namaz --platforms android
 flutter pub get
 flutter run
 ```
 `lib/config.dart` içindeki anahtar **publishable** anahtardır (istemcide olması normaldir). `service_role` anahtarını asla repoya koyma.
+
+---
+
+## 📋 Sürüm Geçmişi
+
+### v1.0 — İlk resmi sürüm (31 Ekim 2026)
+Yukarıdaki tüm özellikler. Bu sürümle numaralandırma `v1.0.<derleme no>` oldu.
+Bu sürümdeki son eklemeler:
+* Toplu kaza eklemede **yıl** seçeneği ve hızlı yıl düğmeleri.
+* Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
+* Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.
+* Aile Reisi simgesi **🏡** (taç simgesi kaldırıldı), **başörtülü** simgeler.
+* Sürüm açıklamalarında teknik ayrıntılar.
+
+<details>
+<summary>Geliştirme geçmişi (v1.0 öncesi test derlemeleri)</summary>
+
+* **Derleme 36:** Temiz başlangıç (test önbelleği bir kez temizlenir), Öneri Yaz mail ile, vakitler yüklenmeden işaretleme kilitli, matriste boş vakitler "—".
+* **Derleme 32:** Paylaşım penceresi (uygulama + davet kodu), ince çizgili vakit simgeleri.
+* **Derleme 27:** Eski tasarım geri döndü; Hoş Geldiniz penceresi; gezinti modu; EMB kodları; 5 dk onay; Bağlantıyı Teyit Et; çevrimdışı kuyruk; aile bildirimleri; hesap silme; Kaza/Karne/Ayarlar yenilendi.
+* **Derleme 21:** Herkese otomatik havuz ve kod; ünvanları reis verir.
+* **Derleme 17:** Gizlilik: e-postalar gizlendi, commit geçmişi temizlendi; ayrıntılı README.
+* **Derleme 16:** Aile Havuzu eski tasarım + v1.13–v1.18 revizeleri.
+* **Derleme 13:** Eski uygulamanın tüm yapısı (GPS, Kıble, Karne, bildirimler).
+* **Derleme 10:** Uygulama içi güncelleme.
+* **Derleme 9:** Çam yeşili tasarım.
+* **Derleme 6–8:** Telefondan hesap seçerek Google girişi.
+* **Derleme 2:** İlk Flutter sürümü.
+</details>

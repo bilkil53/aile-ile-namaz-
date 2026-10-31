@@ -46,6 +46,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   int _idx(int len) => (_sel >= 0 && _sel < len) ? _sel : 0;
   Pool? get _pool => _pools.isEmpty ? null : _pools[_idx(_pools.length)];
   bool get _isOwner => _pool?.ownerId == myId;
+  String _label(Member m) => m.labelFor(viewerIsReis: _isOwner);
 
   @override
   void initState() {
@@ -316,7 +317,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   String get _myRole => _members.where((m) => m.userId == myId).firstOrNull?.roleTitle ?? 'Aile Ferdi';
 
   Future<void> _sendDua({Member? to}) async {
-    final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to?.shownName));
+    final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || text.trim().isEmpty || _pool == null) return;
     final msg = to == null ? text.trim() : '${to.shownName} için: ${text.trim()}';
     if (isGuest) {
@@ -349,7 +350,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           final res = await showDialog<(String, String, String?)>(
             context: context,
             builder: (_) => _TitleDialog(
-              title: m.name.isNotEmpty ? m.name : m.shownName,
+              title: m.name.isNotEmpty ? m.name : _label(m),
               subtitle: 'Sana göre unvanı ve simgesi:',
               initialTitle: m.roleTitle,
               initialIcon: m.icon,
@@ -359,10 +360,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
           if (res == null) return;
           await Repo.setMemberRole(pool.id, m.userId, res.$1, res.$2);
         case 'owner':
-          if (await _confirm('Aile Reisliği ${m.shownName} kişisine devredilsin mi? Bunu geri alamazsın.') != true) return;
+          if (await _confirm('Aile Reisliği ${_label(m)} kişisine devredilsin mi? Bunu geri alamazsın.') != true) return;
           await Repo.transferOwnership(pool.id, m.userId);
         case 'remove':
-          if (await _confirm('${m.shownName} havuzdan çıkarılsın mı?') != true) return;
+          if (await _confirm('${_label(m)} havuzdan çıkarılsın mı?') != true) return;
           await Repo.removeMember(pool.id, m.userId);
       }
       await _load();
@@ -940,7 +941,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                       width: colW,
                       child: Column(children: [
                         Text(m.icon, style: const TextStyle(fontSize: 18)),
-                        Text(m.userId == myId ? 'Sen' : m.shownName,
+                        Text(m.userId == myId ? 'Sen' : _label(m),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -1030,14 +1031,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(isMe ? '${m.shownName} (sen)' : m.shownName,
+                Text(isMe ? '${m.shownName} (sen)' : _label(m),
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 Text(isOwner ? '• 🏡 Havuz Yöneticisi' : '• 👥 Aile Ferdi',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: isOwner ? AppColors.gold : AppColors.emerald)),
-                if (m.name.isNotEmpty && m.name != m.shownName)
+                if (m.name.isNotEmpty && m.name != m.shownName && m.name != _label(m))
                   Text(m.name, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
               ]),
             ),
@@ -1082,7 +1083,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   // ---------- Akış ----------
   String _describe(PoolEvent e) {
-    final who = _members.where((m) => m.userId == e.senderId).firstOrNull?.shownName ??
+    final whoM = _members.where((m) => m.userId == e.senderId).firstOrNull;
+    final who = (whoM == null ? null : _label(whoM)) ??
         (e.message.isNotEmpty ? e.message : 'Bir üye');
     final prayer = prayerLabels[e.prayer?.toLowerCase()] ?? '';
     return switch (e.type) {
@@ -1227,7 +1229,7 @@ class _TitleDialogState extends State<_TitleDialog> {
             Wrap(spacing: 6, runSpacing: 6, children: [
               for (final e in reisTitles.entries)
                 ChoiceChip(
-                  label: Text(e.key),
+                  label: Text('${e.value} ${titleFor(e.key, viewerIsReis: true)}'),
                   selected: custom.isEmpty && _title == e.key,
                   onSelected: (_) => setState(() {
                     _ctrl.clear();

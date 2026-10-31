@@ -79,6 +79,25 @@ const reisTitles = {
   'Aile Ferdi': '👥',
 };
 
+/// Reisin gözünden sahiplik eki: "Kızı" → "Kızın", "Eşi" → "Eşin" …
+const _possessive = {
+  'Eşi': 'Eşin',
+  'Oğlu': 'Oğlun',
+  'Kızı': 'Kızın',
+  'Annesi': 'Annen',
+  'Babası': 'Baban',
+  'Kardeşi': 'Kardeşin',
+  'Torunu': 'Torunun',
+  'Gelini': 'Gelinin',
+  'Damadı': 'Damadın',
+  'Dedesi': 'Deden',
+  'Ninesi': 'Ninen',
+};
+
+/// Aile Reisi bakıyorsa ünvan "senin …" biçiminde (Kızın, Oğlun) gösterilir;
+/// diğer üyeler ünvanı reise göre (Kızı, Oğlu) görür. Veritabanında hep reise göre saklanır.
+String titleFor(String role, {required bool viewerIsReis}) => viewerIsReis ? (_possessive[role] ?? role) : role;
+
 /// Reisin seçebileceği simgeler (eski uygulamadaki gruplar).
 const iconGroups = <String, List<String>>{
   'Başörtülü': ['🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿'],
@@ -140,6 +159,9 @@ class Member {
 
   /// Ekranda gösterilecek ad: önce rol, yoksa profil adı.
   String get shownName => roleTitle.isNotEmpty ? roleTitle : name;
+
+  /// Bakan kişiye göre ad (reis için "Kızın", diğerleri için "Kızı").
+  String labelFor({required bool viewerIsReis}) => titleFor(shownName, viewerIsReis: viewerIsReis);
 }
 
 class JoinRequest {

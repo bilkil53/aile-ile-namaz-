@@ -79,7 +79,7 @@ class UpdateChecker {
         builder: (ctx) => AlertDialog(
           title: const Text('Yeni sürüm var'),
           content: Text(
-            'Sürüm $latest hazır (sizdeki: $current).'
+            'Yeni sürüm hazır (sizdeki: v${info.version}).'
             '${notes.isNotEmpty ? '\n\n$notes' : ''}',
           ),
           actions: [

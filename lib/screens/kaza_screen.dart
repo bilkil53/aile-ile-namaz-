@@ -28,6 +28,7 @@ class _KazaScreenState extends State<KazaScreen> {
 
   Map<String, (int, int)> _data = {};
   List<Member> _family = [];
+  bool _iAmReis = false;
   Map<String, List<int>> _familyKaza = {};
   bool _loading = true;
 
@@ -49,6 +50,7 @@ class _KazaScreenState extends State<KazaScreen> {
           final k = await Repo.kazaSummary(others.map((m) => m.userId).toList());
           if (mounted) {
             setState(() {
+              _iAmReis = pools.first.ownerId == myId;
               _family = others;
               _familyKaza = k;
             });
@@ -81,38 +83,13 @@ class _KazaScreenState extends State<KazaScreen> {
   }
 
   Future<void> _bulkAdd() async {
-    final ctrl = TextEditingController();
-    final days = await showDialog<int>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Toplu Kaza Borcu Ekle'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Kaç günlük namaz borcun var? Her vakte (vitir dahil) bu sayı eklenir.'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ctrl,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(labelText: 'Gün sayısı', hintText: 'örn. 365'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Vazgeç')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, int.tryParse(ctrl.text)), child: const Text('Ekle')),
-        ],
-      ),
-    );
-    ctrl.dispose();
+    final days = await showDialog<int>(context: context, builder: (_) => const _BulkDialog());
     if (days == null || days <= 0 || days > 36500) return;
     for (final (t, _, _, _) in _types) {
       final (o, c) = _of(t);
       await _set(t, o + days, c);
     }
-    _toast('Her vakte $days gün eklendi.');
+    _toast(days % 365 == 0 ? 'Her vakte ${days ~/ 365} yıllık ($days gün) kaza eklendi.' : 'Her vakte $days gün eklendi.');
   }
 
   @override
@@ -180,7 +157,7 @@ class _KazaScreenState extends State<KazaScreen> {
                     child: Row(children: [
                       Text(m.icon, style: const TextStyle(fontSize: 20)),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(m.shownName, style: const TextStyle(fontWeight: FontWeight.w600))),
+                      Expanded(child: Text(m.labelFor(viewerIsReis: _iAmReis), style: const TextStyle(fontWeight: FontWeight.w600))),
                       Builder(builder: (_) {
                         final k = _familyKaza[m.userId];
                         final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);
@@ -215,7 +192,7 @@ class _KazaScreenState extends State<KazaScreen> {
             ),
             onPressed: _bulkAdd,
             icon: const Icon(Icons.playlist_add),
-            label: const Text('Toplu Ekle (gün sayısıyla)'),
+            label: const Text('Toplu Ekle (yıl veya gün)'),
           ),
           const SizedBox(height: 12),
           for (final t in _types) ...[_row(t), const SizedBox(height: 10)],
@@ -296,6 +273,90 @@ class _KazaScreenState extends State<KazaScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
               ),
       ]),
+    );
+  }
+}
+
+/// Toplu kaza ekleme: gün ya da yıl olarak (1 yıl = 365 gün; her vakte, vitir dahil eklenir).
+class _BulkDialog extends StatefulWidget {
+  const _BulkDialog();
+
+  @override
+  State<_BulkDialog> createState() => _BulkDialogState();
+}
+
+class _BulkDialogState extends State<_BulkDialog> {
+  bool _years = true;
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  int get _value => int.tryParse(_ctrl.text) ?? 0;
+  int get _days => _years ? _value * 365 : _value;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      title: const Text('Toplu Kaza Borcu Ekle'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(value: true, label: Text('Yıl'), icon: Icon(Icons.calendar_today, size: 16)),
+              ButtonSegment(value: false, label: Text('Gün'), icon: Icon(Icons.today, size: 16)),
+            ],
+            selected: {_years},
+            onSelectionChanged: (v) => setState(() {
+              _years = v.first;
+              _ctrl.clear();
+            }),
+          ),
+          const SizedBox(height: 12),
+          if (_years) ...[
+            const Text('Hızlı ekle:', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            const SizedBox(height: 6),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final y in [1, 2, 3, 5, 10, 15, 20])
+                ActionChip(
+                  label: Text('$y Yıl'),
+                  onPressed: () => Navigator.pop(context, y * 365),
+                ),
+            ]),
+            const SizedBox(height: 12),
+          ],
+          TextField(
+            controller: _ctrl,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: _years ? 'Yıl sayısı' : 'Gün sayısı',
+              hintText: _years ? 'örn. 7' : 'örn. 365',
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _value > 0
+                ? 'Her vakte (vitir dahil) $_days gün eklenecek · toplam ${_days * 6} vakit.'
+                : (_years ? '1 yıl = 365 gün olarak hesaplanır.' : 'Her vakte (vitir dahil) bu sayı eklenir.'),
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+          onPressed: _value > 0 ? () => Navigator.pop(context, _days) : null,
+          child: const Text('Ekle'),
+        ),
+      ],
     );
   }
 }
