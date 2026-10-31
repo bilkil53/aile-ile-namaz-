@@ -119,6 +119,10 @@ jobs:
           open(ap, 'w', encoding='utf-8').write(s)
           print(open(st).read()[:1200])
           PY
+          # Eklentiler eklenmezse Crashlytics açılışta hata verir: derlemeyi durdur
+          grep -q 'com.google.firebase.crashlytics' android/settings.gradle.kts
+          grep -q 'id("com.google.firebase.crashlytics")' android/app/build.gradle.kts
+          { echo '## Firebase Gradle eklentileri'; echo '```'; grep -n 'google\|crashlytics' android/settings.gradle.kts android/app/build.gradle.kts; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Kalıcı imza anahtarını ayarla (Google girişi için SHA-1 sabit kalmalı)
         env:
