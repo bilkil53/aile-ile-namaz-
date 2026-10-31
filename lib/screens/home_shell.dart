@@ -11,6 +11,7 @@ import '../notifications.dart';
 import '../theme.dart';
 import 'karne_screen.dart';
 import 'kaza_screen.dart';
+import 'login_screen.dart';
 import 'family_screen.dart';
 import 'settings_screen.dart';
 import 'today_screen.dart';
@@ -33,6 +34,10 @@ class _HomeShellState extends State<HomeShell> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (isGuest && !LocalStore.guestMode) {
+        final loggedIn = await showWelcome(context);
+        if (loggedIn || !mounted) return; // giriş yapıldıysa yeni oturum ekranı açılır
+      }
       if (!isGuest) {
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
         // Misafirken girilenleri ve çevrimdışı bekleyenleri buluta gönder

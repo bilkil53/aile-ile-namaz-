@@ -8,7 +8,6 @@ import 'config.dart';
 import 'local_store.dart';
 import 'notifications.dart';
 import 'settings.dart';
-import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
 import 'theme.dart';
 import 'update_checker.dart';
@@ -71,7 +70,8 @@ class _AuthGateState extends State<AuthGate> {
           if (session != null) {
             return HomeShell(key: ValueKey(session.user.id));
           }
-          return LocalStore.guestMode ? const HomeShell(key: ValueKey('guest')) : const LoginScreen();
+          // Giriş yoksa uygulama açılır; ilk açılışta üzerine "Hoş Geldiniz" penceresi gelir.
+          return HomeShell(key: ValueKey('guest-${LocalStore.guestMode}'));
         },
       ),
     );
