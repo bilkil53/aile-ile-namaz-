@@ -19,6 +19,7 @@ Düzeltme: uygulama kapalıyken aile bildirimleri artık geliyor (Firebase açı
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
 **v1.5**
+- Aile Havuzunda ilk sırada kullanıcının kendisi, sonra Aile Reisi, sonra diğer fertler.
 - Düzeltme: Firebase açılırken "FirebaseCrashlytics component is not present" hatası telefonun bildirime kaydını engelliyordu. Çökme raporu eklentisi (Crashlytics) kaldırıldı; anlık bildirim (FCM) normal çalışır.
 
 **v1.4**

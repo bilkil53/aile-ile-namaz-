@@ -146,7 +146,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
         if (pools.isEmpty) throw Exception('pool');
       }
       final pool = pools[_idx(pools.length)];
-      final members = await Repo.members(pool.id);
+      // Sıralama: önce kullanıcının kendisi, sonra Aile Reisi, sonra katılma sırası
+      final members = [...await Repo.members(pool.id)]
+        ..sort((x, y) {
+          int rank(Member m) => m.userId == myId ? 0 : (m.userId == pool.ownerId ? 1 : 2);
+          return rank(x).compareTo(rank(y));
+        });
       final ids = members.map((m) => m.userId).toList();
       final solo = members.length <= 1;
       final r = await Future.wait<dynamic>([
