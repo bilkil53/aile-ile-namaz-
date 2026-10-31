@@ -22,11 +22,10 @@ class AppSettings {
     await _p.setBool('locationFromGps', gps);
   }
 
-  static bool get prayerReminders => _p.getBool('prayerReminders') ?? true;
-  static Future<void> setPrayerReminders(bool v) => _p.setBool('prayerReminders', v);
+  /// Vakit hatırlatması (11 dk önce) ve günün içeriği (12:00) zorunlu, kapatılamaz.
+  static bool get prayerReminders => true;
 
-  static bool get dailyContent => _p.getBool('dailyContent') ?? true;
-  static Future<void> setDailyContent(bool v) => _p.setBool('dailyContent', v);
+  static bool get dailyContent => true;
 
   static bool get familyAlerts => _p.getBool('familyAlerts') ?? true;
   static Future<void> setFamilyAlerts(bool v) => _p.setBool('familyAlerts', v);

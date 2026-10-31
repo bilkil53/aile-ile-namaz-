@@ -223,6 +223,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         label: Text(label),
       );
 
+  Widget _infoRow(String title, String sub) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
+              Text(sub, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+            ]),
+          ),
+          const Icon(Icons.check_circle, color: AppColors.prayedMint, size: 20),
+        ]),
+      );
+
   Widget _subSwitch(String title, bool value, String key) => Padding(
         padding: const EdgeInsets.only(left: 14),
         child: Row(children: [
@@ -473,14 +486,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ]),
             _divider(),
-            _switchRow('Vakit hatırlatması', 'Her vakitten ${AppSettings.reminderMinutes} dakika önce',
-                AppSettings.prayerReminders, (v) async {
-              await AppSettings.setPrayerReminders(v);
-              if (v) await Notifications.requestPermission();
-              unawaited(Notifications.reschedule());
-              setState(() {});
-              unawaited(_loadNextReminder());
-            }),
+            _infoRow('🕌 Vakit hatırlatması', 'Her vakitten ${AppSettings.reminderMinutes} dakika önce, vakte özel hadis/dua ile · her zaman açık'),
             if (AppSettings.prayerReminders && _nextReminder.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(left: 2, bottom: 6),
@@ -518,12 +524,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ]),
                 ),
               ),
-            _switchRow('Günün ayeti / hadisi', 'Her gün 12:00\'de', AppSettings.dailyContent, (v) async {
-              await AppSettings.setDailyContent(v);
-              if (v) await Notifications.requestPermission();
-              unawaited(Notifications.reschedule());
-              setState(() {});
-            }),
+            _infoRow('📖 Günün ayeti / hadisi', 'Her gün 12:00\'de · her zaman açık'),
             _switchRow('Aile bildirimleri', 'Aileden biri namaz kılınca / dua gönderince', AppSettings.familyAlerts,
                 (v) async {
               await AppSettings.setFamilyAlerts(v);

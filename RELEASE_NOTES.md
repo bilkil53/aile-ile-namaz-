@@ -1,4 +1,4 @@
-Düzeltme: anlık bildirim (Firebase) başlatılamıyordu; sürüm adları artık v1.1, v1.2 …
+Vakit hatırlatması ve 12:00 günün ayeti bildirimi artık zorunlu.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,9 @@ Düzeltme: anlık bildirim (Firebase) başlatılamıyordu; sürüm adları artı
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.2**
+- Vakit hatırlatması (her vakitten 11 dk önce, vakte özel hadis/dua ile) ve her gün 12:00'deki günün ayeti/hadisi bildirimi zorunlu; Ayarlar'da kapatma anahtarı kaldırıldı.
 
 **v1.1**
 - Düzeltme: Ayarlar'daki "Anlık bildirim: Firebase başlatılamadı" hatası. Firebase iki kez başlatılmaya çalışılıyordu; artık mevcut olan kullanılıyor, uygulama kapalıyken aile bildirimleri gelir.
