@@ -167,8 +167,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   static const _window = Duration(minutes: 5);
-  Duration _left(DateTime created) {
-    final d = created.add(_window).difference(DateTime.now());
+  Duration _left(DateTime? created) {
+    final d = (created ?? DateTime.now()).add(_window).difference(DateTime.now());
     return d.isNegative ? Duration.zero : d;
   }
 
@@ -525,7 +525,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     );
   }
 
-  Widget _countdown(DateTime created, Color color) {
+  Widget _countdown(DateTime? created, Color color) {
     final left = _left(created);
     return Row(children: [
       Icon(Icons.timer_outlined, size: 16, color: color),
