@@ -100,6 +100,26 @@ jobs:
           print('desugaring ok')
           PY
 
+      - name: Firebase (Crashlytics) Gradle eklentileri
+        run: |
+          cp android-config/google-services.json android/app/google-services.json
+          python3 - <<'PY'
+          import re
+          st = 'android/settings.gradle.kts'
+          s = open(st, encoding='utf-8').read()
+          if 'com.google.gms.google-services' not in s:
+              s = re.sub(r'(plugins\s*\{[^}]*?id\("com\.android\.application"\)[^\n]*\n)',
+                         r'\1    id("com.google.gms.google-services") version "4.4.2" apply false\n    id("com.google.firebase.crashlytics") version "3.0.2" apply false\n',
+                         s, count=1)
+          open(st, 'w', encoding='utf-8').write(s)
+          ap = 'android/app/build.gradle.kts'
+          s = open(ap, encoding='utf-8').read()
+          if 'com.google.gms.google-services' not in s:
+              s = s.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")\n    id("com.google.firebase.crashlytics")', 1)
+          open(ap, 'w', encoding='utf-8').write(s)
+          print(open(st).read()[:1200])
+          PY
+
       - name: Kalıcı imza anahtarını ayarla (Google girişi için SHA-1 sabit kalmalı)
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -188,7 +208,7 @@ jobs:
       - name: APK derle
         run: |
           set +e
-          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} > build.txt 2>&1
+          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} --obfuscate --split-debug-info=build/symbols > build.txt 2>&1
           code=$?
           tail -n 80 build.txt
           {
@@ -205,10 +225,29 @@ jobs:
       - name: APK dosya adını sabitle
         run: cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
 
+      - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
+        run: |
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          if 'xmlns:tools' not in s:
+              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
+          s = s.replace('<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>',
+                        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>')
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
+            --dart-define=STORE=play --obfuscate --split-debug-info=build/symbols-play
+          cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
+          (cd build && zip -qr ../debug-symbols.zip symbols symbols-play)
+
       - uses: actions/upload-artifact@v4
         with:
           name: aile-ile-namaz-apk
-          path: aile-ile-namaz.apk
+          path: |
+            aile-ile-namaz.apk
+            aile-ile-namaz.aab
+            debug-symbols.zip
 
       - name: Sürüm notlarını hazırla (RELEASE_NOTES.md + teknik ayrıntılar)
         if: github.ref == 'refs/heads/main'
@@ -238,4 +277,6 @@ jobs:
           body_path: release_body.md
           prerelease: false
           make_latest: true
-          files: aile-ile-namaz.apk
+          files: |
+            aile-ile-namaz.apk
+            aile-ile-namaz.aab

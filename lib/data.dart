@@ -26,15 +26,6 @@ class Repo {
     return rows.map<Pool>((r) => Pool.fromMap(r)).toList();
   }
 
-  static Future<void> createPool(String name, String role, String icon) async {
-    invalidatePools();
-    await supa.rpc('create_pool', params: {
-      'p_name': name,
-      'p_role_title': role,
-      'p_icon': icon,
-    });
-  }
-
   /// Geçersiz kodda false döner. Başarılıysa yöneticiye istek gitmiş olur.
   static Future<bool> requestJoin(String code, String role, String icon) async {
     final res = await supa.rpc('request_join', params: {
@@ -70,9 +61,6 @@ class Repo {
         .order('created_at');
     return rows.map<JoinRequest>((r) => JoinRequest.fromMap(r)).toList();
   }
-
-  static Future<void> approve(String requestId) =>
-      supa.rpc('approve_join', params: {'p_request': requestId});
 
   /// Reis onaylarken iki tarafın rolünü birden belirler.
   static Future<void> approveWithRoles(String requestId,
@@ -426,7 +414,7 @@ class Repo {
       .stream(primaryKey: ['id'])
       .eq('pool_id', poolId)
       .order('created_at', ascending: false)
-      .limit(50);
+      .limit(5); // Son 5 hareket (sunucu 1 haftalık kaydı tutar)
 
   static Future<void> sendDua(String poolId, String message) async {
     await supa.from('pool_events').insert({

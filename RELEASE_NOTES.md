@@ -1,4 +1,4 @@
-Anlık bildirim etkin: aile bildirimleri uygulama kapalıyken de telefona düşer; Ayarlar'da kayıt durumu görünür.
+Güvenlik ve performans güncellemesi: bildirim sınırları, 1 haftalık hareket kaydı, daha hızlı aile ekranı, çökme raporları.
 
 ## 🌟 Kullanıcı için
 
@@ -33,6 +33,11 @@ Anlık bildirim etkin: aile bildirimleri uygulama kapalıyken de telefona düşe
 - **Tam zamanında hatırlatma:** "Alarm ve hatırlatıcılar" izni verilirse bildirimler dakikası dakikasına gelir (Ayarlar'da uyarı ve İzin ver düğmesi).
 - Uygulama içi güncelleme, bulut durumu, Şimdi Yedekle, Uygulamayı paylaş, Öneri Yaz (mail), Hesabımı ve verilerimi sil.
 
+**Güvenlik ve performans**
+- Kişi başı bildirim sınırı: dua dakikada 1, saatte 3, günde 10; aynı vakit için günde en fazla 2 bildirim.
+- Katılma isteği internet kesilse bile 5 dakika sonra sunucuda kendiliğinden düşer; istek iletilemezse uygulama bunu söyler.
+- Aile hareketleri 1 hafta saklanır, son 5'i görünür. Aile ekranı sadece değişen kişinin satırını günceller.
+
 ## 🛠 Teknik ayrıntılar
 
 **Uygulama:** Flutter (Dart 3), Material 3. Paket adı `com.bilkil53.aile_ile_namaz`. Görünen sürüm `1.0`; `versionCode` = derleme numarası (v1.0 ile **1**'den başladı, yalnızca resmi yayınlarda artar; yayın etiketi `r<N>`). Android güncellemeyi ve uygulama içi güncelleme kontrolü bununla çalışır.
@@ -57,6 +62,10 @@ Anlık bildirim etkin: aile bildirimleri uygulama kapalıyken de telefona düşe
 **Anlık bildirim (FCM):** firebase_core ^3.6 + firebase_messaging ^15.1, Firebase projesi `aile-ile-namaz-d437f`. Cihaz adresi `devices` tablosuna (RLS: sadece sahibi) yazılır; çıkışta / aile bildirimleri kapatılınca silinir. `pool_events` ekleme tetikleyicisi (`pg_net`) → `push-family` Edge Function → FCM HTTP v1 (hizmet hesabı JWT, `aile_olaylari` kanalı). Olay `pushed_at` ile atomik işaretlenir (son 2 dk, tek sefer); geçersiz cihaz adresleri otomatik temizlenir. Uygulama ön plandayken Realtime gösterir, arka planda FCM (çift bildirim yok). Migration `11_fcm_push_trigger`.
 
 **Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri, BigText; `SCHEDULE_EXACT_ALARM` izni varsa `exactAllowWhileIdle`, yoksa esnek). Vakte özel söz havuzu eski uygulamadan taşındı (31 söz). Aile olayları Realtime `pool_events` dinlenerek gösterilir; vakit olayları 5 sn gecikmeli ve tekilleştirilmiş gönderilir.
+
+**Güvenlik/performans (derleme 4):** `pool_events` BEFORE INSERT sınır tetikleyicisi (`rate_limited`), `(sender_id, created_at)` indeksi; kullanılmayan `approve_join`, `create_pool` ve `join_requests_user_idx` kaldırıldı; `join_requests.status`'a `expired`; pg_cron: `aile-expire-requests` (her dakika), `aile-cleanup` (her gece, 7 gün). Release: `--obfuscate --split-debug-info`; Firebase Crashlytics (google-services + crashlytics Gradle eklentileri).
+
+**Google Play:** Aynı derlemede `aile-ile-namaz.aab` (`--dart-define=STORE=play`): Play uygulama içi güncelleme (in_app_update), `REQUEST_INSTALL_PACKAGES` kaldırılmış manifest. Rehber: `docs/PLAY_STORE.md`.
 
 **Güncelleme:** GitHub Releases API (`releases/latest`) → iç etiket numarası > yüklü `versionCode` ise APK uygulama içinde indirilir (ilerleme çubuğu) → Android kurulum ekranı.
 

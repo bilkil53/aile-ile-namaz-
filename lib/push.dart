@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
@@ -36,6 +38,12 @@ class Push {
     try {
       await Firebase.initializeApp(options: _options);
       _ready = true;
+      // Çökme raporları (Firebase Crashlytics): hata olursa geliştiriciye anonim rapor gider
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
     } catch (e) {
       _set(false, 'Firebase başlatılamadı: ${_short(e)}');
     }

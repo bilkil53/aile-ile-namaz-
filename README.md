@@ -94,7 +94,9 @@
 | Konu | Eski sürüm (Kotlin) | v1.0 |
 |---|---|---|
 | Aile verisi | Herkese açık ntfy kanalları | Supabase + satır düzeyi güvenlik (RLS): sadece havuz üyeleri görür |
-| Davet kodu | `REIS-00XXXX` (tahmin edilebilir) | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre, reis onayı |
+| Davet kodu | `REIS-00XXXX` (tahmin edilebilir) | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre (sunucu her dakika süresi dolanı düşürür), reis onayı |
+| Bildirim taşması | — | Kişi başı sınır: dua dakikada 1 / saatte 3 / günde 10; aynı vakit günde 2 |
+| Kod | — | Release derlemesi karıştırılmış (obfuscate) |
 | E-posta | Kanallarda dolaşıyordu | `profiles.email` sütununa istemci erişimi kapalı; hiçbir kullanıcı diğerinin e-postasını göremez |
 | Kaza detayı | — | Veritabanı kuralıyla sadece sahibine açık; aile `kaza_summary` toplamını görür |
 | Ünvan değiştirme | Herkes | Sadece Aile Reisi (sunucu fonksiyonunda kontrol) |
@@ -103,7 +105,7 @@
 | Hesap silme | — | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
 | İmza anahtarı | — | GitHub Secrets'ta; repoda değil |
 
-📄 [Gizlilik Politikası](https://bilkil53.github.io/aile-ile-namaz-/privacy.html)
+📄 [Gizlilik Politikası](https://bilkil53.github.io/aile-ile-namaz-/privacy.html) · 🗑 [Hesap silme](https://bilkil53.github.io/aile-ile-namaz-/delete-account.html) · 🏪 [Play Store rehberi](docs/PLAY_STORE.md)
 
 ---
 
@@ -119,10 +121,12 @@
 | Bildirim | flutter_local_notifications (zamanlanmış, 3 gün ileri, kesin alarm) · aile olayları: ön planda Realtime, arka planda **FCM** (`push-family` Edge Function, Firebase `aile-ile-namaz-d437f`) |
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → APK uygulama içinde indirilir → open_filex ile kurulum |
-| Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → imzalı release APK → GitHub Releases |
+| Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → imzalı, karıştırılmış APK (GitHub) + AAB (Google Play) → GitHub Releases |
+| Hata takibi | Firebase Crashlytics |
+| Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; her gece 7 günden eski aile hareketlerini temizler |
 
 ### Paketler
-`supabase_flutter ^2.8` · `firebase_core ^3.6` · `firebase_messaging ^15.1` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
+`supabase_flutter ^2.8` · `firebase_core ^3.6` · `firebase_messaging ^15.1` · `firebase_crashlytics ^4.1` · `in_app_update ^4.2` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
 
 ### Kod yapısı
 ```
@@ -151,7 +155,7 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 
 Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function `supabase/functions/push-family` → FCM HTTP v1. Gizli ayar `FCM_SERVICE_ACCOUNT` (Supabase Edge Function secret, Firebase hizmet hesabı JSON'u); repoda yoktur.
 
-Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger`.
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix`.
 
 ### Derleme ve dallar
 * `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0 — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).
@@ -177,6 +181,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 4:** Güvenlik ve Play hazırlığı: kişi başı bildirim sınırı (dua: dakikada 1, saatte 3, günde 10; aynı vakit günde 2), süresi dolan istekler sunucuda otomatik düşer, eski onay fonksiyonu kaldırıldı, aile hareketleri 1 hafta saklanır ve son 5'i görünür, aile ekranı sadece değişen kişiyi günceller, kod karıştırma, Firebase Crashlytics, Play paketi (AAB) + Google Play uygulama içi güncelleme, web'den hesap silme sayfası, gizlilik politikası güncellendi. Ayrıntı: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
 * **Derleme 3:** Kaza kayıtlarını sıfırlama (iki aşamalı onay). Ayarlar'da "Anlık bildirim: Hazır ✓" durumu ve tekrar deneme; sunucu anahtarı etkinleştirildi.
 * **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging). Konum her açılışta otomatik (10 sn arayla tekrar deneme); konum sadece Ayarlar'da.
 * Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.

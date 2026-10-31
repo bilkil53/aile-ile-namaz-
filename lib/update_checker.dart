@@ -3,15 +3,20 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// GitHub Releases'taki en son APK'yı kontrol eder, uygulama içinde indirir
-/// ve Android'in kurulum ekranını açar.
-/// Her derlemede sürüm numarası = GitHub Actions çalışma numarası (apk-N etiketi).
+/// Güncelleme iki kanaldan yapılır (derlemede `--dart-define=STORE=` ile seçilir):
+/// - `github` (varsayılan): GitHub Releases'taki son APK uygulama içinde indirilir, Android kurulum ekranı açılır.
+/// - `play`: Google Play'in uygulama içi güncelleme sistemi kullanılır (Play kuralları APK indirmeyi yasaklar).
+/// Karşılaştırma derleme numarasıyla yapılır (yayın etiketi rN = versionCode N).
 class UpdateChecker {
+  static const store = String.fromEnvironment('STORE', defaultValue: 'github');
+  static bool get isPlay => store == 'play';
+
   static const _latestApi =
       'https://api.github.com/repos/bilkil53/aile-ile-namaz-/releases/latest';
   static const downloadUrl =
@@ -21,6 +26,10 @@ class UpdateChecker {
 
   /// GitHub'daki son sürüm: (numara, açıklamanın ilk satırı). Hata olursa null.
   static Future<(int, String)?> latest() async {
+    if (isPlay) {
+      final cur = await currentBuild();
+      return await _playAvailable() ? (cur + 1, 'Google Play\'de yeni güncelleme var.') : (cur, '');
+    }
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
     try {
       final req = await client.getUrl(Uri.parse(_latestApi));
@@ -44,12 +53,44 @@ class UpdateChecker {
       int.tryParse((await PackageInfo.fromPlatform()).buildNumber) ?? 0;
 
   /// Ayarlar'daki "Hemen Güncelle" için.
-  static Future<void> install(BuildContext context, int version) => _downloadAndInstall(context, version);
+  static Future<void> install(BuildContext context, int version) =>
+      isPlay ? _playUpdate(context) : _downloadAndInstall(context, version);
 
   /// Uygulama açılışında bir kez çağrılır. Hata olursa sessizce geçer.
+  // ---------- Google Play ----------
+  static Future<bool> _playAvailable() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      return info.updateAvailability == UpdateAvailability.updateAvailable;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> _playUpdate(BuildContext context) async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability != UpdateAvailability.updateAvailable) return;
+      if (info.flexibleUpdateAllowed) {
+        // Arka planda iner, bitince uygulama yeniden başlatılarak kurulur
+        await InAppUpdate.startFlexibleUpdate();
+        await InAppUpdate.completeFlexibleUpdate();
+      } else if (info.immediateUpdateAllowed) {
+        await InAppUpdate.performImmediateUpdate();
+      }
+    } catch (_) {
+      await launchUrl(Uri.parse('https://play.google.com/store/apps/details?id=com.bilkil53.aile_ile_namaz'),
+          mode: LaunchMode.externalApplication);
+    }
+  }
+
   static Future<void> check(BuildContext context) async {
     if (_checked || !Platform.isAndroid) return;
     _checked = true;
+    if (isPlay) {
+      if (await _playAvailable() && context.mounted) await _playUpdate(context);
+      return;
+    }
     try {
       final info = await PackageInfo.fromPlatform();
       final current = int.tryParse(info.buildNumber) ?? 0;

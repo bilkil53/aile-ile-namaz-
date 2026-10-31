@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "736837751684",
+    "project_id": "aile-ile-namaz-d437f",
+    "storage_bucket": "aile-ile-namaz-d437f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736837751684:android:dc1c39574b3dcbd945c3d1",
+        "android_client_info": {
+          "package_name": "com.bilkil53.aile_ile_namaz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAN2lEI-gh97nI9RMp1gkRpthTBsUHn4sQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

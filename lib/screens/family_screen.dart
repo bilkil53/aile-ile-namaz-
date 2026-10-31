@@ -84,16 +84,40 @@ class _FamilyScreenState extends State<FamilyScreen> {
         .subscribe();
   }
 
+  /// Sadece değişen kişinin satırını günceller (tüm ekranı yeniden yüklemez).
+  void _onPrayerChange(PostgresChangePayload p) {
+    final r = p.newRecord;
+    final uid = r['user_id'] as String?;
+    final date = r['prayer_date'] as String?;
+    if (uid == null || date == null || !_members.any((m) => m.userId == uid) || !mounted) return;
+    final row = {for (final k in prayerKeys) k: PrayerStatusX.parse(r[k] as String?)};
+    if (date == todayStr()) {
+      setState(() => _today = {..._today, uid: row});
+    } else if (date == _yStr()) {
+      setState(() => _yesterday = {..._yesterday, uid: row});
+    }
+  }
+
+  void _onKazaChange(PostgresChangePayload p) {
+    final r = p.newRecord;
+    final uid = r['user_id'] as String?;
+    if (uid == null || !_members.any((m) => m.userId == uid) || !mounted) return;
+    setState(() => _kaza = {
+          ..._kaza,
+          uid: [((r['owed'] ?? 0) as num).toInt(), ((r['completed'] ?? 0) as num).toInt()],
+        });
+  }
+
   void _subscribePool(String poolId) {
     if (_eventsPoolId == poolId) return;
     if (_poolChannel != null) supa.removeChannel(_poolChannel!);
     final f = PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'pool_id', value: poolId);
     _poolChannel = supa
         .channel('pool-$poolId')
-        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'daily_prayers', callback: _refreshSoon)
+        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'daily_prayers', callback: _onPrayerChange)
         .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'pool_members', filter: f, callback: _refreshSoon)
         .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'join_requests', filter: f, callback: _refreshSoon)
-        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'kaza_summary', callback: _refreshSoon)
+        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'kaza_summary', callback: _onKazaChange)
         .subscribe();
     _events = Repo.eventsStream(poolId);
     _eventsPoolId = poolId;
@@ -251,6 +275,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (s.contains('already_member')) return 'Zaten bu havuzdasın.';
     if (s.contains('too_many_attempts')) return 'Çok fazla deneme. Biraz sonra tekrar dene.';
     if (s.contains('request_expired')) return 'İsteğin 5 dakikalık onay süresi doldu. Tekrar istek gönderebilirsin.';
+    if (s.contains('rate_limited')) return 'Çok sık gönderdin. Biraz bekleyip tekrar dene.';
     if (s.contains('pending_exists')) return 'Zaten bekleyen bir katılım isteğin var. 5 dakika içinde onaylanmazsa yenisini gönderebilirsin.';
     if (s.contains('invalid_owner_role')) return 'Kendi ünvanın Aile Reisi, Baba veya Anne olabilir.';
     if (s.contains('pool_limit_reached')) return 'En fazla 3 havuz kurabilirsin.';
@@ -284,7 +309,18 @@ class _FamilyScreenState extends State<FamilyScreen> {
       }
       await _load();
     } catch (e) {
-      _toast(_err(e));
+      // İnternet kesilmiş olabilir: istek sunucuya ulaştı mı kontrol et.
+      // Ulaşmadıysa tekrar denenebilir; ulaştıysa 5 dk içinde onaylanmazsa kendiliğinden düşer.
+      await _load();
+      if (!mounted) return;
+      if (_outgoing.isNotEmpty) {
+        _toast('Talebin iletildi ⏳ Aile Reisinin onayı bekleniyor.');
+      } else if (e.toString().contains('pending_exists') || e.toString().contains('rate_limited') ||
+          e.toString().contains('already_member') || e.toString().contains('too_many_attempts')) {
+        _toast(_err(e));
+      } else {
+        _toast('Talep iletilemedi. İnternet bağlantını kontrol edip tekrar dene.');
+      }
     }
   }
 
@@ -1127,7 +1163,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Son Hareketler',
+        const Text('Son Hareketler (son 5)',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         const SizedBox(height: 8),
         _whiteCard(
@@ -1137,7 +1173,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               if (!snap.hasData) {
                 return const Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator()));
               }
-              final events = snap.data!.take(20).map(PoolEvent.fromMap).toList();
+              final events = snap.data!.take(5).map(PoolEvent.fromMap).toList();
               if (events.isEmpty) {
                 return const Text('Henüz bir hareket yok.', style: TextStyle(color: AppColors.textMuted));
               }

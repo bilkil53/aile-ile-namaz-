@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
 <meta charset="utf-8">
@@ -6,44 +6,44 @@
 <title>Gizlilik Politikası – Aile İle Namaz</title>
 <style>
   body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 680px; margin: 0 auto; padding: 32px 20px; line-height: 1.6; color: #1b1b1b; }
-  h1 { color: #1B5E20; }
-  h2 { margin-top: 28px; }
-  a { color: #1B5E20; }
+  h1 { color: #0E5A4A; } h2 { margin-top: 28px; } a { color: #0E5A4A; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; } td, th { border: 1px solid #ddd; padding: 6px 8px; text-align: left; vertical-align: top; }
 </style>
 </head>
 <body>
-  <h1>Gizlilik Politikası</h1>
-  <p>Son güncelleme: 31 Ekim 2026</p>
+<h1>Gizlilik Politikası</h1>
+<p><small>Son güncelleme: 31 Ekim 2026 · Uygulama: Aile İle Namaz (com.bilkil53.aile_ile_namaz)</small></p>
+<p>Bu politika, Aile İle Namaz mobil uygulamasının hangi bilgileri topladığını, nasıl kullandığını ve nasıl silebileceğinizi açıklar.</p>
 
-  <p>Bu politika, <strong>Aile İle Namaz</strong> mobil uygulamasının hangi bilgileri topladığını ve nasıl kullandığını açıklar.</p>
+<h2>Topladığımız bilgiler</h2>
+<table>
+<tr><th>Bilgi</th><th>Neden</th><th>Nerede</th></tr>
+<tr><td>Google hesabı: ad ve e-posta (şifrenize erişmeyiz)</td><td>Giriş ve hesabınızı tanımak. E-postanız diğer kullanıcılara gösterilmez.</td><td>Supabase (AB, Frankfurt)</td></tr>
+<tr><td>Namaz kayıtları, kaza sayıları, aile havuzu üyelikleri, ünvanlar, dua mesajları</td><td>Uygulamanın temel işlevi; yalnızca aynı aile havuzundaki kişilere gösterilir</td><td>Supabase (AB, Frankfurt)</td></tr>
+<tr><td>Bildirim kimliği (cihaz adresi)</td><td>Aile bildirimlerini uygulama kapalıyken de iletmek</td><td>Supabase + Google Firebase Cloud Messaging</td></tr>
+<tr><td>Çökme raporları (hata kaydı, cihaz modeli, Android sürümü)</td><td>Uygulama hatalarını düzeltmek; kişisel içerik içermez</td><td>Google Firebase Crashlytics</td></tr>
+<tr><td>Konum</td><td>Namaz vakitlerini ve kıble yönünü hesaplamak</td><td><b>Sadece telefonunuzda</b>; sunucuya gönderilmez</td></tr>
+</table>
+<p>Giriş yapmadan (gezinti modunda) kullanırsanız hiçbir veri sunucuya gönderilmez; yaptıklarınız uygulama kapanınca silinir.</p>
 
-  <h2>Topladığımız bilgiler</h2>
-  <ul>
-    <li><strong>Google hesabı bilgileri:</strong> Google ile giriş yaptığınızda adınız ve e-posta adresiniz. Şifrenize erişmeyiz.</li>
-    <li><strong>Uygulama içinde girdiğiniz bilgiler:</strong> günlük namaz kayıtlarınız, kaza namazı sayılarınız, katıldığınız aile havuzları, havuzdaki rolünüz ve gönderdiğiniz dua mesajları.</li>
-    <li><strong>Bildirim kimliği:</strong> bildirim gönderebilmek için cihazınıza ait bir bildirim anahtarı (bu özellik etkinleştirildiğinde).</li>
-  </ul>
+<h2>Paylaşım</h2>
+<p>Bilgilerinizi satmayız ve reklam amacıyla kullanmayız. Veriler yalnızca altyapı sağlayıcıları (Supabase, Google Firebase) üzerinde, uygulamanın çalışması için işlenir. Kaza namazlarınızın hangi vakte ait olduğu yalnızca size görünür; aile havuzu üyeleri sadece toplamı görür.</p>
 
-  <h2>Bilgileri nasıl kullanırız</h2>
-  <ul>
-    <li>Hesabınızı oluşturmak ve oturumunuzu açık tutmak için.</li>
-    <li>Namaz kayıtlarınızı yalnızca <strong>üyesi olduğunuz aile havuzlarındaki</strong> kişilere göstermek için.</li>
-    <li>Havuzunuzdaki gelişmelerden size bildirim göndermek için.</li>
-  </ul>
-  <p>Kaza namazlarınızın hangi vakte ait olduğu yalnızca size görünür; havuz üyeleri sadece toplam sayıyı görür.</p>
+<h2>Güvenlik</h2>
+<p>Tüm bağlantılar şifrelidir (HTTPS). Veritabanında satır düzeyi güvenlik kuralları vardır: herkes yalnızca kendi verisini ve üyesi olduğu aile havuzunun verisini görebilir.</p>
 
-  <h2>Paylaşım</h2>
-  <p>Bilgilerinizi satmayız, reklam amacıyla kullanmayız ve üçüncü kişilerle paylaşmayız. Veriler, uygulamanın altyapı sağlayıcısı Supabase üzerinde (Avrupa Birliği, Frankfurt) saklanır.</p>
+<h2>Saklama ve silme</h2>
+<ul>
+  <li>Aile havuzundaki hareketler (dua, bildirim akışı) <b>7 gün</b> saklanır, sonra otomatik silinir.</li>
+  <li>Hesabınızı ve bütün verilerinizi uygulamadan silebilirsiniz: <b>Ayarlar → Hesabımı ve verilerimi sil</b>. Silme anında gerçekleşir.</li>
+  <li>Uygulamaya erişiminiz yoksa: <a href="delete-account.html">Hesap silme talebi</a> sayfasındaki adımları izleyin.</li>
+</ul>
 
-  <h2>Saklama ve silme</h2>
-  <p>Hesabınız ve tüm verilerinizin silinmesini istediğinizde uygulamadaki <strong>Ayarlar → Hesap</strong> bölümünden veya <a href="https://github.com/bilkil53/aile-ile-namaz-/issues">GitHub talep sayfasından</a> bildirmeniz yeterlidir (talepte e-posta veya kişisel bilgi paylaşmayın); talebiniz en geç 30 gün içinde yerine getirilir. Bir havuzdan ayrıldığınızda o havuzdaki üyeler sizin kayıtlarınızı artık göremez.</p>
+<h2>Çocuklar</h2>
+<p>Uygulama aile içi kullanım içindir. 13 yaşından küçük çocukların hesabı ebeveyn gözetiminde açılmalıdır.</p>
 
-  <h2>Çocuklar</h2>
-  <p>Uygulama aile içi kullanım içindir. 13 yaşından küçük çocukların hesabı ebeveyn gözetiminde açılmalıdır.</p>
-
-  <h2>İletişim</h2>
-  <p><a href="https://github.com/bilkil53/aile-ile-namaz-/issues">GitHub talep sayfası</a></p>
-
-  <p><a href="index.html">← Ana sayfa</a></p>
+<h2>İletişim</h2>
+<p><a href="https://github.com/bilkil53/aile-ile-namaz-/issues">GitHub talep sayfası</a> (talepte kişisel bilgi paylaşmayın).</p>
+<p><a href="index.html">← Ana sayfa</a></p>
 </body>
 </html>
