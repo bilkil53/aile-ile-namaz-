@@ -77,9 +77,9 @@ class UpdateChecker {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Yeni sürüm var'),
+          title: const Text('Yeni güncelleme var'),
           content: Text(
-            'Yeni sürüm hazır (sizdeki: v${info.version}).'
+            'Aile ile Namaz için yeni bir güncelleme hazır.'
             '${notes.isNotEmpty ? '\n\n$notes' : ''}',
           ),
           actions: [

@@ -32,7 +32,7 @@
 
 ## 🛠 Teknik ayrıntılar
 
-**Uygulama:** Flutter (Dart 3), Material 3. Paket adı `com.bilkil53.aile_ile_namaz`. Sürüm `1.0.<derleme no>`, `versionCode` = derleme no.
+**Uygulama:** Flutter (Dart 3), Material 3. Paket adı `com.bilkil53.aile_ile_namaz`. Görünen sürüm `1.0`; `versionCode` arka planda artan derleme numarasıdır (Android güncellemeyi ve uygulama içi güncelleme kontrolü bununla çalışır).
 
 **Paketler:** supabase_flutter ^2.8 · google_sign_in ^6.2 · geolocator ^13 · geocoding ^4 · sensors_plus ^6.1 · flutter_local_notifications ^18 (+ timezone, core library desugaring 2.1.4) · shared_preferences ^2.3 · package_info_plus ^8 · url_launcher ^6.3 · share_plus ^10.1 · open_filex ^4.6 · path_provider ^2.1 · intl ^0.19.
 
@@ -53,6 +53,6 @@
 
 **Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri, BigText). Aile olayları Realtime `pool_events` dinlenerek gösterilir; vakit olayları 5 sn gecikmeli ve tekilleştirilmiş gönderilir.
 
-**Güncelleme:** GitHub Releases API (`releases/latest`) → etiket numarası > yüklü derleme no ise APK uygulama içinde indirilir (ilerleme çubuğu) → Android kurulum ekranı.
+**Güncelleme:** GitHub Releases API (`releases/latest`) → iç etiket numarası > yüklü `versionCode` ise APK uygulama içinde indirilir (ilerleme çubuğu) → Android kurulum ekranı.
 
 **Derleme hattı (GitHub Actions):** `flutter create` → manifest yaması (izinler, giriş dönüş bağlantısı, bildirim alıcıları, mailto/https sorguları) → Gradle desugaring → keystore secrets ile imza → `flutter analyze` özeti → `flutter build apk --release` → `dev` dalında sadece derleme, `main` dalında GitHub Release.

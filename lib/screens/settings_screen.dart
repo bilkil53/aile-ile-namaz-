@@ -60,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       path: 'e.bilkil5391@gmail.com',
       query: _enc({
         'subject': 'Aile ile Namaz – Öneri / Destek (v$_version)',
-        'body': 'Merhaba,\n\n\n\n---\nSürüm: v$_version (yapı $_build)',
+        'body': 'Merhaba,\n\n\n\n---\nSürüm: v$_version (iç derleme $_build)',
       }),
     );
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -270,7 +270,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: hasUpdate ? AppColors.gold : AppColors.prayedMint),
                   ),
-                  child: Text(hasUpdate ? 'Yeni Sürüm!' : '✓ Güncel',
+                  child: Text(hasUpdate ? 'Güncelleme var!' : '✓ Güncel',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -289,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(14)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Yeni Sürüm Hazır 🎉',
+                  Text('Yeni Güncelleme Hazır 🎉',
                       style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
                   if (_notes.isNotEmpty)
                     Text(_notes, style: const TextStyle(fontSize: 12, color: Color(0xFF78350F))),

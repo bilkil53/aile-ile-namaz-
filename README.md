@@ -31,7 +31,7 @@
 
 **Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
-**Sürüm numarası:** `v1.0.<derleme no>` (ör. `v1.0.40`). Büyük bir değişiklikte `v2.0.x`'e geçilir; derleme numarası hep artar, bu yüzden güncellemeler kesintisiz çalışır.
+**Sürüm:** Uygulamada ve GitHub'da sadece **v1.0** yazar; yayınlar tarih ve saatle ayrılır (ör. *v1.0 — 31.10.2026 12:45*). Büyük bir değişiklikte **v2.0**'a geçilir. Arka planda artan bir derleme numarası tutulur (Android güncellemeyi bununla tanır), ekranda görünmez.
 
 ---
 
@@ -108,7 +108,7 @@
 
 | Katman | Kullanılan |
 |---|---|
-| Uygulama | Flutter (Dart 3), Material 3, tek kod tabanı |
+| Uygulama | Flutter (Dart 3), Material 3, tek kod tabanı · görünen sürüm `1.0`, `versionCode` = derleme no |
 | Arka uç | Supabase — PostgreSQL 15, Row Level Security, Auth, Realtime (Frankfurt / eu-central-1) |
 | Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
 | Vakitler | aladhan.com, method 13 (Diyanet) → önbellek → çevrimdışı yerel hesap; 81 il koordinatı |
@@ -148,7 +148,7 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house`.
 
 ### Derleme ve dallar
-* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (`v1.0.N`, etiket `apk-N`).
+* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0 — tarih saat*, iç etiket `apk-N`).
 * Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
 * İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
 
@@ -165,7 +165,7 @@ flutter run
 ## 📋 Sürüm Geçmişi
 
 ### v1.0 — İlk resmi sürüm (31 Ekim 2026)
-Yukarıdaki tüm özellikler. Bu sürümle numaralandırma `v1.0.<derleme no>` oldu.
+Yukarıdaki tüm özellikler. Görünen sürüm **v1.0**; güncellemeler tarihle ayrılır.
 Bu sürümdeki son eklemeler:
 * Toplu kaza eklemede **yıl** seçeneği ve hızlı yıl düğmeleri.
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
