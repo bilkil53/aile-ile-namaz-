@@ -28,5 +28,8 @@ class AppSettings {
   static bool get dailyContent => _p.getBool('dailyContent') ?? true;
   static Future<void> setDailyContent(bool v) => _p.setBool('dailyContent', v);
 
+  static bool get familyAlerts => _p.getBool('familyAlerts') ?? true;
+  static Future<void> setFamilyAlerts(bool v) => _p.setBool('familyAlerts', v);
+
   static int get reminderMinutes => _p.getInt('reminderMinutes') ?? 10;
 }

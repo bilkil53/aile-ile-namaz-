@@ -19,6 +19,33 @@ class UpdateChecker {
 
   static bool _checked = false;
 
+  /// GitHub'daki son sürüm: (numara, açıklamanın ilk satırı). Hata olursa null.
+  static Future<(int, String)?> latest() async {
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+    try {
+      final req = await client.getUrl(Uri.parse(_latestApi));
+      req.headers.set('Accept', 'application/vnd.github+json');
+      req.headers.set('User-Agent', 'aile-ile-namaz-app');
+      final res = await req.close();
+      if (res.statusCode != 200) return null;
+      final body = jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
+      final tag = body['tag_name'] as String? ?? '';
+      final n = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
+      return (n, notes);
+    } catch (_) {
+      return null;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<int> currentBuild() async =>
+      int.tryParse((await PackageInfo.fromPlatform()).buildNumber) ?? 0;
+
+  /// Ayarlar'daki "Hemen Güncelle" için.
+  static Future<void> install(BuildContext context, int version) => _downloadAndInstall(context, version);
+
   /// Uygulama açılışında bir kez çağrılır. Hata olursa sessizce geçer.
   static Future<void> check(BuildContext context) async {
     if (_checked || !Platform.isAndroid) return;

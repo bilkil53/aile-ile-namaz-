@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
+import '../local_store.dart';
 import '../theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final ok = await _nativeSignIn();
       if (!ok) return; // kullanıcı hesap seçimini kapattı
+      await LocalStore.setGuestMode(false);
     } catch (_) {
       try {
         await Supabase.instance.client.auth.signInWithOAuth(
@@ -109,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Telefonundaki Google hesabını seçerek hemen başla.',
+                        'Telefonundaki Google hesabını seç; namazların buluta yedeklenir, ailenle eşitlenir.',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                       ),
@@ -131,6 +133,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           label: const Text('Google ile giriş yap',
                               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                         ),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: OutlinedButton(
+                          onPressed: _busy ? null : () => LocalStore.setGuestMode(true),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.emerald,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Giriş yapmadan devam et'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Giriş yapmazsan kayıtların sadece bu telefonda saklanır; Aile Havuzu kullanılamaz. '
+                        'Sonra giriş yaparsan kayıtların buluta taşınır.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 11, color: AppColors.textMuted, height: 1.35),
                       ),
                     ],
                   ),

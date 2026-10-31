@@ -27,6 +27,22 @@ class Notifications {
     importance: Importance.defaultImportance,
   );
 
+  static const _familyChannel = AndroidNotificationDetails(
+    'aile_olaylari',
+    'Aile bildirimleri',
+    channelDescription: 'Aileden biri namaz kılınca veya dua gönderince',
+    importance: Importance.high,
+    priority: Priority.high,
+  );
+
+  /// Anında bildirim (aile olayları).
+  static Future<void> showFamily(int id, String title, String body) async {
+    try {
+      await init();
+      await _plugin.show(1000 + (id % 100000), title, body, const NotificationDetails(android: _familyChannel));
+    } catch (_) {}
+  }
+
   static Future<void> init() => _initF ??= _init();
 
   static Future<void> _init() async {

@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'local_store.dart';
 import 'models.dart';
 
 SupabaseClient get supa => Supabase.instance.client;
 
-String get myId => supa.auth.currentUser!.id;
+/// Giriş yapılmadıysa (misafir) 'local'.
+String get myId => supa.auth.currentUser?.id ?? 'local';
+
+bool get isGuest => supa.auth.currentUser == null;
 
 String todayStr() => DateFormat('yyyy-MM-dd').format(DateTime.now());
 
@@ -58,9 +63,10 @@ class Repo {
   static Future<List<JoinRequest>> pendingRequests(String poolId) async {
     final rows = await supa
         .from('join_requests')
-        .select('id, user_id, role_title, icon, profiles(display_name)')
+        .select('id, user_id, role_title, icon, created_at, profiles(display_name)')
         .eq('pool_id', poolId)
         .eq('status', 'pending')
+        .gte('created_at', DateTime.now().toUtc().subtract(const Duration(minutes: 5)).toIso8601String())
         .order('created_at');
     return rows.map<JoinRequest>((r) => JoinRequest.fromMap(r)).toList();
   }
@@ -88,12 +94,17 @@ class Repo {
   static Future<void> cancelRequest(String requestId) =>
       supa.rpc('cancel_join_request', params: {'p_request': requestId});
 
-  /// Gönderdiğim bekleyen istekler: (id, havuz adı, reis adı)
-  static Future<List<(String, String, String)>> myOutgoingRequests() async {
+  /// Gönderdiğim bekleyen istekler: (id, havuz adı, reis adı, gönderim zamanı). 5 dk geçerli.
+  static Future<List<(String, String, String, DateTime)>> myOutgoingRequests() async {
     final rows = await supa.rpc('my_outgoing_requests') as List<dynamic>;
     return [
       for (final r in rows.cast<Map<String, dynamic>>())
-        (r['id'] as String, r['pool_name'] as String? ?? '', r['owner_name'] as String? ?? ''),
+        (
+          r['id'] as String,
+          r['pool_name'] as String? ?? '',
+          r['owner_name'] as String? ?? '',
+          DateTime.tryParse(r['created_at'] as String? ?? '')?.toLocal() ?? DateTime.now(),
+        ),
     ];
   }
 
@@ -110,6 +121,7 @@ class Repo {
   static String? _myName;
   static Future<String> myDisplayName() async {
     if (_myName != null) return _myName!;
+    if (isGuest) return 'Misafir';
     final p = await supa.from('profiles').select('display_name').eq('id', myId).maybeSingle();
     final n = (p?['display_name'] as String? ?? '').trim();
     _myName = n.isNotEmpty ? n : (supa.auth.currentUser?.email ?? '').split('@').first;
@@ -133,17 +145,55 @@ class Repo {
   }
 
   // ---- Namaz durumları ----
+  /// Kendi kaydım: misafirde telefondan; girişliyse sunucudan (olmazsa son bilinen).
   static Future<Map<String, Map<String, PrayerStatus>>> dayPrayers(
       List<String> userIds, String date) async {
     if (userIds.isEmpty) return {};
+    if (isGuest) return {myId: LocalStore.day(date)};
+    try {
+      final rows = await supa
+          .from('daily_prayers')
+          .select()
+          .eq('prayer_date', date)
+          .inFilter('user_id', userIds);
+      final out = <String, Map<String, PrayerStatus>>{};
+      for (final r in rows) {
+        out[r['user_id'] as String] = {
+          for (final k in prayerKeys) k: PrayerStatusX.parse(r[k] as String?),
+        };
+      }
+      // Bekleyen (gönderilmemiş) kendi işaretlerimi üstüne koy
+      final mine = {...?out[myId], ..._pendingFor(date)};
+      if (userIds.contains(myId)) {
+        out[myId] = mine;
+        await LocalStore.saveDay(date, mine);
+      }
+      return out;
+    } catch (_) {
+      if (userIds.contains(myId)) return {myId: LocalStore.day(date)};
+      rethrow;
+    }
+  }
+
+  static Map<String, PrayerStatus> _pendingFor(String date) => {
+        for (final o in LocalStore.queue())
+          if (o['t'] == 'prayer' && o['date'] == date) o['key'] as String: PrayerStatusX.parse(o['status'] as String?),
+      };
+
+  /// Aile üyelerinin tarih aralığındaki kayıtları (Birlikte Secde için): date -> userId -> durumlar
+  static Future<Map<String, Map<String, Map<String, PrayerStatus>>>> rangeFor(
+      List<String> userIds, DateTime from, DateTime to) async {
+    if (userIds.isEmpty || isGuest) return {};
+    String f(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
     final rows = await supa
         .from('daily_prayers')
-        .select()
-        .eq('prayer_date', date)
-        .inFilter('user_id', userIds);
-    final out = <String, Map<String, PrayerStatus>>{};
+        .select('user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha')
+        .inFilter('user_id', userIds)
+        .gte('prayer_date', f(from))
+        .lte('prayer_date', f(to));
+    final out = <String, Map<String, Map<String, PrayerStatus>>>{};
     for (final r in rows) {
-      out[r['user_id'] as String] = {
+      (out[r['prayer_date'] as String] ??= {})[r['user_id'] as String] = {
         for (final k in prayerKeys) k: PrayerStatusX.parse(r[k] as String?),
       };
     }
@@ -169,39 +219,122 @@ class Repo {
   /// Üye olunan havuz kimlikleri (önbellekli; havuz değişince [invalidatePools]).
   static List<String>? _poolIds;
   static void invalidatePools() => _poolIds = null;
-  static Future<List<String>> myPoolIds() async =>
-      _poolIds ??= (await myPools()).map((p) => p.id).toList();
+  static Future<List<String>> myPoolIds() async {
+    if (isGuest) return [];
+    return _poolIds ??= (await myPools()).map((p) => p.id).toList();
+  }
 
-  /// Bir vakti kaydeder. Bugünse ve "kıldı/kılmadı" ise havuzlara olay düşer.
-  static Future<void> setPrayer({
+  /// Bir vakti kaydeder. İnternet yoksa telefonda bekletir, bağlantı gelince gönderir.
+  /// Dönüş: true = buluta gitti, false = telefonda bekliyor / misafir.
+  static Future<bool> setPrayer({
     required String key,
     required PrayerStatus status,
     String? date,
   }) async {
     final day = date ?? todayStr();
-    await supa.from('daily_prayers').upsert(
-      {'user_id': myId, 'prayer_date': day, key: status.code},
-      onConflict: 'user_id,prayer_date',
-    );
-    if (day != todayStr()) return;
-    final type = switch (status) {
-      PrayerStatus.prayed => 'PRAYED',
-      PrayerStatus.missed => 'MISSED',
-      _ => null,
-    };
-    if (type == null) return;
-    final pools = await myPoolIds();
-    if (pools.isEmpty) return;
-    // Tek istekte tüm havuzlara
-    await supa.from('pool_events').insert([
-      for (final p in pools)
-        {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
-    ]);
+    await LocalStore.setPrayer(day, key, status);
+    if (isGuest) {
+      await LocalStore.setHasGuestData(true);
+      return false;
+    }
+    try {
+      await supa.from('daily_prayers').upsert(
+        {'user_id': myId, 'prayer_date': day, key: status.code},
+        onConflict: 'user_id,prayer_date',
+      );
+    } catch (_) {
+      await LocalStore.enqueue({'t': 'prayer', 'date': day, 'key': key, 'status': status.code});
+      return false;
+    }
+    if (day != todayStr()) return true;
+    _scheduleAnnounce(day, key);
+    return true;
+  }
+
+  // Aileye bildirim: işaretlemeden 5 sn sonra, son duruma göre bir kez gönderilir.
+  // Hızlı değiştirmelerde (kıldı → kılmadı → kıldı) aileye tek bildirim gider.
+  static final Map<String, Timer> _announceTimers = {};
+  static final Map<String, String> _announced = {};
+
+  static void _scheduleAnnounce(String day, String key) {
+    final id = '$day|$key';
+    _announceTimers.remove(id)?.cancel();
+    _announceTimers[id] = Timer(const Duration(seconds: 5), () async {
+      _announceTimers.remove(id);
+      if (isGuest || day != todayStr()) return;
+      final status = LocalStore.day(day)[key] ?? PrayerStatus.none;
+      final type = switch (status) {
+        PrayerStatus.prayed => 'PRAYED',
+        PrayerStatus.missed => 'MISSED',
+        _ => null,
+      };
+      if (type == null || _announced[id] == type) return;
+      try {
+        final pools = await myPoolIds();
+        if (pools.isEmpty) return;
+        await supa.from('pool_events').insert([
+          for (final p in pools)
+            {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
+        ]);
+        _announced[id] = type;
+      } catch (_) {}
+    });
+  }
+
+  /// Bekleyen işlemleri sırayla buluta gönderir. İlk hatada durur.
+  static Future<int> flushQueue() async {
+    if (isGuest) return 0;
+    final q = LocalStore.queue();
+    var sent = 0;
+    while (q.isNotEmpty) {
+      final o = q.first;
+      try {
+        if (o['t'] == 'prayer') {
+          await supa.from('daily_prayers').upsert(
+            {'user_id': myId, 'prayer_date': o['date'], o['key'] as String: o['status']},
+            onConflict: 'user_id,prayer_date',
+          );
+        } else if (o['t'] == 'kaza') {
+          await _upsertKaza(o['type'] as String, (o['o'] as num).toInt(), (o['c'] as num).toInt());
+        }
+        q.removeAt(0);
+        sent++;
+        await LocalStore.saveQueue(q);
+      } catch (_) {
+        break;
+      }
+    }
+    return sent;
+  }
+
+  /// Misafirken girilen kayıtları giriş sonrası buluta taşır.
+  static Future<void> migrateGuestData() async {
+    if (isGuest || !LocalStore.hasGuestData) return;
+    for (final d in LocalStore.allDates()) {
+      final m = LocalStore.day(d);
+      if (m.isEmpty) continue;
+      await supa.from('daily_prayers').upsert(
+        {'user_id': myId, 'prayer_date': d, for (final e in m.entries) e.key: e.value.code},
+        onConflict: 'user_id,prayer_date',
+      );
+    }
+    for (final e in LocalStore.kaza().entries) {
+      await _upsertKaza(e.key, e.value.$1, e.value.$2);
+    }
+    await LocalStore.setHasGuestData(false);
   }
 
   /// Kendi namaz kayıtlarım (tarih aralığı, Karne için).
   static Future<Map<String, Map<String, PrayerStatus>>> myRange(DateTime from, DateTime to) async {
     String f(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+    if (isGuest) {
+      final out = <String, Map<String, PrayerStatus>>{};
+      for (var d = from; !d.isAfter(to); d = d.add(const Duration(days: 1))) {
+        final m = LocalStore.day(f(d));
+        if (m.isNotEmpty) out[f(d)] = m;
+      }
+      return out;
+    }
     final rows = await supa
         .from('daily_prayers')
         .select('prayer_date, fajr, dhuhr, asr, maghrib, isha')
@@ -218,34 +351,63 @@ class Repo {
 
   // ---- Kaza (detay sadece sahibine görünür) ----
   static Future<Map<String, (int, int)>> myKaza() async {
-    final rows = await supa
-        .from('kaza_prayers')
-        .select('prayer_type, owed_count, completed_count')
-        .eq('user_id', myId);
-    return {
-      for (final r in rows)
-        r['prayer_type'] as String: (
-          (r['owed_count'] as num).toInt(),
-          (r['completed_count'] as num).toInt(),
-        ),
-    };
+    if (isGuest) return LocalStore.kaza();
+    try {
+      final rows = await supa
+          .from('kaza_prayers')
+          .select('prayer_type, owed_count, completed_count')
+          .eq('user_id', myId);
+      final out = {
+        for (final r in rows)
+          r['prayer_type'] as String: (
+            (r['owed_count'] as num).toInt(),
+            (r['completed_count'] as num).toInt(),
+          ),
+      };
+      for (final o in LocalStore.queue().where((o) => o['t'] == 'kaza')) {
+        out[o['type'] as String] = ((o['o'] as num).toInt(), (o['c'] as num).toInt());
+      }
+      return out;
+    } catch (_) {
+      return LocalStore.kaza();
+    }
   }
 
+  static Future<void> _upsertKaza(String type, int owed, int completed) => supa.from('kaza_prayers').upsert({
+        'user_id': myId,
+        'prayer_type': type,
+        'owed_count': owed,
+        'completed_count': completed,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id,prayer_type');
+
   static Future<void> saveKaza(String type, int owed, int completed, {bool announce = false}) async {
-    await supa.from('kaza_prayers').upsert({
-      'user_id': myId,
-      'prayer_type': type,
-      'owed_count': owed,
-      'completed_count': completed,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }, onConflict: 'user_id,prayer_type');
+    await LocalStore.saveKaza(type, owed, completed);
+    if (isGuest) {
+      await LocalStore.setHasGuestData(true);
+      return;
+    }
+    try {
+      await _upsertKaza(type, owed, completed);
+    } catch (_) {
+      await LocalStore.enqueue({'t': 'kaza', 'type': type, 'o': owed, 'c': completed});
+      return;
+    }
     if (!announce) return;
-    final pools = await myPoolIds();
-    if (pools.isEmpty) return;
-    // Hangi vaktin kaza edildiği paylaşılmaz; sadece "kaza kıldı" olayı.
-    await supa.from('pool_events').insert([
-      for (final p in pools) {'pool_id': p, 'sender_id': myId, 'event_type': 'KAZA'},
-    ]);
+    try {
+      final pools = await myPoolIds();
+      if (pools.isEmpty) return;
+      // Hangi vaktin kaza edildiği paylaşılmaz; sadece "kaza kıldı" olayı.
+      await supa.from('pool_events').insert([
+        for (final p in pools) {'pool_id': p, 'sender_id': myId, 'event_type': 'KAZA'},
+      ]);
+    } catch (_) {}
+  }
+
+  /// Hesabımı ve bütün verilerimi kalıcı olarak siler.
+  static Future<void> deleteMyAccount() async {
+    await supa.rpc('delete_my_account');
+    await supa.auth.signOut();
   }
 
   // ---- Olaylar ----

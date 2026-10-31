@@ -42,6 +42,27 @@ const prayerLabels = {
   'witr': 'Vitir',
 };
 
+/// Vakit simgeleri (eski uygulamadaki gibi).
+const prayerEmoji = {
+  'fajr': '🌅',
+  'dhuhr': '☀️',
+  'asr': '⛅',
+  'maghrib': '🌇',
+  'isha': '🌌',
+};
+
+/// Vakit açıklamaları (eski Karne ekranından).
+const prayerSubtitles = {
+  'fajr': 'Güneş doğmadan önceki vaktin bereketi',
+  'dhuhr': 'Günün ortasındaki manevi mola',
+  'asr': 'Günün en kıymetli secde vakti',
+  'maghrib': 'Günün batışıyla ifa edilen şükür',
+  'isha': 'Günün son huzur secdesi',
+};
+
+/// Reisin kendi unvanı (katılım onayında seçer).
+const ownerTitles = {'Aile Reisi': '👑', 'Baba': '🧔', 'Anne': '🧕'};
+
 /// Unvanlar Aile Reisine göredir (reisin eşi, oğlu, kızı…). Reisin unvanı sabit: "Aile Reisi".
 const reisTitles = {
   'Eşi': '🧕',
@@ -86,9 +107,9 @@ class Pool {
         inviteCode: m['invite_code'] as String,
       );
 
-  /// ABCD-EFGH biçiminde gösterim.
-  String get displayCode => inviteCode.length == 8
-      ? '${inviteCode.substring(0, 4)}-${inviteCode.substring(4)}'
+  /// EMB-123456 biçiminde gösterim.
+  String get displayCode => inviteCode.startsWith('EMB') && inviteCode.length > 3
+      ? 'EMB-${inviteCode.substring(3)}'
       : inviteCode;
 }
 
@@ -127,8 +148,10 @@ class JoinRequest {
   final String email;
   final String roleTitle;
   final String icon;
+  final DateTime? createdAt;
 
   JoinRequest({
+    this.createdAt,
     required this.id,
     required this.userId,
     required this.name,
@@ -146,6 +169,7 @@ class JoinRequest {
       email: profile is Map ? (profile['email'] as String? ?? '') : '',
       roleTitle: m['role_title'] as String? ?? 'Aile Ferdi',
       icon: m['icon'] as String? ?? '👥',
+      createdAt: m['created_at'] == null ? null : DateTime.parse(m['created_at'] as String).toLocal(),
     );
   }
 }

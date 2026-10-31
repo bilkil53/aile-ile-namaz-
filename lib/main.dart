@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
+import 'local_store.dart';
 import 'notifications.dart';
 import 'settings.dart';
 import 'screens/login_screen.dart';
@@ -61,12 +62,18 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     final auth = Supabase.instance.client.auth;
-    return StreamBuilder<AuthState>(
-      stream: auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        final session = auth.currentSession;
-        return session == null ? const LoginScreen() : const HomeShell();
-      },
+    return ValueListenableBuilder<int>(
+      valueListenable: LocalStore.guestChanged,
+      builder: (context, _, __) => StreamBuilder<AuthState>(
+        stream: auth.onAuthStateChange,
+        builder: (context, snapshot) {
+          final session = auth.currentSession;
+          if (session != null) {
+            return HomeShell(key: ValueKey(session.user.id));
+          }
+          return LocalStore.guestMode ? const HomeShell(key: ValueKey('guest')) : const LoginScreen();
+        },
+      ),
     );
   }
 }

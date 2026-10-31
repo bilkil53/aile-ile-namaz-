@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data.dart';
+import '../local_store.dart';
 import '../location.dart';
+import '../models.dart';
+import '../settings.dart';
 import '../notifications.dart';
 
 import '../theme.dart';
@@ -21,16 +26,67 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _tab = 0;
 
+  RealtimeChannel? _events;
+  final Map<String, String> _names = {};
+
   @override
   void initState() {
     super.initState();
-    // Giriş sonrası: bildirim izni iste ve vakit hatırlatmalarını kur.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!isGuest) {
+        if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
+        // Misafirken girilenleri ve çevrimdışı bekleyenleri buluta gönder
+        try {
+          await Repo.migrateGuestData();
+        } catch (_) {}
+        await Repo.flushQueue();
+        _listenFamily();
+      }
       // Konum otomatik (GPS) → vakitler → hatırlatmalar
       await LocationHelper.autoUpdate();
       await Notifications.requestPermission();
       await Notifications.reschedule();
     });
+  }
+
+  @override
+  void dispose() {
+    if (_events != null) supa.removeChannel(_events!);
+    super.dispose();
+  }
+
+  /// Aileden biri namaz kılınca / dua gönderince telefona bildirim (uygulama açıkken).
+  Future<void> _listenFamily() async {
+    try {
+      for (final p in await Repo.myPools()) {
+        for (final m in await Repo.members(p.id)) {
+          _names[m.userId] = m.shownName;
+        }
+      }
+    } catch (_) {}
+    _events = supa
+        .channel('family-alerts-$myId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'pool_events',
+          callback: (payload) {
+            final r = payload.newRecord;
+            if (r['sender_id'] == myId || !AppSettings.familyAlerts) return;
+            final who = _names[r['sender_id']] ?? 'Aile ferdin';
+            final prayer = prayerLabels[(r['prayer'] as String?)?.toLowerCase()] ?? '';
+            final (title, body) = switch (r['event_type']) {
+              'PRAYED' => ('$who namazını kıldı 🤲', '$prayer namazını kıldı. Allah kabul etsin.'),
+              'KAZA' => ('$who kaza namazı kıldı', 'Bir kaza namazı eda etti.'),
+              'DUA' => ('$who dua gönderdi 🤲', (r['message'] as String?) ?? ''),
+              'MEMBER_JOINED' => ('Aile havuzuna katılım 🤝', '${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.'),
+              _ => ('', ''),
+            };
+            if (title.isEmpty) return;
+            Notifications.showFamily((r['id'] as num?)?.toInt() ?? 0, title, body);
+          },
+        )
+        .subscribe();
   }
 
   static const _subtitles = [

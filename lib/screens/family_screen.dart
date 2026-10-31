@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../content/daily_content.dart';
 import '../data.dart';
+import '../local_store.dart';
 import '../models.dart';
 import '../theme.dart';
 
@@ -26,7 +27,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Map<String, Map<String, PrayerStatus>> _yesterday = {};
   Map<String, List<int>> _kaza = {};
   List<JoinRequest> _requests = [];
-  List<(String, String, String)> _outgoing = [];
+  List<(String, String, String, DateTime)> _outgoing = [];
+  String _myName = '';
+  bool _checkingLink = false;
+  Timer? _ticker;
   bool _loading = true;
   bool _showYesterday = false;
   final _joinCtrl = TextEditingController();
@@ -44,6 +48,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
   @override
   void initState() {
     super.initState();
+    if (isGuest) {
+      _loading = false;
+      return;
+    }
     _subscribeMe();
     _load();
   }
@@ -51,6 +59,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _ticker?.cancel();
     if (_poolChannel != null) supa.removeChannel(_poolChannel!);
     if (_meChannel != null) supa.removeChannel(_meChannel!);
     _joinCtrl.dispose();
@@ -108,7 +117,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
         Repo.dayPrayers(ids, _yStr()),
         Repo.kazaSummary(ids),
         pool.ownerId == myId ? Repo.pendingRequests(pool.id) : Future.value(<JoinRequest>[]),
-        solo ? Repo.myOutgoingRequests() : Future.value(<(String, String, String)>[]),
+        solo ? Repo.myOutgoingRequests() : Future.value(<(String, String, String, DateTime)>[]),
+        Repo.myDisplayName(),
       ]);
       if (!mounted) return;
       _subscribePool(pool.id);
@@ -119,9 +129,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
         _yesterday = r[1] as Map<String, Map<String, PrayerStatus>>;
         _kaza = r[2] as Map<String, List<int>>;
         _requests = r[3] as List<JoinRequest>;
-        _outgoing = r[4] as List<(String, String, String)>;
+        _outgoing = r[4] as List<(String, String, String, DateTime)>;
+        _myName = r[5] as String;
         _loading = false;
       });
+      _syncTicker();
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -132,11 +144,64 @@ class _FamilyScreenState extends State<FamilyScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
+  /// Bekleyen istek varsa geri sayım için saniyede bir yenile; süre dolunca listeyi tazele.
+  void _syncTicker() {
+    final active = _outgoing.isNotEmpty || _requests.isNotEmpty;
+    if (!active) {
+      _ticker?.cancel();
+      _ticker = null;
+      return;
+    }
+    _ticker ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final expired = [..._outgoing.map((o) => o.$4), ..._requests.map((r) => r.createdAt)]
+          .any((t) => _left(t) == Duration.zero);
+      if (expired) {
+        _ticker?.cancel();
+        _ticker = null;
+        _load();
+      } else {
+        setState(() {});
+      }
+    });
+  }
+
+  static const _window = Duration(minutes: 5);
+  Duration _left(DateTime created) {
+    final d = created.add(_window).difference(DateTime.now());
+    return d.isNegative ? Duration.zero : d;
+  }
+
+  String _mmss(Duration d) =>
+      '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+
+  /// "Bağlantıyı Teyit Et": sunucuya sorup havuz / istek durumunu bildirir.
+  Future<void> _verifyLink() async {
+    setState(() => _checkingLink = true);
+    final before = _members.length;
+    await _load();
+    if (!mounted) return;
+    setState(() => _checkingLink = false);
+    if (_members.length > 1) {
+      _toast(_members.length > before
+          ? '🎉 Bağlantı kuruldu! Aile havuzunda ${_members.length} kişisiniz.'
+          : '🟢 Bağlantı aktif: ${_members.length} kişi aile havuzunda.');
+    } else if (_outgoing.isNotEmpty) {
+      _toast('⏳ Talebin hâlâ Aile Reisinin onayını bekliyor (${_mmss(_left(_outgoing.first.$4))} kaldı).');
+    } else if (_requests.isNotEmpty) {
+      _toast('🔔 Onay bekleyen ${_requests.length} katılım isteğin var.');
+    } else {
+      _toast('Henüz bağlı bir aile ferdi yok. Davet kodunu paylaş veya bir koda katıl.');
+    }
+  }
+
   String _err(Object e) {
     final s = e.toString();
     if (s.contains('already_member')) return 'Zaten bu havuzdasın.';
     if (s.contains('too_many_attempts')) return 'Çok fazla deneme. Biraz sonra tekrar dene.';
-    if (s.contains('request_expired')) return 'Bu isteğin süresi (24 saat) dolmuş.';
+    if (s.contains('request_expired')) return 'İsteğin 5 dakikalık onay süresi doldu. Tekrar istek gönderebilirsin.';
+    if (s.contains('pending_exists')) return 'Zaten bekleyen bir katılım isteğin var. 5 dakika içinde onaylanmazsa yenisini gönderebilirsin.';
+    if (s.contains('invalid_owner_role')) return 'Kendi ünvanın Aile Reisi, Baba veya Anne olabilir.';
     if (s.contains('pool_limit_reached')) return 'En fazla 3 havuz kurabilirsin.';
     if (s.contains('owner_cannot_leave')) return 'Aile Reisi ayrılamaz; önce yöneticiliği devret.';
     return 'İşlem yapılamadı. İnternet bağlantını kontrol et.';
@@ -173,7 +238,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Future<void> _approve(JoinRequest r) async {
     final who = r.name.isNotEmpty ? r.name : 'Bir aile ferdi';
-    final res = await showDialog<(String, String)>(
+    final res = await showDialog<(String, String, String?)>(
       context: context,
       builder: (_) => _TitleDialog(
         title: '🤝 $who havuzuna katılmak istiyor',
@@ -181,18 +246,23 @@ class _FamilyScreenState extends State<FamilyScreen> {
         initialTitle: 'Aile Ferdi',
         initialIcon: '👥',
         confirm: 'Onayla & Havuza Ekle',
+        askOwner: true,
+        initialOwner: ownerTitles.containsKey(_myRole) ? _myRole : 'Aile Reisi',
       ),
     );
     if (res == null) return;
-    final (title, icon) = res;
+    final (title, icon, owner) = res;
     try {
-      await Repo.approveWithRoles(r.id, memberRole: title, memberIcon: icon);
+      await Repo.approveWithRoles(r.id,
+          memberRole: title, memberIcon: icon, ownerRole: owner, ownerIcon: ownerTitles[owner]);
       _toast('🎉 $title aile havuzuna katıldı!');
       await _load();
     } catch (e) {
       _toast(_err(e));
     }
   }
+
+  String get _myRole => _members.where((m) => m.userId == myId).firstOrNull?.roleTitle ?? 'Aile Ferdi';
 
   Future<void> _sendDua({Member? to}) async {
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to?.shownName));
@@ -212,10 +282,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
     try {
       switch (action) {
         case 'role':
-          final res = await showDialog<(String, String)>(
+          final res = await showDialog<(String, String, String?)>(
             context: context,
             builder: (_) => _TitleDialog(
-              title: '${m.name.isNotEmpty ? m.name : m.shownName}',
+              title: m.name.isNotEmpty ? m.name : m.shownName,
               subtitle: 'Sana göre unvanı ve simgesi:',
               initialTitle: m.roleTitle,
               initialIcon: m.icon,
@@ -241,6 +311,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isGuest) return _guestCard();
     if (_loading) return const Center(child: CircularProgressIndicator());
     final pool = _pool;
     return RefreshIndicator(
@@ -248,6 +319,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
+          _profileCard(),
+          const SizedBox(height: 12),
           _hero(),
           const SizedBox(height: 12),
           if (pool != null) ...[
@@ -264,12 +337,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ],
             _matrix(),
             const SizedBox(height: 10),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
                 foregroundColor: AppColors.emerald,
-                side: const BorderSide(color: AppColors.emerald),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                side: const BorderSide(color: AppColors.cardBorder),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: () => _sendDua(),
               icon: const Text('🤲'),
@@ -344,12 +418,133 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 ),
             ]),
           ],
+          const SizedBox(height: 12),
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _members.length > 1 ? AppColors.prayedMint : AppColors.goldContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(_members.length > 1 ? '🟢 AKTİF' : '⏳ BEKLEMEDE',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: _members.length > 1 ? AppColors.emeraldDark : const Color(0xFF78350F))),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(_members.length > 1 ? 'Bağlantı Kuruldu ✓' : 'Bağlantı Bekleniyor ⏳',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _checkingLink ? null : _verifyLink,
+              icon: _checkingLink
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('🔄'),
+              label: Text(_checkingLink ? 'Sorgulanıyor…' : 'Bağlantıyı Teyit Et',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
           const SizedBox(height: 10),
           Text('"Ailene namazı emret ve kendin de onda devamlı ol." (Tâhâ, 132)',
               style: TextStyle(fontSize: 11, color: white85, fontStyle: FontStyle.italic)),
         ],
       ),
     );
+  }
+
+  Widget _guestCard() => ListView(padding: const EdgeInsets.all(16), children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
+          child: Column(children: [
+            const Text('👨‍👩‍👧‍👦', style: TextStyle(fontSize: 44)),
+            const SizedBox(height: 10),
+            const Text('Aile Havuzu İçin Google Girişi Gerekir',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 8),
+            Text(
+              'Şu an Bireysel Mod\'dasın ve kayıtların sadece bu telefonda. Ailenle aynı havuzda buluşmak, '
+              'birbirinizin vakitlerini görmek ve dua göndermek için Google ile giriş yap. '
+              'Telefondaki kayıtların otomatik olarak buluta taşınır.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9), height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.emerald),
+              onPressed: () => LocalStore.setGuestMode(false),
+              icon: const Icon(Icons.login),
+              label: const Text('Google ile Giriş Yap', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ]),
+        ),
+      ]);
+
+  Widget _profileCard() {
+    final family = _members.length > 1;
+    final me = _members.where((m) => m.userId == myId).firstOrNull;
+    return _whiteCard(
+      child: Row(children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: AppColors.emeraldContainer,
+          child: Text(me?.icon ?? '👤', style: const TextStyle(fontSize: 24)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(_myName.isNotEmpty ? _myName : 'Aile Ferdi',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            Text('${me?.roleTitle ?? 'Aile Ferdi'} · Google Hesabı Bağlı ✓',
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          ]),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: family ? AppColors.emerald : AppColors.emeraldContainer,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(family ? 'Aile Modu' : 'Bireysel Mod',
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.bold, color: family ? Colors.white : AppColors.emerald)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _countdown(DateTime created, Color color) {
+    final left = _left(created);
+    return Row(children: [
+      Icon(Icons.timer_outlined, size: 16, color: color),
+      const SizedBox(width: 4),
+      Text('Onay için kalan süre: ${_mmss(left)}',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+      const SizedBox(width: 8),
+      Expanded(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: left.inSeconds / _window.inSeconds,
+            minHeight: 5,
+            color: color,
+            backgroundColor: color.withValues(alpha: 0.2),
+          ),
+        ),
+      ),
+    ]);
   }
 
   Widget _whiteCard({required Widget child, Color? color}) => Container(
@@ -386,7 +581,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               style: const TextStyle(color: Colors.white),
               textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
-                hintText: 'Örn: ABCD-EFGH',
+                hintText: 'Örn: EMB-123456',
                 hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.12),
@@ -411,7 +606,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Widget _pendingCard() {
-    final (id, poolName, ownerName) = _outgoing.first;
+    final (id, poolName, ownerName, created) = _outgoing.first;
     return _whiteCard(
       color: AppColors.goldContainer,
       child: Column(
@@ -426,10 +621,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 6),
           Text(
             '"$poolName" havuzuna katılma isteğin ${ownerName.isNotEmpty ? '$ownerName adlı ' : ''}Aile Reisine iletildi. '
-            'Onaylayıp ünvanını belirlediğinde havuz burada açılacak. İstek 24 saat geçerlidir.',
+            'Onaylayıp ünvanını belirlediğinde havuz burada açılacak. '
+            'Talep 5 dakika içinde onaylanmalıdır; bu sürede başka talep gönderemezsin.',
             style: const TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.35),
           ),
           const SizedBox(height: 8),
+          _countdown(created, const Color(0xFF92400E)),
+          const SizedBox(height: 4),
           TextButton(
             onPressed: () async {
               try {
@@ -467,11 +665,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(r.name.isNotEmpty ? r.name : 'Bir aile ferdi',
                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  Text('Onaylarken ünvanını ve simgesini sen belirleyeceksin.',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  const Text('Onaylarken ünvanını ve simgesini sen belirleyeceksin.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                 ]),
               ),
             ]),
+            const SizedBox(height: 8),
+            _countdown(r.createdAt, const Color(0xFF92400E)),
             const SizedBox(height: 10),
             Row(children: [
               Expanded(
@@ -506,7 +706,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Aile Havuz Paylaşım Kodun (👑 Aile Reisi)',
+          const Text('Davet Kodunuzu Paylaşın 🔗',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 2),
+          Text('Aile Havuz Paylaşım Kodun',
               style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
           const SizedBox(height: 6),
           Row(children: [
@@ -601,13 +804,44 @@ class _FamilyScreenState extends State<FamilyScreen> {
               child: Text('Aile İbadet Halkası',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
-            toggle('Dün', _showYesterday, true),
+            toggle('◄ Dünü Gör', _showYesterday, true),
             const SizedBox(width: 6),
             toggle('Bugün', !_showYesterday, false),
           ]),
           const SizedBox(height: 4),
-          Text('ORTAK MATRİS',
-              style: TextStyle(fontSize: 10, letterSpacing: 1, color: Colors.white.withValues(alpha: 0.7))),
+          Builder(builder: (_) {
+            final total = _members.length * prayerKeys.length;
+            final done = [
+              for (final m in _members)
+                for (final k in prayerKeys)
+                  if (data[m.userId]?[k] == PrayerStatus.prayed) 1
+            ].length;
+            final pct = total == 0 ? 0 : (done * 100 / total).round();
+            return Container(
+              margin: const EdgeInsets.only(top: 6, bottom: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
+              child: Row(children: [
+                const Text('🏆', style: TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('${_showYesterday ? 'Dün' : 'Bugün'} Aile Başarısı: $done / $total Vakit',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+                Text('%$pct',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.prayedMint)),
+              ]),
+            );
+          }),
+          Row(children: [
+            Text('ORTAK MATRİS',
+                style: TextStyle(fontSize: 10, letterSpacing: 1, color: Colors.white.withValues(alpha: 0.7))),
+            const Spacer(),
+            if (_members.length > 3)
+              Text('Sağa Kaydırılabilir (${_members.length} Kişi) →',
+                  style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7))),
+          ]),
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -616,7 +850,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               children: [
                 Row(children: [
                   SizedBox(
-                    width: 60,
+                    width: 72,
                     child: Text('VAKİT',
                         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.7))),
                   ),
@@ -638,8 +872,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(children: [
                       SizedBox(
-                        width: 60,
-                        child: Text(prayerLabels[k]!,
+                        width: 72,
+                        child: Text('${prayerEmoji[k]} ${prayerLabels[k]}',
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                       ),
                       for (final m in _members)
@@ -713,7 +947,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(isMe ? '${m.shownName} (sen)' : m.shownName,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                Text(isOwner ? '• 👑 Aile Reisi' : '• 👥 Aile Ferdi',
+                Text(isOwner ? '• 👑 Havuz Yöneticisi' : '• 👥 Aile Ferdi',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -826,12 +1060,16 @@ class _TitleDialog extends StatefulWidget {
   final String initialTitle;
   final String initialIcon;
   final String confirm;
+  final bool askOwner;
+  final String initialOwner;
   const _TitleDialog({
     required this.title,
     required this.subtitle,
     required this.initialTitle,
     required this.initialIcon,
     required this.confirm,
+    this.askOwner = false,
+    this.initialOwner = 'Aile Reisi',
   });
 
   @override
@@ -841,6 +1079,7 @@ class _TitleDialog extends StatefulWidget {
 class _TitleDialogState extends State<_TitleDialog> {
   late String _title = widget.initialTitle;
   late String _icon = widget.initialIcon;
+  late String _owner = widget.initialOwner;
   late final _ctrl =
       TextEditingController(text: reisTitles.containsKey(widget.initialTitle) ? '' : widget.initialTitle);
 
@@ -860,6 +1099,19 @@ class _TitleDialogState extends State<_TitleDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.askOwner) ...[
+              const Text('Senin ünvanın', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 6, children: [
+                for (final e in ownerTitles.entries)
+                  ChoiceChip(
+                    label: Text('${e.value} ${e.key}'),
+                    selected: _owner == e.key,
+                    onSelected: (_) => setState(() => _owner = e.key),
+                  ),
+              ]),
+              const Divider(height: 22),
+            ],
             Text(widget.subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             const SizedBox(height: 10),
             const Text('Ünvanı (sana göre)', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -912,7 +1164,8 @@ class _TitleDialogState extends State<_TitleDialog> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
         FilledButton(
-          onPressed: () => Navigator.pop(context, (custom.isNotEmpty ? custom : _title, _icon)),
+          onPressed: () => Navigator.pop(
+              context, (custom.isNotEmpty ? custom : _title, _icon, widget.askOwner ? _owner : null)),
           child: Text(widget.confirm),
         ),
       ],

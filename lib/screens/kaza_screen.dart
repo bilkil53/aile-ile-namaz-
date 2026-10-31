@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data.dart';
+import '../models.dart';
 import '../theme.dart';
 
-/// Kaza namazı takibi. Detay (hangi vakit) sadece sahibine görünür;
-/// havuzdaki aile üyeleri yalnızca toplam sayıyı görür.
+/// Kaza namazı takibi (eski uygulamadaki düzen).
+/// Hangi vakit kaza edildiği sadece sahibine görünür; aile yalnızca toplamı görür.
 class KazaScreen extends StatefulWidget {
   const KazaScreen({super.key});
 
@@ -14,16 +15,19 @@ class KazaScreen extends StatefulWidget {
 }
 
 class _KazaScreenState extends State<KazaScreen> {
+  // (tip, ad, emoji, farz rekat)
   static const _types = [
-    ('FAJR', 'Sabah', Icons.wb_twilight),
-    ('DHUHR', 'Öğle', Icons.wb_sunny),
-    ('ASR', 'İkindi', Icons.wb_cloudy),
-    ('MAGHRIB', 'Akşam', Icons.nightlight_round),
-    ('ISHA', 'Yatsı', Icons.bedtime),
-    ('WITR', 'Vitir', Icons.star),
+    ('FAJR', 'Sabah Namazı', '🌅', 'Farz: 2 Rekat'),
+    ('DHUHR', 'Öğle Namazı', '☀️', 'Farz: 4 Rekat'),
+    ('ASR', 'İkindi Namazı', '⛅', 'Farz: 4 Rekat'),
+    ('MAGHRIB', 'Akşam Namazı', '🌇', 'Farz: 3 Rekat'),
+    ('ISHA', 'Yatsı Namazı', '🌌', 'Farz: 4 Rekat'),
+    ('WITR', 'Vitir Namazı', '⭐', 'Vacip: 3 Rekat'),
   ];
 
   Map<String, (int, int)> _data = {};
+  List<Member> _family = [];
+  Map<String, List<int>> _familyKaza = {};
   bool _loading = true;
 
   @override
@@ -36,6 +40,20 @@ class _KazaScreenState extends State<KazaScreen> {
     try {
       final d = await Repo.myKaza();
       if (mounted) setState(() => _data = d);
+      if (!isGuest) {
+        final pools = await Repo.myPools();
+        if (pools.isNotEmpty) {
+          final members = await Repo.members(pools.first.id);
+          final others = members.where((m) => m.userId != myId).toList();
+          final k = await Repo.kazaSummary(others.map((m) => m.userId).toList());
+          if (mounted) {
+            setState(() {
+              _family = others;
+              _familyKaza = k;
+            });
+          }
+        }
+      }
     } catch (_) {
       _toast('Kaza bilgisi yüklenemedi.');
     } finally {
@@ -66,7 +84,7 @@ class _KazaScreenState extends State<KazaScreen> {
     final days = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Toplu borç ekle'),
+        title: const Text('Toplu Kaza Borcu Ekle'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,27 +101,24 @@ class _KazaScreenState extends State<KazaScreen> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Vazgeç')),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, int.tryParse(ctrl.text)),
-            child: const Text('Ekle'),
-          ),
+          FilledButton(onPressed: () => Navigator.pop(ctx, int.tryParse(ctrl.text)), child: const Text('Ekle')),
         ],
       ),
     );
     ctrl.dispose();
     if (days == null || days <= 0 || days > 36500) return;
-    for (final (t, _, _) in _types) {
+    for (final (t, _, _, _) in _types) {
       final (o, c) = _of(t);
       await _set(t, o + days, c);
     }
-    _toast('Her vakte $days eklendi.');
+    _toast('Her vakte $days gün eklendi.');
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     var owed = 0, done = 0;
-    for (final (t, _, _) in _types) {
+    for (final (t, _, _, _) in _types) {
       final (o, c) = _of(t);
       owed += o;
       done += c;
@@ -119,45 +134,68 @@ class _KazaScreenState extends State<KazaScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(children: [
-                  Icon(Icons.calendar_month, size: 14, color: Colors.white),
-                  SizedBox(width: 5),
-                  Text('KAZA BORCU',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1)),
-                ]),
-                const SizedBox(height: 10),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('$remaining',
-                        style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text('vakit kaldı',
-                          style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
-                    ),
-                  ],
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const Text('📿 Kaza Namazı Takibi',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('Kılamadığın vakitleri kaydet, kıldıkça düş.',
+                  style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
+              const SizedBox(height: 14),
+              Row(children: [
+                Expanded(child: _tile('Kalan Kaza Borcu', '$remaining', AppColors.goldContainer, const Color(0xFF78350F))),
+                const SizedBox(width: 10),
+                Expanded(child: _tile('Kılınan Kaza', '$done', AppColors.prayedMint, AppColors.emeraldDark)),
+              ]),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: ratio,
+                  minHeight: 8,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.prayedMint,
                 ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: ratio,
-                    minHeight: 8,
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    color: AppColors.prayedMint,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text('Toplam borç $owed · Ödenen $done',
-                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
-              ],
-            ),
+              ),
+              const SizedBox(height: 6),
+              Text(owed == 0 ? 'Kayıtlı kaza borcun yok.' : '%${(ratio * 100).round()} tamamlandı · Toplam $owed vakit',
+                  style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
+            ]),
           ),
+          if (_family.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.cardBorder),
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('👨‍👩‍👧 Aile Fertleri Kaza Durumu (Detaysız)',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                const SizedBox(height: 8),
+                for (final m in _family)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(children: [
+                      Text(m.icon, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(m.shownName, style: const TextStyle(fontWeight: FontWeight.w600))),
+                      Builder(builder: (_) {
+                        final k = _familyKaza[m.userId];
+                        final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);
+                        return Text(
+                          left == 0 ? 'Borç yok ✓' : 'Kalan $left · Kılınan ${k![1]}',
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: left == 0 ? AppColors.emerald : AppColors.gold),
+                        );
+                      }),
+                    ]),
+                  ),
+              ]),
+            ),
+          ],
           const SizedBox(height: 10),
           const Row(children: [
             Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted),
@@ -167,75 +205,96 @@ class _KazaScreenState extends State<KazaScreen> {
                   style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
             ),
           ]),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.emerald,
+              side: const BorderSide(color: AppColors.emerald),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: _bulkAdd,
             icon: const Icon(Icons.playlist_add),
-            label: const Text('Toplu borç ekle (gün sayısıyla)'),
+            label: const Text('Toplu Ekle (gün sayısıyla)'),
           ),
           const SizedBox(height: 12),
-          for (final (type, label, icon) in _types) ...[
-            _row(type, label, icon),
-            const SizedBox(height: 8),
-          ],
+          for (final t in _types) ...[_row(t), const SizedBox(height: 10)],
         ],
       ),
     );
   }
 
-  Widget _row(String type, String label, IconData icon) {
+  Widget _tile(String label, String value, Color bg, Color fg) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
+        child: Column(children: [
+          Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: fg)),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg)),
+        ]),
+      );
+
+  Widget _row((String, String, String, String) t) {
+    final (type, label, emoji, rekat) = t;
     final (owed, done) = _of(type);
     final left = owed > done ? owed - done : 0;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.cardBorder),
       ),
-      child: Row(
-        children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
           Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, size: 20, color: AppColors.emerald),
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
+            child: Text(emoji, style: const TextStyle(fontSize: 22)),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                Text('Kalan $left · Ödenen $done',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              ],
-            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Text('$rekat | Kılınan: $done', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            ]),
           ),
           IconButton(
             tooltip: 'Borcu azalt',
             visualDensity: VisualDensity.compact,
             onPressed: owed > done ? () => _set(type, owed - 1, done) : null,
-            icon: const Icon(Icons.remove_circle_outline),
+            icon: const Icon(Icons.remove_circle_outline, color: AppColors.emerald),
           ),
+          Column(children: [
+            Text('$left', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const Text('Borç', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+          ]),
           IconButton(
             tooltip: 'Borç ekle',
             visualDensity: VisualDensity.compact,
             onPressed: () => _set(type, owed + 1, done),
-            icon: const Icon(Icons.add_circle_outline),
+            icon: const Icon(Icons.add_circle_outline, color: AppColors.emerald),
           ),
-          const SizedBox(width: 4),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.emerald,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              visualDensity: VisualDensity.compact,
-            ),
-            onPressed: left > 0 ? () => _set(type, owed, done + 1, announce: true) : null,
-            child: const Text('Kıldım'),
-          ),
-        ],
-      ),
+        ]),
+        const SizedBox(height: 8),
+        left > 0
+            ? FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.emerald,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => _set(type, owed, done + 1, announce: true),
+                icon: const Icon(Icons.check_circle, size: 18),
+                label: const Text('Kaza Kıldım', style: TextStyle(fontWeight: FontWeight.bold)),
+              )
+            : Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
+                child: const Text('Kaza Borcu Yok (Elhamdülillah) 🤲',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
+              ),
+      ]),
     );
   }
 }

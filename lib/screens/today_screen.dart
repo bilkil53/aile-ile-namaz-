@@ -33,14 +33,6 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _gpsBusy = false;
   Timer? _ticker;
 
-  static const _icons = {
-    'fajr': Icons.wb_twilight,
-    'dhuhr': Icons.wb_sunny,
-    'asr': Icons.wb_cloudy,
-    'maghrib': Icons.nightlight_round,
-    'isha': Icons.bedtime,
-  };
-
   void _onLocation() => _load();
 
   @override
@@ -145,11 +137,17 @@ class _TodayScreenState extends State<TodayScreen> {
       }
     });
     try {
-      await Repo.setPrayer(
+      final synced = await Repo.setPrayer(
         key: key,
         status: next,
         date: _showYesterday ? _yesterdayStr() : null,
       );
+      if (!synced && !isGuest && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('📱 Telefona kaydedildi. İnternet gelince otomatik buluta gönderilecek.'),
+          duration: Duration(seconds: 2),
+        ));
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -306,7 +304,7 @@ class _TodayScreenState extends State<TodayScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(children: [
-        seg('Dün', _showYesterday, () => setState(() => _showYesterday = true)),
+        seg('← Dün', _showYesterday, () => setState(() => _showYesterday = true)),
         seg('Bugün', !_showYesterday, () => setState(() => _showYesterday = false)),
       ]),
     );
@@ -505,7 +503,8 @@ class _TodayScreenState extends State<TodayScreen> {
                   color: Colors.white.withValues(alpha: arrived ? 0.16 : 0.10),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(_icons[key], size: 20, color: Colors.white),
+                alignment: Alignment.center,
+                child: Text(prayerEmoji[key] ?? '🕌', style: const TextStyle(fontSize: 20)),
               ),
               const SizedBox(width: 12),
               Expanded(

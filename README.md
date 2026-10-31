@@ -90,6 +90,26 @@
 
 > Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
 
+### 🌙 Sürüm 24 — Eski tasarım geri döndü, EMB kodları, 5 dakikalık onay, misafir modu
+**Aile Havuzu**
+* Davet kodları artık **EMB-123456** biçiminde. Uygulamayı kuran herkes **"Aile Ferdi"** olarak başlar (Bireysel Mod).
+* Reis, katılımı onaylarken **kendi ünvanını** (👑 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer.
+* Katılım isteği **5 dakika** içinde onaylanmalı; bu sürede ikinci istek gönderilemez. İki tarafta da canlı geri sayım.
+* **"Bağlantıyı Teyit Et 🔄"** düğmesi: sunucudan bağlantı / istek durumunu sorgular. BEKLEMEDE / AKTİF rozeti.
+* Profil kartı (Bireysel Mod / Aile Modu), **"Bugün Aile Başarısı: x / y Vakit (%)"**, vakit simgeli ortak matris, "◄ Dünü Gör".
+* **Aile bildirimleri:** Aileden biri namaz kılınca, kaza eda edince, dua gönderince telefona bildirim gelir (Ayarlar'dan kapatılabilir). Kıldı/kılmadı işaretinden **5 saniye sonra** son duruma göre tek bildirim gider; hızlı değiştirmeler aileye fazla bildirim göndermez.
+
+**Ekranlar (eski uygulamanın tasarımı)**
+* Vakitler simgelerle: 🌅 Sabah · ☀️ Öğle · ⛅ İkindi · 🌇 Akşam · 🌌 Yatsı.
+* **Kaza:** "Kalan Kaza Borcu / Kılınan Kaza" kutuları, "Farz: 4 Rekat | Kılınan: X", −/Borç/+ , "Kaza Kıldım" / "Kaza Borcu Yok (Elhamdülillah)", aile fertlerinin detaysız kaza durumu.
+* **Karne:** Haftalık başarı oranı, Kılınan Vakit / Eda Edilen Kaza / Aile Uyumu, tarihli 7 günlük grafik (güne dokun → vakit detayı), **Birlikte Secde** sayacı ve gerçek veriyle hesaplanan 5 rozet (Sabah Namazı Muhafızı, 5'te 5 Sadakati, Kaza Avcısı, İbadet Kardeşliği, İstikrar Yıldızı), Günün Hadis-i Şerifi.
+* **Ayarlar:** Uygulama Bilgileri kartı: sürüm + Güncel/Yeni Sürüm rozeti, Güncellemeleri Kontrol Et, Veritabanı Durumu (Bulut / Yerel), Şimdi Yedekle, Geliştirici, Proje & Kaynak Kod, Öneri Yaz; konum ve bildirim anahtarları, uygulamayı paylaş, gizlilik.
+
+**Güvenilirlik ve gizlilik**
+* **Çevrimdışı kayıt:** İnternet yokken işaretlenen vakit / kaza telefonda bekler, bağlantı gelince otomatik buluta gider.
+* **Giriş yapmadan kullanım:** Kayıtlar telefonda tutulur; sonradan Google ile giriş yapılırsa buluta taşınır.
+* **Hesabımı ve verilerimi sil:** Çift onaylı; reisi olunan dolu havuzların reisliği en eski üyeye geçer.
+
 ### 🕌 Sürüm 21 — Aile Havuzu: kod hazır, ünvanları reis verir
 * **"Aile Havuzumu Başlat" adımı kaldırıldı:** Giriş yapan herkesin kendi havuzu ve davet kodu otomatik hazır gelir (eski v1.14 gibi).
 * **Katılım:** Katılan kişi sadece davet kodunu girer; ünvan sorulmaz.
