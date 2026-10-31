@@ -1,4 +1,4 @@
-İlk resmi sürüm: Aile Havuzu, Diyanet vakitleri, kaza takibi, karne ve bildirimler.
+Aile bildirimleri artık uygulama kapalıyken de telefona düşer (Firebase anlık bildirim).
 
 ## 🌟 Kullanıcı için
 
@@ -16,7 +16,7 @@
 - Reis onaylarken kendi ünvanını (🏡 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer; başörtülü simgeler dahil.
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
-- Aile bildirimleri: işaretten 5 sn sonra son duruma göre tek bildirim.
+- Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
 **Kaza**
 - Kalan / Kılınan kutuları, vakit başına −/Borç/+, Kaza Kıldım.
@@ -52,6 +52,8 @@
 - Giriş yapmışken işaretler önce telefona yazılır; buluta gidemezse bekleme kuyruğuna girer ve bağlantı gelince gönderilir.
 - Misafir verisi yalnızca bellekte. Test dönemi önbelleği ilk açılışta bir kez temizlenir.
 - `profiles.email` sütununa istemci erişimi kapalı.
+
+**Anlık bildirim (FCM):** firebase_core ^3.6 + firebase_messaging ^15.1, Firebase projesi `aile-ile-namaz-d437f`. Cihaz adresi `devices` tablosuna (RLS: sadece sahibi) yazılır; çıkışta / aile bildirimleri kapatılınca silinir. `pool_events` ekleme tetikleyicisi (`pg_net`) → `push-family` Edge Function → FCM HTTP v1 (hizmet hesabı JWT, `aile_olaylari` kanalı). Olay `pushed_at` ile atomik işaretlenir (son 2 dk, tek sefer); geçersiz cihaz adresleri otomatik temizlenir. Uygulama ön plandayken Realtime gösterir, arka planda FCM (çift bildirim yok). Migration `11_fcm_push_trigger`.
 
 **Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri, BigText; `SCHEDULE_EXACT_ALARM` izni varsa `exactAllowWhileIdle`, yoksa esnek). Vakte özel söz havuzu eski uygulamadan taşındı (31 söz). Aile olayları Realtime `pool_events` dinlenerek gösterilir; vakit olayları 5 sn gecikmeli ve tekilleştirilmiş gönderilir.
 

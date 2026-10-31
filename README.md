@@ -55,7 +55,7 @@
 * **Ortak Matris:** Ailenin 5 vakit durumu (vakit × kişi), **"Bugün Aile Başarısı: x / y Vakit (%)"**, **◄ Dünü Gör**. Yalnızca gerçekten işaretlenen vakitler görünür; boş vakitler "—".
 * **🤲 Aileye Dua Gönder**, üye kartında **Tebrik Et & Dua Gönder**, **Son Hareketler** akışı.
 * **Reis yetkileri:** Ünvan/simge değiştirme, reisliği devretme, üyeyi çıkarma, kodu yenileme, **Havuzu Kapat & Sıfırla**.
-* **Aile bildirimleri:** Aileden biri namaz kılınca, kaza eda edince, dua gönderince veya katılınca bildirim. Kıldı/kılmadı işaretinden **5 saniye sonra** son duruma göre **tek** bildirim gider.
+* **Aile bildirimleri (uygulama kapalıyken de):** Aileden biri namaz kılınca, kaza eda edince, dua gönderince veya katılınca telefona bildirim düşer (Firebase Cloud Messaging). Kıldı/kılmadı işaretinden **5 saniye sonra** son duruma göre **tek** bildirim gider.
 
 ### 3. 📿 Kaza Takibi (Mahremiyet Korumalı)
 * **Kalan Kaza Borcu / Kılınan Kaza** kutuları ve ilerleme çubuğu.
@@ -115,13 +115,13 @@
 | Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
 | Vakitler | aladhan.com, method 13 (Diyanet) → önbellek → çevrimdışı yerel hesap; 81 il koordinatı |
 | Konum | geolocator (son bilinen → anlık konum), geocoding (İlçe, İl), 3 saatte bir otomatik |
-| Bildirim | flutter_local_notifications (zamanlanmış, 3 gün ileri) + Realtime ile aile olayları |
+| Bildirim | flutter_local_notifications (zamanlanmış, 3 gün ileri, kesin alarm) · aile olayları: ön planda Realtime, arka planda **FCM** (`push-family` Edge Function, Firebase `aile-ile-namaz-d437f`) |
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → APK uygulama içinde indirilir → open_filex ile kurulum |
 | Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → imzalı release APK → GitHub Releases |
 
 ### Paketler
-`supabase_flutter ^2.8` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
+`supabase_flutter ^2.8` · `firebase_core ^3.6` · `firebase_messaging ^15.1` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
 
 ### Kod yapısı
 ```
@@ -134,6 +134,7 @@ lib/
   prayer_times.dart    Diyanet vakitleri, 81 il, kıble açısı
   location.dart        GPS → ilçe/il
   notifications.dart   Vakit hatırlatmaları, günün içeriği, aile bildirimleri
+  push.dart            Firebase anlık bildirim: cihaz kaydı (devices)
   update_checker.dart  GitHub Releases'tan uygulama içi güncelleme
   screens/             today, family, kaza, karne, settings, login (Hoş Geldiniz), home_shell
   widgets/             prayer_icon (vakit simgeleri), qibla_card (pusula)
@@ -147,7 +148,9 @@ Sunucu fonksiyonları (`security definer`, sadece `authenticated`): `ensure_my_p
 
 Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_members`, `kaza_summary`.
 
-Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house`.
+Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function `supabase/functions/push-family` → FCM HTTP v1. Gizli ayar `FCM_SERVICE_ACCOUNT` (Supabase Edge Function secret, Firebase hizmet hesabı JSON'u); repoda yoktur.
+
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger`.
 
 ### Derleme ve dallar
 * `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0 — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).
@@ -173,6 +176,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging).
 * Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.
 * Aile Reisi simgesi **🏡** (taç simgesi kaldırıldı), **başörtülü** simgeler.
 * Sürüm açıklamalarında teknik ayrıntılar.

@@ -54,6 +54,15 @@ class Notifications {
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       ),
     );
+    // FCM bildirimleri (uygulama kapalıyken) bu kanala düşer; önceden oluşturulmalı
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          'aile_olaylari',
+          'Aile bildirimleri',
+          description: 'Aileden biri namaz kılınca veya dua gönderince',
+          importance: Importance.high,
+        ));
   }
 
   static Future<void> requestPermission() async {

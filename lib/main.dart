@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config.dart';
 import 'local_store.dart';
 import 'notifications.dart';
+import 'push.dart';
 import 'settings.dart';
 import 'screens/home_shell.dart';
 import 'theme.dart';
@@ -24,6 +25,7 @@ Future<void> main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseKey,
   );
+  unawaited(Push.init());
   runApp(const App());
 }
 

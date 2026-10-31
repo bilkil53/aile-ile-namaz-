@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,6 +9,7 @@ import '../location.dart';
 import '../models.dart';
 import '../settings.dart';
 import '../notifications.dart';
+import '../push.dart';
 
 import '../theme.dart';
 import 'karne_screen.dart';
@@ -46,6 +49,8 @@ class _HomeShellState extends State<HomeShell> {
         } catch (_) {}
         await Repo.flushQueue();
         _listenFamily();
+        // Uygulama kapalıyken de aile bildirimleri için cihazı kaydet (FCM)
+        unawaited(Push.register());
       }
       // Konum otomatik (GPS) → vakitler → hatırlatmalar
       await LocationHelper.autoUpdate();
@@ -78,6 +83,8 @@ class _HomeShellState extends State<HomeShell> {
           callback: (payload) {
             final r = payload.newRecord;
             if (r['sender_id'] == myId || !AppSettings.familyAlerts) return;
+            // Arka plandayken bildirimi FCM gösterir; çift bildirim olmasın
+            if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
             final who = _names[r['sender_id']] ?? 'Aile ferdin';
             final prayer = prayerLabels[(r['prayer'] as String?)?.toLowerCase()] ?? '';
             final (title, body) = switch (r['event_type']) {

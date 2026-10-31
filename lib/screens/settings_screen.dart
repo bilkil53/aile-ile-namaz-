@@ -10,6 +10,7 @@ import '../data.dart';
 import '../local_store.dart';
 import '../location.dart';
 import '../notifications.dart';
+import '../push.dart';
 import '../settings.dart';
 import '../theme.dart';
 import '../update_checker.dart';
@@ -374,6 +375,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(width: 10),
                     _outlineBtn('Çıkış Yap', () async {
                       Navigator.of(context).popUntil((r) => r.isFirst);
+                      await Push.unregister();
                       await supa.auth.signOut();
                     }, icon: Icons.logout),
                   ]),
@@ -473,6 +475,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _switchRow('Aile bildirimleri', 'Aileden biri namaz kılınca / dua gönderince', AppSettings.familyAlerts,
                 (v) async {
               await AppSettings.setFamilyAlerts(v);
+              unawaited(v ? Push.register() : Push.unregister());
               setState(() {});
             }),
             const SizedBox(height: 6),
