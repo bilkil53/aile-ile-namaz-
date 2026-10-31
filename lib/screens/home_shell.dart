@@ -27,7 +27,7 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _tab = 0;
 
   RealtimeChannel? _events;
@@ -36,6 +36,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (isGuest && !LocalStore.guestMode) {
         final loggedIn = await showWelcome(context);
@@ -59,8 +60,17 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
+  /// Uygulamaya geri dönülünce (arka plandan) konum 1 saatten eskiyse yenilenir.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(LocationHelper.autoUpdate(maxAge: const Duration(hours: 1)));
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_events != null) supa.removeChannel(_events!);
     super.dispose();
   }

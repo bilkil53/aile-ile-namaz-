@@ -5,7 +5,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../content/daily_content.dart';
 import '../data.dart';
 import '../models.dart';
-import '../settings.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
 
@@ -303,7 +302,7 @@ class _KarneScreenState extends State<KarneScreen> {
           ])),
           const SizedBox(height: 14),
           Center(
-            child: Text('Konum: ${AppSettings.cityName} · Aile ile Namaz v$_version',
+            child: Text('Aile ile Namaz v$_version',
                 style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
           ),
         ],

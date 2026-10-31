@@ -7,7 +7,7 @@ Aile bildirimleri artık uygulama kapalıyken de telefona düşer (Firebase anl�
 - Gezinti modunda bütün ekranlar denenebilir; yapılanlar sadece bellekte tutulur, uygulama kapanınca silinir. Giriş yapılırsa o oturumdakiler buluta kaydedilir.
 
 **Bugün**
-- GPS ile otomatik ilçe/il, Diyanet vakitleri, SIRADAKİ VAKİT geri sayımı, günün ayeti/hadisi, kıble pusulası.
+- Konum uygulama her açıldığında otomatik alınır; hata olursa 10 sn sonra tekrar dener (en fazla 3). Konum bilgisi sadece Ayarlar'da. Diyanet vakitleri, SIRADAKİ VAKİT geri sayımı, günün ayeti/hadisi, kıble pusulası.
 - 5 vakit kartı (ince çizgili simgeler): Kıldı → Kılmadı → Muaf → Bekliyor. Vakti girmemiş namaz ve vakitler yüklenmeden kartlar kilitli.
 
 **Aile Havuzu**

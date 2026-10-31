@@ -14,11 +14,17 @@ class LocationHelper {
   static bool _running = false;
 
   /// Açılışta çağrılır. Son güncellemeden bu yana [maxAge] geçtiyse sessizce yeniler.
-  static Future<void> autoUpdate({Duration maxAge = const Duration(hours: 3)}) async {
+  /// Uygulama her açıldığında konumu otomatik alır. Alınamazsa 10 saniye sonra tekrar dener
+  /// (en fazla 3 deneme). İzin verilmemişse ya da konum servisi kapalıysa tekrar denemez.
+  static Future<void> autoUpdate({Duration maxAge = Duration.zero}) async {
     final last = AppSettings.prefs.getInt('locationUpdatedAt') ?? 0;
     final age = DateTime.now().millisecondsSinceEpoch - last;
-    if (AppSettings.locationFromGps && age < maxAge.inMilliseconds) return;
-    await updateFromGps();
+    if (maxAge > Duration.zero && AppSettings.locationFromGps && age < maxAge.inMilliseconds) return;
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      final (ok, msg) = await updateFromGps();
+      if (ok || permissionDenied || msg.contains('servisi kapalı')) return;
+      if (attempt < 3) await Future<void>.delayed(const Duration(seconds: 10));
+    }
   }
 
   /// (başarılı mı, konum adı veya hata mesajı)

@@ -7,9 +7,7 @@ import '../content/daily_content.dart';
 import '../data.dart';
 import '../location.dart';
 import '../models.dart';
-import '../notifications.dart';
 import '../prayer_times.dart';
-import '../settings.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
 import '../widgets/qibla_card.dart';
@@ -31,7 +29,6 @@ class _TodayScreenState extends State<TodayScreen> {
   DayTimes? _tomorrow;
   String _name = '';
   bool _loading = true;
-  bool _gpsBusy = false;
   Timer? _ticker;
 
   void _onLocation() => _load();
@@ -91,29 +88,6 @@ class _TodayScreenState extends State<TodayScreen> {
       _tomorrow = times[1];
       _loading = false;
     });
-  }
-
-  Future<void> _updateGps() async {
-    setState(() => _gpsBusy = true);
-    try {
-      final (ok, msg) = await LocationHelper.updateFromGps();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? 'Konum güncellendi: $msg' : msg)),
-      );
-      if (ok) {
-        await _load();
-        unawaited(Notifications.reschedule());
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Konum alınamadı. İli Ayarlar\'dan seçebilirsin.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _gpsBusy = false);
-    }
   }
 
   PrayerStatus _next(PrayerStatus s) => switch (s) {
@@ -188,10 +162,6 @@ class _TodayScreenState extends State<TodayScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           _greeting(),
-          if (LocationHelper.permissionDenied) ...[
-            const SizedBox(height: 10),
-            _locationBanner(),
-          ],
           const SizedBox(height: 10),
           _dayToggle(),
           const SizedBox(height: 12),
@@ -239,7 +209,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 const SizedBox(width: 5),
                 Flexible(
                   child: Text(
-                    '$date · ${_gpsBusy ? 'GPS güncelleniyor…' : AppSettings.cityName}',
+                    date,
                     style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ),
@@ -247,41 +217,9 @@ class _TodayScreenState extends State<TodayScreen> {
             ],
           ),
         ),
-        Material(
-          color: AppColors.emeraldContainer,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: _gpsBusy ? null : _updateGps,
-            child: const SizedBox(
-              width: 42,
-              height: 42,
-              child: Icon(Icons.my_location, size: 20, color: AppColors.emerald),
-            ),
-          ),
-        ),
       ],
     );
   }
-
-  Widget _locationBanner() => Container(
-        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-        decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(12)),
-        child: Row(children: [
-          const Icon(Icons.location_off, size: 18, color: Color(0xFF78350F)),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text('Doğru vakitler için konum izni ver. Şu an İstanbul vakitleri gösteriliyor.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
-          ),
-          TextButton(
-            onPressed: () async {
-              await LocationHelper.openSettings();
-            },
-            child: const Text('İzin ver'),
-          ),
-        ]),
-      );
 
   Widget _dayToggle() {
     Widget seg(String label, bool selected, VoidCallback onTap) => Expanded(
@@ -392,7 +330,7 @@ class _TodayScreenState extends State<TodayScreen> {
           const SizedBox(height: 10),
           Text(
             t.fromDiyanet
-                ? 'Diyanet İşleri Başkanlığı hesaplama yöntemiyle ${AppSettings.cityName} vakitleri.'
+                ? 'Diyanet İşleri Başkanlığı hesaplama yöntemiyle, bulunduğun konuma göre vakitler.'
                 : 'İnternet yok: vakitler cihazda yaklaşık hesaplandı.',
             style: TextStyle(fontSize: 11, color: white85, height: 1.35),
           ),

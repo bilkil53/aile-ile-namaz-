@@ -38,7 +38,7 @@
 ## 🌟 Özellikler
 
 ### 1. 🕌 Bugün — Vakitler ve Günlük İbadet
-* **Selamün aleyküm** karşılaması, tarih ve bulunduğun **ilçe/il** (GPS ile otomatik; şehir seçmek gerekmez).
+* **Selamün aleyküm** karşılaması ve tarih. Konum uygulama her açıldığında **otomatik** alınır (alınamazsa 10 sn sonra tekrar, en fazla 3 deneme); konum bilgisi ve yenileme sadece **Ayarlar**'da.
 * **SIRADAKİ VAKİT** kartı: geri sayım ve günün 6 vakti (İmsak, Güneş, Öğle/Cuma, İkindi, Akşam, Yatsı).
 * **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor**. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
 * **← Dün / Bugün** geçişi: unuttuğun dünkü vakitleri işaretleyebilirsin.
@@ -114,7 +114,7 @@
 | Arka uç | Supabase — PostgreSQL 15, Row Level Security, Auth, Realtime (Frankfurt / eu-central-1) |
 | Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
 | Vakitler | aladhan.com, method 13 (Diyanet) → önbellek → çevrimdışı yerel hesap; 81 il koordinatı |
-| Konum | geolocator (son bilinen → anlık konum), geocoding (İlçe, İl), 3 saatte bir otomatik |
+| Konum | geolocator (son bilinen → anlık konum), geocoding (İlçe, İl); her açılışta otomatik, hata olursa 10 sn arayla 3 deneme; arka plandan dönüşte 1 saatten eskiyse yenilenir |
 | Bildirim | flutter_local_notifications (zamanlanmış, 3 gün ileri, kesin alarm) · aile olayları: ön planda Realtime, arka planda **FCM** (`push-family` Edge Function, Firebase `aile-ile-namaz-d437f`) |
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → APK uygulama içinde indirilir → open_filex ile kurulum |
@@ -176,7 +176,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
-* **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging).
+* **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging). Konum her açılışta otomatik (10 sn arayla tekrar deneme); konum sadece Ayarlar'da.
 * Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.
 * Aile Reisi simgesi **🏡** (taç simgesi kaldırıldı), **başörtülü** simgeler.
 * Sürüm açıklamalarında teknik ayrıntılar.
