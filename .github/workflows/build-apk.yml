@@ -58,6 +58,17 @@ jobs:
                       </intent-filter>'''
           s = s.replace('</activity>', intent + '\n        </activity>', 1)
           s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
+          # Android otomatik yedeklemesi kapalı: oturum bilgisi Drive yedeğine / başka cihaza taşınmaz.
+          # Kişinin namaz ve kaza kayıtları zaten hesabına bağlı bulutta; girişte otomatik geri gelir.
+          if 'android:allowBackup' not in s:
+              s = s.replace('<application', '<application android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules"', 1)
+          import os
+          os.makedirs('android/app/src/main/res/xml', exist_ok=True)
+          open('android/app/src/main/res/xml/data_extraction_rules.xml', 'w', encoding='utf-8').write(
+              '<?xml version="1.0" encoding="utf-8"?>\n<data-extraction-rules>\n'
+              '  <cloud-backup><exclude domain="root" /><exclude domain="sharedpref" /><exclude domain="database" /><exclude domain="file" /></cloud-backup>\n'
+              '  <device-transfer><exclude domain="root" /><exclude domain="sharedpref" /><exclude domain="database" /><exclude domain="file" /></device-transfer>\n'
+              '</data-extraction-rules>\n')
           receivers = '''<receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
                   <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
                       <intent-filter>
@@ -226,8 +237,15 @@ jobs:
           fi
           exit $code
 
-      - name: APK dosya adını sabitle
-        run: cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
+      - name: APK dosya adını sabitle + işlemci türüne göre küçük APK'lar
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
+          flutter build apk --release --split-per-abi --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
+            --obfuscate --split-debug-info=build/symbols-abi
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "aile-ile-namaz-$abi.apk"
+          done
+          ls -la aile-ile-namaz*.apk
 
       - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
         run: |
@@ -243,13 +261,13 @@ jobs:
           flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
             --dart-define=STORE=play --obfuscate --split-debug-info=build/symbols-play
           cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
-          (cd build && zip -qr ../debug-symbols.zip symbols symbols-play)
+          (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
 
       - uses: actions/upload-artifact@v4
         with:
           name: aile-ile-namaz-apk
           path: |
-            aile-ile-namaz.apk
+            aile-ile-namaz*.apk
             aile-ile-namaz.aab
             debug-symbols.zip
 
@@ -283,4 +301,7 @@ jobs:
           make_latest: true
           files: |
             aile-ile-namaz.apk
+            aile-ile-namaz-arm64-v8a.apk
+            aile-ile-namaz-armeabi-v7a.apk
+            aile-ile-namaz-x86_64.apk
             aile-ile-namaz.aab

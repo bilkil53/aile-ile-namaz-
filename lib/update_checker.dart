@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,6 +24,19 @@ class UpdateChecker {
       'https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz.apk';
 
   static bool _checked = false;
+
+  /// Bu telefonun işlemci türüne ait APK adresi (arm64-v8a / armeabi-v7a / x86_64).
+  static String? _abiUrl() {
+    final abi = switch (Abi.current()) {
+      Abi.androidArm64 => 'arm64-v8a',
+      Abi.androidArm => 'armeabi-v7a',
+      Abi.androidX64 => 'x86_64',
+      _ => null,
+    };
+    return abi == null
+        ? null
+        : 'https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz-$abi.apk';
+  }
 
   /// GitHub'daki son sürüm: (numara, açıklamanın ilk satırı). Hata olursa null.
   static Future<(int, String)?> latest() async {
@@ -185,9 +199,16 @@ class UpdateChecker {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/aile-ile-namaz-$version.apk');
 
-      final req = await client.getUrl(Uri.parse(downloadUrl));
+      // Telefonun işlemci türüne uygun küçük APK (yaklaşık 20 MB); yoksa hepsini içeren APK
+      var req = await client.getUrl(Uri.parse(_abiUrl() ?? downloadUrl));
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
+      var res = await req.close();
+      if (res.statusCode != 200) {
+        await res.drain<void>();
+        req = await client.getUrl(Uri.parse(downloadUrl));
+        req.headers.set('User-Agent', 'aile-ile-namaz-app');
+        res = await req.close();
+      }
       if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
 
       final total = res.contentLength;

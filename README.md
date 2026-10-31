@@ -102,6 +102,8 @@
 | Ünvan değiştirme | Herkes | Sadece Aile Reisi (sunucu fonksiyonunda kontrol) |
 | Konum | — | Sadece telefonda; sunucuya gönderilmez |
 | Misafir verisi | — | Telefona yazılmaz, sadece bellekte |
+| Telefon yedeği | — | Android otomatik yedeklemesi kapalı; oturum bilgisi başka cihaza taşınamaz. Kişisel kayıtlar hesaba bağlı bulutta |
+| Giriş yöntemi | — | Sadece Google; e-posta/şifre ile kayıt kapalı |
 | Hesap silme | — | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
 | İmza anahtarı | — | GitHub Secrets'ta; repoda değil |
 
@@ -120,7 +122,7 @@
 | Konum | geolocator (son bilinen → anlık konum), geocoding (İlçe, İl); her açılışta otomatik, hata olursa 10 sn arayla 3 deneme; arka plandan dönüşte 1 saatten eskiyse yenilenir |
 | Bildirim | flutter_local_notifications (zamanlanmış, 3 gün ileri, kesin alarm) · aile olayları: ön planda Realtime, arka planda **FCM** (`push-family` Edge Function, Firebase `aile-ile-namaz-d437f`) |
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
-| Güncelleme | GitHub Releases API → APK uygulama içinde indirilir → open_filex ile kurulum |
+| Güncelleme | GitHub Releases API → telefonun işlemci türüne uygun APK (arm64-v8a / armeabi-v7a / x86_64, yaklaşık 20 MB; bulunamazsa hepsini içeren APK) uygulama içinde indirilir → open_filex ile kurulum · Play sürümünde Google Play uygulama içi güncelleme |
 | Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → imzalı, karıştırılmış APK (GitHub) + AAB (Google Play) → GitHub Releases |
 | Hata takibi | Firebase Crashlytics |
 | Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; her gece 7 günden eski aile hareketlerini temizler |
@@ -181,6 +183,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 5:** Android otomatik yedeklemesi kapatıldı (oturum bilgisi Drive'a/başka cihaza taşınmaz; kişisel kayıtlar zaten bulutta ve girişte geri gelir); sadece Google ile giriş (e-posta/şifre kaydı kapatıldı); güncelleme telefonun işlemci türüne uygun küçük APK'yı indirir.
 * **Derleme 4:** Güvenlik ve Play hazırlığı: kişi başı bildirim sınırı (dua: dakikada 1, saatte 3, günde 10; aynı vakit günde 2), süresi dolan istekler sunucuda otomatik düşer, eski onay fonksiyonu kaldırıldı, aile hareketleri 1 hafta saklanır ve son 5'i görünür, aile ekranı sadece değişen kişiyi günceller, kod karıştırma, Firebase Crashlytics, Play paketi (AAB) + Google Play uygulama içi güncelleme, web'den hesap silme sayfası, gizlilik politikası güncellendi. Ayrıntı: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
 * **Derleme 3:** Kaza kayıtlarını sıfırlama (iki aşamalı onay). Ayarlar'da "Anlık bildirim: Hazır ✓" durumu ve tekrar deneme; sunucu anahtarı etkinleştirildi.
 * **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging). Konum her açılışta otomatik (10 sn arayla tekrar deneme); konum sadece Ayarlar'da.

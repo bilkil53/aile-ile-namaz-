@@ -1,4 +1,4 @@
-Güvenlik ve performans güncellemesi: bildirim sınırları, 1 haftalık hareket kaydı, daha hızlı aile ekranı, çökme raporları.
+Daha küçük güncelleme indirmesi ve güvenlik: telefon yedeğinde oturum bilgisi tutulmaz, sadece Google ile giriş.
 
 ## 🌟 Kullanıcı için
 
@@ -34,6 +34,9 @@ Güvenlik ve performans güncellemesi: bildirim sınırları, 1 haftalık hareke
 - Uygulama içi güncelleme, bulut durumu, Şimdi Yedekle, Uygulamayı paylaş, Öneri Yaz (mail), Hesabımı ve verilerimi sil.
 
 **Güvenlik ve performans**
+- Güncelleme telefonun işlemci türüne uygun küçük APK'yı indirir (yaklaşık 20 MB).
+- Android otomatik yedeklemesi kapalı: oturum bilgisi başka cihaza taşınamaz. Namaz ve kaza kayıtların hesabına bağlı bulutta; giriş yapınca otomatik gelir.
+- Sadece Google ile giriş (e-posta/şifre ile kayıt kapalı).
 - Kişi başı bildirim sınırı: dua dakikada 1, saatte 3, günde 10; aynı vakit için günde en fazla 2 bildirim.
 - Katılma isteği internet kesilse bile 5 dakika sonra sunucuda kendiliğinden düşer; istek iletilemezse uygulama bunu söyler.
 - Aile hareketleri 1 hafta saklanır, son 5'i görünür. Aile ekranı sadece değişen kişinin satırını günceller.
@@ -64,6 +67,8 @@ Güvenlik ve performans güncellemesi: bildirim sınırları, 1 haftalık hareke
 **Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri, BigText; `SCHEDULE_EXACT_ALARM` izni varsa `exactAllowWhileIdle`, yoksa esnek). Vakte özel söz havuzu eski uygulamadan taşındı (31 söz). Aile olayları Realtime `pool_events` dinlenerek gösterilir; vakit olayları 5 sn gecikmeli ve tekilleştirilmiş gönderilir.
 
 **Güvenlik/performans (derleme 4):** `pool_events` BEFORE INSERT sınır tetikleyicisi (`rate_limited`), `(sender_id, created_at)` indeksi; kullanılmayan `approve_join`, `create_pool` ve `join_requests_user_idx` kaldırıldı; `join_requests.status`'a `expired`; pg_cron: `aile-expire-requests` (her dakika), `aile-cleanup` (her gece, 7 gün). Release: `--obfuscate --split-debug-info`; Firebase Crashlytics (google-services + crashlytics Gradle eklentileri).
+
+**Derleme 5:** `allowBackup=false`, `dataExtractionRules` (bulut yedeği ve cihaz aktarımı hariç); `--split-per-abi` APK'ları (arm64-v8a, armeabi-v7a, x86_64) + evrensel APK; güncelleyici `dart:ffi Abi.current()` ile doğru APK'yı seçer. Supabase Auth: e-posta sağlayıcısı kapalı, yalnızca Google.
 
 **Google Play:** Aynı derlemede `aile-ile-namaz.aab` (`--dart-define=STORE=play`): Play uygulama içi güncelleme (in_app_update), `REQUEST_INSTALL_PACKAGES` kaldırılmış manifest. Rehber: `docs/PLAY_STORE.md`.
 
