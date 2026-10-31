@@ -90,7 +90,7 @@
 
 > Sürüm numarası = GitHub Actions derleme numarası. Her sürüm [Releases](https://github.com/bilkil53/aile-ile-namaz-/releases) sayfasında APK olarak yayınlanır.
 
-### 🌙 Sürüm 24 — Eski tasarım geri döndü, EMB kodları, 5 dakikalık onay, misafir modu
+### 🌙 Sürüm 27 — Eski tasarım geri döndü, Hoş Geldiniz penceresi, gezinti modu, EMB kodları, 5 dakikalık onay
 **Aile Havuzu**
 * Davet kodları artık **EMB-123456** biçiminde. Uygulamayı kuran herkes **"Aile Ferdi"** olarak başlar (Bireysel Mod).
 * Reis, katılımı onaylarken **kendi ünvanını** (👑 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer.
