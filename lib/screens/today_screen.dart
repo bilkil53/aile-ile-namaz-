@@ -165,7 +165,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   /// Cuma günü öğle kartı "Cuma Namazı 🕌" olarak görünür (eski uygulamadaki gibi).
-  String _name(String key) =>
+  String _prayerName(String key) =>
       key == 'dhuhr' && !_showYesterday && DateTime.now().weekday == DateTime.friday
           ? 'Cuma Namazı 🕌'
           : prayerLabels[key]!;
@@ -497,7 +497,7 @@ class _TodayScreenState extends State<TodayScreen> {
             _toggle(key);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${_name(key)} vakti $time\'de girecek.')),
+              SnackBar(content: Text('${_prayerName(key)} vakti $time\'de girecek.')),
             );
           }
         },
@@ -520,7 +520,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_name(key),
+                    Text(_prayerName(key),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                     Text(statusText,
                         style: TextStyle(
