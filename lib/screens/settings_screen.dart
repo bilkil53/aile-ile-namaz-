@@ -549,7 +549,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           size: 16, color: Push.ok ? AppColors.prayedMint : AppColors.missedCoral),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text('Anlık bildirim: $s${Push.ok ? '' : ' · tekrar denemek için dokun'}',
+                        child: Text('Anlık bildirim (uygulama kapalıyken aile bildirimleri): $s${Push.ok ? '' : ' · tekrar denemek için dokun'}',
                             style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
                       ),
                     ]),
@@ -572,6 +572,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
               },
               child: _row('Uygulamayı paylaş', const Icon(Icons.share, color: Colors.white), icon: Icons.favorite),
+            ),
+            _divider(),
+            InkWell(
+              onTap: () => _open(_repo),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(children: [
+                  const Icon(Icons.star_rounded, size: 22, color: Color(0xFFFFD54F)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('GitHub\'da yıldız ver ⭐',
+                          style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
+                      Text('Beğendiysen projeye yıldız vererek destek olabilirsin (GitHub hesabı gerekir)',
+                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                    ]),
+                  ),
+                  const Icon(Icons.open_in_new, color: Colors.white, size: 18),
+                ]),
+              ),
             ),
             _divider(),
             InkWell(

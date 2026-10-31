@@ -1,4 +1,4 @@
-Herkes aile fertlerini kendine göre akrabalık hitabıyla görüyor; vakit hatırlatması zorunlu; kapatma/ayrılmada çift onay.
+Düzeltme: uygulama kapalıyken aile bildirimleri (Firebase başlatma); dua gönderiminde önizleme.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,11 @@ Herkes aile fertlerini kendine göre akrabalık hitabıyla görüyor; vakit hat�
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.3**
+- Düzeltme: "Firebase başlatılamadı" — Firebase aynı anda iki yerden başlatılmaya çalışılıyordu (yarış). Artık tek sefer başlatılır, sessizce 3 kez denenir; olmazsa Ayarlar'da uyarı ve "tekrar dene".
+- Dua penceresi: hiçbir şey yazmadan gönderince hangi duanın gideceği önizlenir ("Hazır duayı gönder").
+- Ayarlar → Diğer: "GitHub'da yıldız ver ⭐".
 
 **v1.2**
 - Akrabalık hitapları her kullanıcıya göre: Aile Reisi "Kızın, Eşin"; Eşi "Eşin (Aile Reisi), Kızın"; Kızı "Baban (Aile Reisi), Annen, Kardeşin"; ayrıca Ninen, Deden, Amcan/Halan, Dayın/Teyzen, Yengen, Enişten, Kayınvaliden… Bildirim metinleri de buna göre.

@@ -1525,6 +1525,7 @@ class _DuaDialog extends StatefulWidget {
 
 class _DuaDialogState extends State<_DuaDialog> {
   final _ctrl = TextEditingController();
+  static const _defaultDua = 'Allah ibadetlerimizi kabul etsin, ailemizi namazda buluştursun 🤲';
 
   @override
   void dispose() {
@@ -1557,6 +1558,7 @@ class _DuaDialogState extends State<_DuaDialog> {
               ),
             const SizedBox(height: 8),
             TextField(
+              onChanged: (_) => setState(() {}),
               controller: _ctrl,
               maxLength: 240,
               maxLines: 3,
@@ -1565,12 +1567,23 @@ class _DuaDialogState extends State<_DuaDialog> {
                 hintText: 'Örn: Allah kabul etsin, hayırlı ve bereketli olsun…',
               ),
             ),
+            if (_ctrl.text.trim().isEmpty)
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(10)),
+                child: Text('Bir şey yazmazsan şu dua gönderilir:\n"$_defaultDua"',
+                    style: const TextStyle(fontSize: 12, color: AppColors.emerald)),
+              ),
           ],
         ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
-        FilledButton(onPressed: () => Navigator.pop(context, _ctrl.text), child: const Text('Gönder 🤲')),
+        FilledButton(
+          // Boş bırakılırsa gönderilecek dua önizlemede yazar
+          onPressed: () => Navigator.pop(context, _ctrl.text.trim().isEmpty ? _defaultDua : _ctrl.text),
+          child: Text(_ctrl.text.trim().isEmpty ? 'Hazır duayı gönder 🤲' : 'Yazdığımı gönder 🤲'),
+        ),
       ],
     );
   }

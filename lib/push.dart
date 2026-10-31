@@ -33,32 +33,58 @@ class Push {
   static String? _token;
   static StreamSubscription<String>? _refreshSub;
 
-  static Future<void> init() async {
-    if (_ready || defaultTargetPlatform != TargetPlatform.android) return;
-    try {
-      // google-services.json (derlemede eklenir) Android tarafında varsayılan uygulamayı zaten açar.
-      // Ayarlarla ikinci kez açmaya çalışmak "duplicate-app" hatası verir; önce mevcut olanı kullan.
-      if (Firebase.apps.isEmpty) {
-        try {
-          await Firebase.initializeApp();
-        } catch (_) {
-          await Firebase.initializeApp(options: _options);
+  static Future<void>? _initF;
+
+  /// Tek seferlik başlatma (aynı anda iki yerden çağrılsa da bir kez çalışır).
+  static Future<void> init() => _initF ??= _init();
+
+  static Future<void> _init() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    Object? lastError;
+    // Sessizce 3 kez dene (5 sn arayla); olmazsa Ayarlar'da uyarı göster
+    for (var attempt = 1; attempt <= 3 && !_ready; attempt++) {
+      try {
+        if (Firebase.apps.isEmpty) {
+          try {
+            // google-services.json ile Android tarafında hazırlanan varsayılan uygulama
+            await Firebase.initializeApp();
+          } on FirebaseException catch (e) {
+            if (e.code != 'duplicate-app') {
+              await Firebase.initializeApp(options: _options);
+            }
+          }
         }
+        Firebase.app(); // varsayılan uygulama gerçekten var mı?
+        _ready = true;
+      } on FirebaseException catch (e) {
+        if (e.code == 'duplicate-app') {
+          _ready = true; // zaten açık: sorun yok
+        } else {
+          lastError = e;
+        }
+      } catch (e) {
+        lastError = e;
       }
-      _ready = true;
-      // Çökme raporları (Firebase Crashlytics): hata olursa geliştiriciye anonim rapor gider
+      if (!_ready && attempt < 3) await Future<void>.delayed(const Duration(seconds: 5));
+    }
+    if (!_ready) {
+      _initF = null; // sonraki açılışta / "tekrar dene"de yeniden denensin
+      _set(false, 'Firebase başlatılamadı (${_short(lastError ?? 'bilinmeyen hata')})');
+      return;
+    }
+    // Çökme raporları (Firebase Crashlytics): hata olursa geliştiriciye anonim rapor gider
+    try {
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
       PlatformDispatcher.instance.onError = (error, stack) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         return true;
       };
-    } catch (e) {
-      _set(false, 'Firebase başlatılamadı: ${_short(e)}');
-    }
+    } catch (_) {}
   }
 
   /// Giriş yapılmışsa ve aile bildirimleri açıksa cihazı kaydeder.
   static Future<void> register() async {
+    if (!ok) status.value = 'Hazırlanıyor…';
     await init();
     if (!_ready) return;
     if (isGuest) return _set(false, 'Giriş yapılmadı');
@@ -69,7 +95,15 @@ class Push {
     try {
       final fm = FirebaseMessaging.instance;
       await fm.setAutoInitEnabled(true);
-      final t = await fm.getToken();
+      String? t;
+      for (var i = 0; i < 3 && t == null; i++) {
+        try {
+          t = await fm.getToken();
+        } catch (_) {
+          if (i == 2) rethrow;
+          await Future<void>.delayed(const Duration(seconds: 5));
+        }
+      }
       if (t == null) return _set(false, 'Cihaz adresi alınamadı');
       await _save(t, strict: true);
       _refreshSub ??= fm.onTokenRefresh.listen(_save);
