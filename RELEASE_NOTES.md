@@ -1,4 +1,4 @@
-Yeni İbadet Karnesi: okul karnesi gibi, sadece senin kayıtların.
+Düzeltme: uygulama kapalıyken aile bildirimleri artık geliyor (Firebase açılış hatası giderildi).
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,9 @@ Yeni İbadet Karnesi: okul karnesi gibi, sadece senin kayıtların.
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.5**
+- Düzeltme: Firebase açılırken "FirebaseCrashlytics component is not present" hatası telefonun bildirime kaydını engelliyordu. Çökme raporu eklentisi (Crashlytics) kaldırıldı; anlık bildirim (FCM) normal çalışır.
 
 **v1.4**
 - Yeni İbadet Karnesi (aile verisi yok): hafta / 30 gün / 3 ay; genel not; vakit vakit karne ve en çok aksatılan vakit; seri; aylık takvim; kaza ilerlemesi; kişisel rozetler (yeni: 7 ve 30 Gün Serisi).
@@ -112,7 +115,7 @@ Yeni İbadet Karnesi: okul karnesi gibi, sadece senin kayıtların.
 
 **Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri, BigText; `SCHEDULE_EXACT_ALARM` izni varsa `exactAllowWhileIdle`, yoksa esnek). Vakte özel söz havuzu eski uygulamadan taşındı (31 söz). Aile olayları Realtime `pool_events` dinlenerek gösterilir; vakit olayları 5 sn gecikmeli ve tekilleştirilmiş gönderilir.
 
-**Güvenlik/performans (derleme 4):** `pool_events` BEFORE INSERT sınır tetikleyicisi (`rate_limited`), `(sender_id, created_at)` indeksi; kullanılmayan `approve_join`, `create_pool` ve `join_requests_user_idx` kaldırıldı; `join_requests.status`'a `expired`; pg_cron: `aile-expire-requests` (her dakika), `aile-cleanup` (her gece, 7 gün). Release: `--obfuscate --split-debug-info`; Firebase Crashlytics (google-services + crashlytics Gradle eklentileri).
+**Güvenlik/performans (derleme 4):** `pool_events` BEFORE INSERT sınır tetikleyicisi (`rate_limited`), `(sender_id, created_at)` indeksi; kullanılmayan `approve_join`, `create_pool` ve `join_requests_user_idx` kaldırıldı; `join_requests.status`'a `expired`; pg_cron: `aile-expire-requests` (her dakika), `aile-cleanup` (her gece, 7 gün). Release: `--obfuscate --split-debug-info`; google-services Gradle eklentisi (Crashlytics v1.5te kaldırıldı).
 
 **Derleme 5:** `allowBackup=false`, `dataExtractionRules` (bulut yedeği ve cihaz aktarımı hariç); `--split-per-abi` APK'ları (arm64-v8a, armeabi-v7a, x86_64) + evrensel APK; güncelleyici `dart:ffi Abi.current()` ile doğru APK'yı seçer. Supabase Auth: e-posta sağlayıcısı kapalı, yalnızca Google.
 

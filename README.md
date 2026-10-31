@@ -126,11 +126,10 @@
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → telefonun işlemci türüne uygun APK (arm64-v8a / armeabi-v7a / x86_64, yaklaşık 20 MB; bulunamazsa hepsini içeren APK) uygulama içinde indirilir → open_filex ile kurulum · Play sürümünde Google Play uygulama içi güncelleme |
 | Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → imzalı, karıştırılmış APK (GitHub) + AAB (Google Play) → GitHub Releases |
-| Hata takibi | Firebase Crashlytics |
 | Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; her gece 7 günden eski aile hareketlerini temizler |
 
 ### Paketler
-`supabase_flutter ^2.8` · `firebase_core ^3.6` · `firebase_messaging ^15.1` · `firebase_crashlytics ^4.1` · `in_app_update ^4.2` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
+`supabase_flutter ^2.8` · `firebase_core ^3.6` · `firebase_messaging ^15.1` · `in_app_update ^4.2` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
 
 ### Kod yapısı
 ```
@@ -185,6 +184,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.5:** Düzeltme: anlık bildirim kaydını engelleyen hata bulundu ("FirebaseCrashlytics component is not present"). Çökme raporu eklentisi (Crashlytics) kaldırıldı; Firebase artık sorunsuz açılır, uygulama kapalıyken aile bildirimleri gelir.
 * **v1.4:** Yeni İbadet Karnesi (okul karnesi mantığı, sadece kişinin kendi verisi): dönem seçimi (hafta / 30 gün / 3 ay), genel not (Pekiyi/İyi/Orta), vakit vakit karne ve en çok aksatılan vakit, şu anki ve en uzun seri, aylık takvim, kaza ilerlemesi, kişisel rozetler. Anlık bildirim hatasına dokununca ayrıntı + kopyala + tekrar dene; Firebase yedek başlatma.
 * **v1.3:** Anlık bildirim (Firebase) başlatma düzeltmesi: aynı anda iki kez başlatma yarışı giderildi, sessizce 3 kez denenir, olmazsa Ayarlar'da uyarı. Dua penceresinde boş gönderimde hangi duanın gideceği önizlenir. Ayarlar'a "GitHub'da yıldız ver ⭐".
 * **v1.2:** Akrabalık hitapları her kullanıcıya göre (Reis: "Kızın"; Eşi: "Eşin (Aile Reisi)", "Kızın"; Kızı: "Baban (Aile Reisi)", "Annen"; ayrıca Kardeşin, Ninen, Amcan/Dayın…). Havuzu kapatma ve havuzdan ayrılma tek pencerede 1. ve 2. onay ister. Vakit hatırlatması (11 dk önce) ve 12:00 günün ayeti/hadisi bildirimi zorunlu; Ayarlar'da kapatma anahtarı yok.

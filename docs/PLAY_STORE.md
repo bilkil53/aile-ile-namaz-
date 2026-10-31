@@ -12,7 +12,6 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
 | Hesap silme (web) | https://bilkil53.github.io/aile-ile-namaz-/delete-account.html |
 | Gizlilik politikası | https://bilkil53.github.io/aile-ile-namaz-/privacy.html |
 | Kod karıştırma | `--obfuscate --split-debug-info` (sembol dosyaları Actions artifact'ında `debug-symbols.zip`) |
-| Çökme raporları | Firebase Crashlytics |
 | Hedef Android sürümü | Flutter stable'ın varsayılanı (Play'in yıllık hedef SDK şartını karşılar); `flutter create` her derlemede günceller. |
 
 ## Çıkış günü yapılacaklar (sırayla)
@@ -23,7 +22,7 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
    - Firebase **aile-ile-namaz-d437f** → Proje ayarları → Android uygulaması → *Parmak izi ekle*.
    - Google Cloud **aile-ile-namaz-d437f** → Credentials → *Android key (auto created by Firebase)* → Android uygulama kısıtlamasına aynı paket + Play SHA-1'ini ekle.
 4. **Veri güvenliği formu** (Data safety):
-   - Toplanan: Ad, e-posta (hesap yönetimi) · Uygulama etkinliği: namaz/kaza kayıtları, mesajlar (uygulama işlevi) · Cihaz kimliği: bildirim kimliği (uygulama işlevi) · Çökme kayıtları ve tanılama (analitik değil, hata ayıklama).
+   - Toplanan: Ad, e-posta (hesap yönetimi) · Uygulama etkinliği: namaz/kaza kayıtları, mesajlar (uygulama işlevi) · Cihaz kimliği: bildirim kimliği (uygulama işlevi) · (Çökme raporu toplanmıyor.)
    - Konum: **toplanmıyor** (yalnızca cihazda işleniyor).
    - Veriler aktarım sırasında şifreleniyor: Evet · Kullanıcı silme isteyebilir: Evet (uygulama içi + web bağlantısı).
    - Üçüncü taraflarla paylaşım: Hayır (Supabase ve Firebase hizmet sağlayıcıdır).

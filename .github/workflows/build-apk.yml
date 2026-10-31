@@ -112,7 +112,7 @@ jobs:
           print('desugaring ok')
           PY
 
-      - name: Firebase (Crashlytics) Gradle eklentileri
+      - name: Firebase Gradle eklentisi (google-services)
         run: |
           cp android-config/google-services.json android/app/google-services.json
           python3 - <<'PY'
@@ -121,19 +121,19 @@ jobs:
           s = open(st, encoding='utf-8').read()
           if 'com.google.gms.google-services' not in s:
               s = re.sub(r'(plugins\s*\{[^}]*?id\("com\.android\.application"\)[^\n]*\n)',
-                         r'\1    id("com.google.gms.google-services") version "4.4.2" apply false\n    id("com.google.firebase.crashlytics") version "3.0.2" apply false\n',
+                         r'\1    id("com.google.gms.google-services") version "4.4.2" apply false\n',
                          s, count=1)
           open(st, 'w', encoding='utf-8').write(s)
           ap = 'android/app/build.gradle.kts'
           s = open(ap, encoding='utf-8').read()
           if 'com.google.gms.google-services' not in s:
-              s = s.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")\n    id("com.google.firebase.crashlytics")', 1)
+              s = s.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")', 1)
           open(ap, 'w', encoding='utf-8').write(s)
           print(open(st).read()[:1200])
           PY
-          # Eklentiler eklenmezse Crashlytics açılışta hata verir: derlemeyi durdur
-          grep -q 'com.google.firebase.crashlytics' android/settings.gradle.kts
-          grep -q 'id("com.google.firebase.crashlytics")' android/app/build.gradle.kts
+          # Eklenti eksikse anlık bildirim çalışmaz: derlemeyi durdur
+          grep -q 'com.google.gms.google-services' android/settings.gradle.kts
+          grep -q 'id("com.google.gms.google-services")' android/app/build.gradle.kts
           { echo '## Firebase Gradle eklentileri'; echo '```'; grep -n 'google\|crashlytics' android/settings.gradle.kts android/app/build.gradle.kts; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Kalıcı imza anahtarını ayarla (Google girişi için SHA-1 sabit kalmalı)

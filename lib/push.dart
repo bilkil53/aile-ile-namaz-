@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show PlatformException;
@@ -87,14 +85,6 @@ class Push {
       _set(false, 'Firebase başlatılamadı (${_short(lastError ?? 'bilinmeyen hata')})');
       return;
     }
-    // Çökme raporları (Firebase Crashlytics): hata olursa geliştiriciye anonim rapor gider
-    try {
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-      PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return true;
-      };
-    } catch (_) {}
   }
 
   /// Giriş yapılmışsa ve aile bildirimleri açıksa cihazı kaydeder.
