@@ -516,7 +516,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ]),
             _divider(),
-            _infoRow('🕌 Vakit hatırlatması', 'Her vakitten ${AppSettings.reminderMinutes} dakika önce, vakte özel hadis/dua ile · her zaman açık'),
             if (AppSettings.prayerReminders && _nextReminder.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(left: 2, bottom: 6),
@@ -554,7 +553,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ]),
                 ),
               ),
-            _infoRow('📖 Günün ayeti / hadisi', 'Her gün 12:00\'de · her zaman açık'),
             _switchRow('Aile bildirimleri', 'Aileden biri namaz kılınca / dua gönderince', AppSettings.familyAlerts,
                 (v) async {
               await AppSettings.setFamilyAlerts(v);
