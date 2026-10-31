@@ -63,8 +63,11 @@ class UpdateChecker {
     }
   }
 
-  static Future<int> currentBuild() async =>
-      int.tryParse((await PackageInfo.fromPlatform()).buildNumber) ?? 0;
+  /// Yüklü derleme numarası. İşlemci türüne göre APK'larda Android sürüm kodu
+  /// "tür×1000 + derleme" olur (ör. 3011 = arm64, derleme 11); karşılaştırma derleme numarasıyla yapılır.
+  static int buildOf(String buildNumber) => (int.tryParse(buildNumber) ?? 0) % 1000;
+
+  static Future<int> currentBuild() async => buildOf((await PackageInfo.fromPlatform()).buildNumber);
 
   /// Ayarlar'daki "Hemen Güncelle" için.
   static Future<void> install(BuildContext context, int version) =>
@@ -107,7 +110,7 @@ class UpdateChecker {
     }
     try {
       final info = await PackageInfo.fromPlatform();
-      final current = int.tryParse(info.buildNumber) ?? 0;
+      final current = buildOf(info.buildNumber);
 
       final client = HttpClient()
         ..connectionTimeout = const Duration(seconds: 8);
@@ -200,15 +203,10 @@ class UpdateChecker {
       final file = File('${dir.path}/aile-ile-namaz-$version.apk');
 
       // Telefonun işlemci türüne uygun küçük APK (yaklaşık 20 MB); yoksa hepsini içeren APK
-      var req = await client.getUrl(Uri.parse(_abiUrl() ?? downloadUrl));
+      // (Küçük APK'dan büyük APK'ya geçilemez: Android bunu eski sürüm sayar. Bu yüzden yedek yok.)
+      final req = await client.getUrl(Uri.parse(_abiUrl() ?? downloadUrl));
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      var res = await req.close();
-      if (res.statusCode != 200) {
-        await res.drain<void>();
-        req = await client.getUrl(Uri.parse(downloadUrl));
-        req.headers.set('User-Agent', 'aile-ile-namaz-app');
-        res = await req.close();
-      }
+      final res = await req.close();
       if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
 
       final total = res.contentLength;
@@ -242,7 +240,7 @@ class UpdateChecker {
       if (context.mounted && !cancelled) {
         Navigator.of(context, rootNavigator: true).maybePop();
         // Son çare: tarayıcıdan indir.
-        await launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
+        await launchUrl(Uri.parse(_abiUrl() ?? downloadUrl), mode: LaunchMode.externalApplication);
       }
     } finally {
       progress.dispose();

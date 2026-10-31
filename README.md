@@ -29,6 +29,8 @@
 2. İnen dosyayı aç; Android "bilinmeyen kaynaklardan yükleme" izni isterse ver.
 3. Açılan **Hoş Geldiniz** penceresinde **Google ile Hızlı Giriş Yap**'a dokun ve telefondaki Gmail hesabını seç. İstersen **Giriş Yapmadan Devam Et** ile önce gezinebilirsin.
 
+> **Not (31.10.2026):** Derleme 6–11 arasında uygulama içi güncelleme yeni sürümü görmüyordu. Bir kez telefonuna uygun APK'yı elle kur, sonrası yine otomatik: çoğu telefon için [aile-ile-namaz-arm64-v8a.apk](https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz-arm64-v8a.apk) (eski telefonlarda [armeabi-v7a](https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz-armeabi-v7a.apk)).
+
 **Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
 **Sürüm:** Uygulamada ve GitHub'da sadece **v1.0** yazar; yayınlar tarih ve saatle ayrılır (ör. *v1.0 — 31.10.2026 12:45*). Büyük bir değişiklikte **v2.0**'a geçilir. Arka planda derleme numarası tutulur (v1.0 ile **1**'den başladı, her resmi yayında bir artar; Android güncellemeyi bununla tanır), ekranda görünmez.
@@ -183,6 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 12:** Düzeltme: küçük (işlemci türüne göre) APK'larda Android sürüm kodu 3000+N olduğu için uygulama içi güncelleme yeni sürümü görmüyordu; karşılaştırma artık derleme numarasıyla yapılıyor. Bir kez elle kurulum gerekir (aşağıya bakın).
 * **Derleme 11:** Cinsiyeti Aile Reisi verir: katılımı onaylarken ve ünvan değiştirirken ünvan + simge + cinsiyet (🧔 Erkek / 🧕 Kadın); reis "Aile Reisi" seçerse kendi cinsiyetini de seçer (Baba/Anne'de otomatik). Muaf buna göre gösterilir; kullanıcıya sorulan cinsiyet penceresi ve Ayarlar'daki seçim kaldırıldı.
 * **Derleme 10:** Ayarlar'da "Sıradaki hatırlatma: Yatsı 19:20 (vakit 19:31)" satırı ve hatırlatmanın tam zamanında mı yoksa gecikmeli mi geleceği bilgisi.
 * **Derleme 9:** Aile Havuzu internetsiz de açılır (ailenin son bilinen durumu + "İnternet yok" uyarısı, bağlantı gelince kendiliğinden yenilenir). Kilit ekranı ve cinsiyet soruları internet beklemeden hemen sorulur; açılıştaki ağ işleri arka plana alındı.

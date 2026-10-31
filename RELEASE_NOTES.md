@@ -1,4 +1,4 @@
-Cinsiyeti Aile Reisi ünvanla birlikte veriyor; Muaf buna göre.
+Düzeltme: uygulama içi güncelleme yeniden çalışıyor (bir kez elle kurulum gerekir).
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,9 @@ Cinsiyeti Aile Reisi ünvanla birlikte veriyor; Muaf buna göre.
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**Derleme 12**
+- Düzeltme: işlemci türüne göre APK'larda Android sürüm kodu 3000+N olduğundan güncelleme kontrolü yeni sürümü görmüyordu; artık derleme numarasıyla karşılaştırılıyor. Derleme 6–11 kullananlar bu sürümü bir kez elle kurmalı (arm64-v8a APK).
 
 **Derleme 11**
 - Aile Reisi katılımı onaylarken ve ünvan değiştirirken cinsiyet de seçer (🧔 Erkek / 🧕 Kadın). Kendi ünvanı "Aile Reisi" ise kendi cinsiyetini de seçer; Baba ve Anne'de otomatik.

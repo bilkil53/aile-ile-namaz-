@@ -48,7 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       setState(() {
         _version = i.version;
-        _build = int.tryParse(i.buildNumber) ?? 0;
+        _build = UpdateChecker.buildOf(i.buildNumber);
       });
     });
   }
