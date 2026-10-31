@@ -48,7 +48,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         try {
           await Repo.migrateGuestData();
         } catch (_) {}
-        await Repo.flushQueue();
+        await Repo.syncNow();
         _listenFamily();
         // Uygulama kapalıyken de aile bildirimleri için cihazı kaydet (FCM)
         unawaited(Push.register());
@@ -65,6 +65,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(LocationHelper.autoUpdate(maxAge: const Duration(hours: 1)));
+      unawaited(Repo.syncNow()); // telefonda bekleyen işaretleri gönder
     }
   }
 
@@ -80,7 +81,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     try {
       for (final p in await Repo.myPools()) {
         for (final m in await Repo.members(p.id)) {
-          _names[m.userId] = m.labelFor(viewerIsReis: p.ownerId == myId);
+          _names[m.userId] = '${m.icon} ${m.labelFor(viewerIsReis: p.ownerId == myId)}';
         }
       }
     } catch (_) {}
@@ -95,6 +96,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             if (r['sender_id'] == myId || !AppSettings.familyAlerts) return;
             // Arka plandayken bildirimi FCM gösterir; çift bildirim olmasın
             if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+            final type = r['event_type'] as String?;
+            if ((type == 'PRAYED' && !AppSettings.notifyPrayer) ||
+                (type == 'KAZA' && !AppSettings.notifyKaza) ||
+                (type == 'DUA' && !AppSettings.notifyDua)) return;
             final who = _names[r['sender_id']] ?? 'Aile ferdin';
             final prayer = prayerLabels[(r['prayer'] as String?)?.toLowerCase()] ?? '';
             final (title, body) = switch (r['event_type']) {

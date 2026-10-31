@@ -106,21 +106,28 @@ Deno.serve(async (req) => {
 
     const [{ data: pool }, { data: members }] = await Promise.all([
       db.from("pools").select("owner_id").eq("id", ev.pool_id).single(),
-      db.from("pool_members").select("user_id, role_title").eq("pool_id", ev.pool_id),
+      db.from("pool_members").select("user_id, role_title, icon").eq("pool_id", ev.pool_id),
     ]);
     const sender = (members ?? []).find((m) => m.user_id === ev.sender_id);
     const recipients = (members ?? []).map((m) => m.user_id).filter((id) => id !== ev.sender_id);
     if (!recipients.length) return Response.json({ sent: 0 });
 
-    const { data: devices } = await db.from("devices").select("user_id, fcm_token").in("user_id", recipients);
+    // Kişinin bildirim tercihi: namaz / kaza / dua (katılım bildirimi herkese)
+    const prefCol = ev.event_type === "PRAYED" ? "notify_prayer"
+      : ev.event_type === "KAZA" ? "notify_kaza"
+      : ev.event_type === "DUA" ? "notify_dua" : null;
+    let q = db.from("devices").select("user_id, fcm_token, lock_screen").in("user_id", recipients);
+    if (prefCol) q = q.eq(prefCol, true);
+    const { data: devices } = await q;
     if (!devices?.length) return Response.json({ sent: 0, reason: "cihaz yok" });
 
     const token = await accessToken(sa);
     const role = sender?.role_title || "Aile ferdin";
+    const icon = sender?.icon ? `${sender.icon} ` : "";
     let sent = 0;
     await Promise.all(devices.map(async (d) => {
       // Reis "Kızın / Oğlun" görür, diğerleri "Kızı / Oğlu"
-      const who = d.user_id === pool?.owner_id ? (POSSESSIVE[role] ?? role) : role;
+      const who = icon + (d.user_id === pool?.owner_id ? (POSSESSIVE[role] ?? role) : role);
       const t = text(ev.event_type, who, ev.prayer, ev.message ?? "");
       if (!t) return;
       const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
@@ -132,7 +139,13 @@ Deno.serve(async (req) => {
             notification: { title: t[0], body: t[1] },
             android: {
               priority: "HIGH",
-              notification: { channel_id: "aile_olaylari", sound: "default", tag: `ev-${ev.id}` },
+              notification: {
+                channel_id: "aile_olaylari",
+                sound: "default",
+                tag: `ev-${ev.id}`,
+                // Kilit ekranında içerik görünsün mü (kişinin tercihi)
+                visibility: d.lock_screen === false ? "PRIVATE" : "PUBLIC",
+              },
             },
             data: { type: ev.event_type, pool_id: ev.pool_id },
           },

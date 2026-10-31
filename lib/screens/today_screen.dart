@@ -74,7 +74,9 @@ class _TodayScreenState extends State<TodayScreen> {
         Repo.dayPrayers([myId], todayStr()),
         Repo.dayPrayers([myId], _yesterdayStr()),
         Repo.myDisplayName(),
+        Repo.canExcuse(),
       ]);
+      _canExcuse = results[3] as bool;
       _today = (results[0] as Map<String, Map<String, PrayerStatus>>)[myId] ?? {};
       _yesterday = (results[1] as Map<String, Map<String, PrayerStatus>>)[myId] ?? {};
       _name = results[2] as String;
@@ -90,10 +92,13 @@ class _TodayScreenState extends State<TodayScreen> {
     });
   }
 
+  bool _canExcuse = true;
+
+  // Erkeklerde: Kıldı → Kılmadı → Bekliyor (Muaf yok)
   PrayerStatus _next(PrayerStatus s) => switch (s) {
         PrayerStatus.none => PrayerStatus.prayed,
         PrayerStatus.prayed => PrayerStatus.missed,
-        PrayerStatus.missed => PrayerStatus.excused,
+        PrayerStatus.missed => _canExcuse ? PrayerStatus.excused : PrayerStatus.none,
         PrayerStatus.excused => PrayerStatus.none,
       };
 
@@ -406,7 +411,7 @@ class _TodayScreenState extends State<TodayScreen> {
           ],
         ]),
         const SizedBox(height: 6),
-        const Text('Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.',
+        Text(_canExcuse ? 'Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.' : 'Vakite dokundukça Kıldı → Kılmadı → Bekliyor sırasıyla ilerler.',
             style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
       ],
     );

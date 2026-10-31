@@ -105,6 +105,19 @@ class Repo {
     await supa.from('pools').delete().eq('id', poolId);
   }
 
+  /// Bu kullanıcı "Muaf" işaretleyebilir mi? (erkek ünvan/simgede hayır)
+  static Future<bool> canExcuse() async {
+    if (isGuest) return true;
+    try {
+      final pools = await myPools();
+      if (pools.isEmpty) return true;
+      final me = (await members(pools.first.id)).where((m) => m.userId == myId).firstOrNull;
+      return me == null || canBeExcused(me.roleTitle, me.icon);
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Kullanıcı adı (tüm sekmelerde aynı görünür), önbellekli.
   static String? _myName;
   static Future<String> myDisplayName() async {
@@ -214,6 +227,9 @@ class Repo {
 
   /// Bir vakti kaydeder. İnternet yoksa telefonda bekletir, bağlantı gelince gönderir.
   /// Dönüş: true = buluta gitti, false = telefonda bekliyor / misafir.
+  /// Bir vakti kaydeder. Önce telefona yazılır; buluta yazma ve aile bildirimi 5 saniye sonra,
+  /// son duruma göre yapılır (hızlı değiştirmelerde tek yazma, tek bildirim). İnternet yoksa kayıt
+  /// telefonda bekler ve bağlantı gelince arka planda otomatik gönderilir.
   static Future<bool> setPrayer({
     required String key,
     required PrayerStatus status,
@@ -225,57 +241,83 @@ class Repo {
       await LocalStore.setHasGuestData(true);
       return false;
     }
-    try {
-      await supa.from('daily_prayers').upsert(
-        {'user_id': myId, 'prayer_date': day, key: status.code},
-        onConflict: 'user_id,prayer_date',
-      );
-    } catch (_) {
-      await LocalStore.enqueue({'t': 'prayer', 'date': day, 'key': key, 'status': status.code});
-      return false;
-    }
-    if (day != todayStr()) return true;
-    _scheduleAnnounce(day, key);
+    await LocalStore.enqueue({'t': 'prayer', 'date': day, 'key': key, 'status': status.code});
+    final id = '$day|$key';
+    if (day == todayStr()) _pendingAnnounce.add(id);
+    _writeTimers.remove(id)?.cancel();
+    _writeTimers[id] = Timer(const Duration(seconds: 5), () {
+      _writeTimers.remove(id);
+      unawaited(syncNow());
+    });
     return true;
   }
 
-  // Aileye bildirim: işaretlemeden 5 sn sonra, son duruma göre bir kez gönderilir.
-  // Hızlı değiştirmelerde (kıldı → kılmadı → kıldı) aileye tek bildirim gider.
-  static final Map<String, Timer> _announceTimers = {};
+  static final Map<String, Timer> _writeTimers = {};
+  static final Set<String> _pendingAnnounce = {};
   static final Map<String, String> _announced = {};
+  static Timer? _retry;
+  static bool _syncing = false;
 
-  static void _scheduleAnnounce(String day, String key) {
-    final id = '$day|$key';
-    _announceTimers.remove(id)?.cancel();
-    _announceTimers[id] = Timer(const Duration(seconds: 5), () async {
-      _announceTimers.remove(id);
-      if (isGuest || day != todayStr()) return;
-      final status = LocalStore.day(day)[key] ?? PrayerStatus.none;
-      final type = switch (status) {
-        PrayerStatus.prayed => 'PRAYED',
-        PrayerStatus.missed => 'MISSED',
-        _ => null,
-      };
-      if (type == null || _announced[id] == type) return;
-      try {
-        final pools = await myPoolIds();
-        if (pools.isEmpty) return;
-        await supa.from('pool_events').insert([
-          for (final p in pools)
-            {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
-        ]);
-        _announced[id] = type;
-      } catch (_) {}
-    });
+  /// Bekleyen kayıtları buluta yazar, sonra aile bildirimlerini gönderir.
+  /// Gönderilemeyen kalırsa 20 saniyede bir arka planda tekrar dener.
+  static Future<void> syncNow() async {
+    if (isGuest || _syncing) return;
+    _syncing = true;
+    try {
+      await flushQueue();
+      if (LocalStore.pendingCount > _writeTimers.length) {
+        _retry ??= Timer.periodic(const Duration(seconds: 20), (_) => syncNow());
+        return;
+      }
+      _retry?.cancel();
+      _retry = null;
+      for (final id in _pendingAnnounce.toList()) {
+        if (_writeTimers.containsKey(id)) continue;
+        _pendingAnnounce.remove(id);
+        final parts = id.split('|');
+        await _announce(parts[0], parts[1]);
+      }
+    } finally {
+      _syncing = false;
+    }
   }
 
-  /// Bekleyen işlemleri sırayla buluta gönderir. İlk hatada durur.
+  static void _ensureRetry() => _retry ??= Timer.periodic(const Duration(seconds: 20), (_) => syncNow());
+
+  /// Aileye bildirim: son duruma göre bir kez (aynı durum tekrar bildirilmez).
+  static Future<void> _announce(String day, String key) async {
+    if (isGuest || day != todayStr()) return;
+    final id = '$day|$key';
+    final status = LocalStore.day(day)[key] ?? PrayerStatus.none;
+    final type = switch (status) {
+      PrayerStatus.prayed => 'PRAYED',
+      PrayerStatus.missed => 'MISSED',
+      _ => null,
+    };
+    if (type == null || _announced[id] == type) return;
+    try {
+      final pools = await myPoolIds();
+      if (pools.isEmpty) return;
+      await supa.from('pool_events').insert([
+        for (final p in pools)
+          {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
+      ]);
+      _announced[id] = type;
+    } catch (_) {}
+  }
+
   static Future<int> flushQueue() async {
     if (isGuest) return 0;
     final q = LocalStore.queue();
     var sent = 0;
-    while (q.isNotEmpty) {
-      final o = q.first;
+    var i = 0;
+    while (i < q.length) {
+      final o = q[i];
+      // 5 saniyelik bekleme süresi dolmamış işaretler henüz gönderilmez
+      if (o['t'] == 'prayer' && _writeTimers.containsKey('${o['date']}|${o['key']}')) {
+        i++;
+        continue;
+      }
       try {
         if (o['t'] == 'prayer') {
           await supa.from('daily_prayers').upsert(
@@ -285,7 +327,7 @@ class Repo {
         } else if (o['t'] == 'kaza') {
           await _upsertKaza(o['type'] as String, (o['o'] as num).toInt(), (o['c'] as num).toInt());
         }
-        q.removeAt(0);
+        q.removeAt(i);
         sent++;
         await LocalStore.saveQueue(q);
       } catch (_) {
@@ -389,6 +431,7 @@ class Repo {
       await _upsertKaza(type, owed, completed);
     } catch (_) {
       await LocalStore.enqueue({'t': 'kaza', 'type': type, 'o': owed, 'c': completed});
+      _ensureRetry();
       return;
     }
     if (!announce) return;

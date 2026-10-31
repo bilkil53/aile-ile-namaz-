@@ -79,6 +79,18 @@ const reisTitles = {
   'Aile Ferdi': '👥',
 };
 
+/// Erkek ünvan/simgeler: bu kişilerde "Muaf" seçeneği gösterilmez (Aile Reisi erkek kabul edilir).
+const maleTitles = {'Aile Reisi', 'Baba', 'Oğlu', 'Babası', 'Dedesi', 'Damadı'};
+const maleIcons = {'🧔', '👨', '👴', '👱‍♂️', '👦', '🏡'};
+const femaleIcons = {'🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿', '👩', '👵', '👱‍♀️', '👧'};
+
+/// Muaf seçeneği bu kişi için geçerli mi? Bilinmiyorsa (bireysel mod) gösterilir.
+bool canBeExcused(String role, String icon) {
+  if (femaleIcons.contains(icon) || role == 'Anne') return true;
+  if (maleTitles.contains(role) || maleIcons.contains(icon)) return false;
+  return true;
+}
+
 /// Reisin gözünden sahiplik eki: "Kızı" → "Kızın", "Eşi" → "Eşin" …
 const _possessive = {
   'Eşi': 'Eşin',

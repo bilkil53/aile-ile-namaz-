@@ -40,7 +40,22 @@ class Notifications {
   static Future<void> showFamily(int id, String title, String body) async {
     try {
       await init();
-      await _plugin.show(1000 + (id % 100000), title, body, const NotificationDetails(android: _familyChannel));
+      await _plugin.show(
+        1000 + (id % 100000),
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _familyChannel.channelId,
+            _familyChannel.channelName,
+            channelDescription: _familyChannel.channelDescription,
+            importance: Importance.high,
+            priority: Priority.high,
+            // Kilit ekranında içerik: kullanıcının tercihine göre
+            visibility: AppSettings.lockScreen ? NotificationVisibility.public : NotificationVisibility.private,
+          ),
+        ),
+      );
     } catch (_) {}
   }
 

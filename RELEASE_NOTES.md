@@ -1,4 +1,4 @@
-Daha küçük güncelleme indirmesi ve güvenlik: telefon yedeğinde oturum bilgisi tutulmaz, sadece Google ile giriş.
+Bildirim tercihleri, simgeli bildirimler, 5 saniyelik kayıt ve çevrimdışı arka plan gönderimi.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,12 @@ Daha küçük güncelleme indirmesi ve güvenlik: telefon yedeğinde oturum bilg
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**Bildirim ve kayıt (derleme 6)**
+- Kıldı/kılmadı işareti buluta ve aileye 5 saniye sonra, son duruma göre gider; internet yoksa telefonda bekler, bağlantı gelince arka planda gönderilir.
+- Erkek ünvan/simgelerde (Aile Reisi, Baba, Oğlu…) "Muaf" seçeneği yok.
+- Bildirimde kişinin simgesi: "🧕🏻 Kızın kaza namazı kıldı".
+- Ayarlar → Aile bildirimleri altında: namaz / kaza / dua bildirimlerini ayrı ayrı aç-kapat, kilit ekranında içeriği göster.
 
 **Kaza**
 - Kalan / Kılınan kutuları, vakit başına −/Borç/+, Kaza Kıldım.

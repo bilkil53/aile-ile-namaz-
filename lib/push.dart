@@ -79,6 +79,10 @@ class Push {
         'user_id': myId,
         'fcm_token': t,
         'platform': 'android',
+        'notify_prayer': AppSettings.notifyPrayer,
+        'notify_kaza': AppSettings.notifyKaza,
+        'notify_dua': AppSettings.notifyDua,
+        'lock_screen': AppSettings.lockScreen,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id,fcm_token');
     } catch (e) {

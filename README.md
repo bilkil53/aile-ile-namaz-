@@ -40,7 +40,7 @@
 ### 1. 🕌 Bugün — Vakitler ve Günlük İbadet
 * **Selamün aleyküm** karşılaması ve tarih. Konum uygulama her açıldığında **otomatik** alınır (alınamazsa 10 sn sonra tekrar, en fazla 3 deneme); konum bilgisi ve yenileme sadece **Ayarlar**'da.
 * **SIRADAKİ VAKİT** kartı: geri sayım ve günün 6 vakti (İmsak, Güneş, Öğle/Cuma, İkindi, Akşam, Yatsı).
-* **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor**. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
+* **5 vakit kartı** (ince çizgili simgelerle): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor** (erkek ünvan/simgelerde Muaf yok). Kayıt buluta 5 sn sonra yazılır; internet yoksa telefonda bekler ve otomatik gönderilir. Vakti girmemiş namaz ve vakitler yüklenmeden tüm kartlar 🔒 kilitlidir.
 * **← Dün / Bugün** geçişi: unuttuğun dünkü vakitleri işaretleyebilirsin.
 * **Günün Ayeti / Hadisi** (Arapça metin + Diyanet meali).
 * **🧭 Kıble Pusulası:** İnternet gerektirmez; ivme + manyetik sensörle Kâbe yönü.
@@ -183,6 +183,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **Derleme 6:** Kıldı/kılmadı buluta da 5 saniye sonra yazılır (aile matrisi ve bildirim son duruma göre); internet yoksa telefonda bekler, 20 saniyede bir arka planda tekrar denenir. Erkek ünvan/simgelerde "Muaf" seçeneği yok. Bildirimlerde kişinin simgesi (ör. "🧕🏻 Kızın kaza namazı kıldı"). Ayarlar'da hangi aile bildirimlerinin alınacağı (namaz / kaza / dua) ve kilit ekranında içerik gösterimi.
 * **Derleme 5:** Android otomatik yedeklemesi kapatıldı (oturum bilgisi Drive'a/başka cihaza taşınmaz; kişisel kayıtlar zaten bulutta ve girişte geri gelir); sadece Google ile giriş (e-posta/şifre kaydı kapatıldı); güncelleme telefonun işlemci türüne uygun küçük APK'yı indirir.
 * **Derleme 4:** Güvenlik ve Play hazırlığı: kişi başı bildirim sınırı (dua: dakikada 1, saatte 3, günde 10; aynı vakit günde 2), süresi dolan istekler sunucuda otomatik düşer, eski onay fonksiyonu kaldırıldı, aile hareketleri 1 hafta saklanır ve son 5'i görünür, aile ekranı sadece değişen kişiyi günceller, kod karıştırma, Firebase Crashlytics, Play paketi (AAB) + Google Play uygulama içi güncelleme, web'den hesap silme sayfası, gizlilik politikası güncellendi. Ayrıntı: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
 * **Derleme 3:** Kaza kayıtlarını sıfırlama (iki aşamalı onay). Ayarlar'da "Anlık bildirim: Hazır ✓" durumu ve tekrar deneme; sunucu anahtarı etkinleştirildi.

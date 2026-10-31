@@ -208,6 +208,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
         label: Text(label),
       );
 
+  Widget _subSwitch(String title, bool value, String key) => Padding(
+        padding: const EdgeInsets.only(left: 14),
+        child: Row(children: [
+          Icon(Icons.subdirectory_arrow_right, size: 16, color: Colors.white.withValues(alpha: 0.6)),
+          const SizedBox(width: 6),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 13, color: Colors.white))),
+          Transform.scale(
+            scale: 0.85,
+            child: Switch(
+              value: value,
+              activeThumbColor: AppColors.emerald,
+              activeTrackColor: AppColors.prayedMint,
+              onChanged: (v) async {
+                await AppSettings.setNotify(key, v);
+                setState(() {});
+                unawaited(Push.register()); // tercih sunucudaki cihaz kaydına da yazılır
+              },
+            ),
+          ),
+        ]),
+      );
+
   Widget _switchRow(String title, String sub, bool value, ValueChanged<bool> onChanged) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(children: [
@@ -478,6 +500,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               await Push.register();
               setState(() {});
             }),
+            if (AppSettings.familyAlerts) ...[
+              _subSwitch('Namaz kıldı bildirimleri', AppSettings.notifyPrayer, 'notifyPrayer'),
+              _subSwitch('Kaza namazı bildirimleri', AppSettings.notifyKaza, 'notifyKaza'),
+              _subSwitch('Dua bildirimleri', AppSettings.notifyDua, 'notifyDua'),
+              _subSwitch('Kilit ekranında içeriği göster', AppSettings.lockScreen, 'lockScreen'),
+            ],
             if (!guest)
               ValueListenableBuilder<String>(
                 valueListenable: Push.status,
