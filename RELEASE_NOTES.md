@@ -18,6 +18,12 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
+**v1.14**
+- Mübarek gün hatırlatmaları: Hicri Yılbaşı, Aşure, Mevlid / Regaib / Miraç / Berat kandilleri, Üç Ayların ve Ramazan'ın başlangıcı, Kadir Gecesi, arefeler, Ramazan ve Kurban bayramları için 1 gün kala akşam 19:00'da anlamını anlatan açıklamalı bildirim.
+- Tarihler Diyanet hicri takviminden otomatik alınır (bu hicri yıl + sonraki yıl); liste bitmeye yaklaşınca kendiliğinden yenilenir ve ilerler.
+- Ayarlar sadeleşti: Aile Havuzu ve Namaz Vakitleri kartları kaldırıldı (aynı bilgi kendi ekranlarında var); konum satırı Uygulama kartına taşındı. Yazılar küçültüldü.
+- Sıralama: Hesap → Uygulama → Diğer → Bildirimler → Hesabımı sil.
+
 **v1.13**
 - Ayarlar yeni sıralama: Hesap → Aile Havuzu → Namaz Vakitleri → Uygulama → Diğer → Bildirimler (en altta) → Hesabımı sil.
 - Hesap: üyelik ve son giriş tarihi.

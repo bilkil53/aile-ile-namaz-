@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../config.dart';
 import 'package:flutter/services.dart';
-import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -12,9 +11,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data.dart';
 import '../local_store.dart';
 import '../location.dart';
-import '../member_icon.dart';
-import '../models.dart';
-import '../prayer_times.dart';
 import '../notifications.dart';
 import '../push.dart';
 import '../settings.dart';
@@ -41,11 +37,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _gpsBusy = false;
   String _lastSync = '';
   bool _exact = true;
-  Pool? _pool;
-  Member? _me;
-  int _memberCount = 0;
-  bool _poolLoaded = false;
-  DayTimes? _times;
 
   @override
   void initState() {
@@ -53,8 +44,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Notifications.exactAllowed().then((v) {
       if (mounted) setState(() => _exact = v);
     });
-    _loadTimes();
-    _loadPool();
     PackageInfo.fromPlatform().then((i) {
       if (!mounted) return;
       setState(() {
@@ -62,49 +51,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _build = UpdateChecker.buildOf(i.buildNumber);
       });
     });
-  }
-
-  Future<void> _loadTimes() async {
-    try {
-      final t = await PrayerTimesService.forDate(DateTime.now());
-      if (mounted) setState(() => _times = t);
-    } catch (_) {}
-  }
-
-  Future<void> _loadPool() async {
-    if (isGuest) {
-      if (mounted) setState(() => _poolLoaded = true);
-      return;
-    }
-    try {
-      final pools = await Repo.myPools().timeout(const Duration(seconds: 6));
-      Pool? p = pools.isEmpty ? null : pools.first;
-      List<Member> ms = const [];
-      if (p != null) ms = await Repo.members(p.id).timeout(const Duration(seconds: 6));
-      if (!mounted) return;
-      setState(() {
-        _pool = p;
-        _memberCount = ms.length;
-        _me = ms.where((m) => m.userId == myId).firstOrNull;
-        _poolLoaded = true;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _poolLoaded = true);
-    }
-  }
-
-  static const _hijriMonths = [
-    'Muharrem', 'Safer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir',
-    'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce',
-  ];
-
-  String _hijriToday() {
-    try {
-      final h = HijriCalendar.fromDate(DateTime.now());
-      return '${h.hDay} ${_hijriMonths[h.hMonth - 1]} ${h.hYear}';
-    } catch (_) {
-      return '';
-    }
   }
 
   static String _fmtDate(String? iso) {
@@ -132,14 +78,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = AppSettings.prefs;
     var n = 0;
     for (final k in prefs.getKeys().toList()) {
-      if (k.startsWith('pt_') || k == 'familySnapshot') {
+      if (k.startsWith('pt_') || k == 'familySnapshot' || k.startsWith('diniGunler')) {
         await prefs.remove(k);
         n++;
       }
     }
-    await _loadTimes();
     unawaited(Notifications.reschedule());
-    unawaited(_loadPool());
     _toast(n == 0 ? 'Önbellek zaten temiz ✓' : 'Önbellek temizlendi ✓ ($n kayıt)');
   }
 
@@ -286,7 +230,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ---------- Arayüz parçaları ----------
 
   Widget _bigCard(List<Widget> children) => Container(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
         decoration: BoxDecoration(
           color: AppColors.emerald,
           borderRadius: BorderRadius.circular(24),
@@ -295,7 +239,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
       );
 
-  Widget _divider() => Divider(color: Colors.white.withValues(alpha: 0.18), height: 22);
+  Widget _divider() => Divider(color: Colors.white.withValues(alpha: 0.18), height: 18);
 
   Widget _whiteBtn(String label, VoidCallback? onTap, {IconData? icon}) => FilledButton.icon(
         style: FilledButton.styleFrom(
@@ -326,7 +270,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Row(children: [
           Icon(Icons.subdirectory_arrow_right, size: 16, color: Colors.white.withValues(alpha: 0.6)),
           const SizedBox(width: 6),
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 13, color: Colors.white))),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 12, color: Colors.white))),
           Transform.scale(
             scale: 0.85,
             child: Switch(
@@ -348,8 +292,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
-              Text(sub, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+              Text(title, style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600)),
+              Text(sub, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
             ]),
           ),
           Switch(
@@ -376,7 +320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: Text(_notes.isEmpty ? 'Sürüm açıklaması alınamadı. İnternet bağlantını kontrol et.' : _notes,
-                style: const TextStyle(fontSize: 13, height: 1.4)),
+                style: const TextStyle(fontSize: 12, height: 1.4)),
           ),
         ),
         actions: [
@@ -387,7 +331,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _title(String t) => Text(t, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white));
+  Widget _title(String t) => Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white));
 
   Widget _tapRow(String label, IconData icon, VoidCallback onTap, {String? sub, Widget? trailing, Color? color}) => InkWell(
         onTap: onTap,
@@ -398,8 +342,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(label, style: TextStyle(fontSize: 15, color: color ?? Colors.white, fontWeight: FontWeight.w600)),
-                if (sub != null) Text(sub, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                Text(label, style: TextStyle(fontSize: 14, color: color ?? Colors.white, fontWeight: FontWeight.w600)),
+                if (sub != null) Text(sub, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
               ]),
             ),
             trailing ?? Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.7)),
@@ -441,9 +385,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(guest ? 'Gezinti modu' : (name.isEmpty ? 'Google hesabı' : name),
-                      style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold)),
                   if (!guest && email.isNotEmpty)
-                    Text(email, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                    Text(email, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
                   if (!guest && _fmtDate(user?.createdAt).isNotEmpty)
                     Text('Üyelik: ${_fmtDate(user?.createdAt)}'
                         '${_fmtDate(user?.lastSignInAt).isEmpty ? '' : ' · Son giriş: ${_fmtDate(user?.lastSignInAt)}'}',
@@ -485,59 +429,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
-          // 2) Aile Havuzu
-          if (!guest) ...[
-            _bigCard([
-              _title('Aile Havuzu'),
-              _divider(),
-              if (!_poolLoaded)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('Yükleniyor…', style: TextStyle(color: Colors.white)),
-                )
-              else if (_pool == null)
-                Text('Henüz bir aile havuzunda değilsin. Aile sekmesinden havuz kurabilir ya da davet koduyla katılabilirsin.',
-                    style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)))
-              else ...[
-                Row(children: [
-                  MemberIcon(_me?.icon ?? '👥', size: 26),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(_pool!.name,
-                          style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-                      Text(
-                          '${_pool!.ownerId == myId ? 'Aile Reisi' : (_me?.roleTitle ?? 'Üye')} · $_memberCount üye',
-                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
-                    ]),
-                  ),
-                ]),
-                const SizedBox(height: 8),
-                Row(children: [
-                  const Icon(Icons.vpn_key, size: 18, color: AppColors.prayedMint),
-                  const SizedBox(width: 8),
-                  Text('Davet kodu: ', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
-                  SelectableText(_pool!.displayCode,
-                      style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-                  const Spacer(),
-                  _outlineBtn('Paylaş', () async {
-                    await Share.share(
-                      '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
-                      'Davet kodu: ${_pool!.displayCode}\n'
-                      '(Kodu 5 dakika içinde onaylarım.)\n\n'
-                      'Uygulama: $_repo/releases/latest/download/aile-ile-namaz.apk',
-                      subject: 'Aile Havuzu davet kodu',
-                    );
-                  }, icon: Icons.share),
-                ]),
-              ],
-              const SizedBox(height: 6),
-            ]),
-            const SizedBox(height: 14),
-          ],
-          // 3) Namaz Vakitleri
+          // 2) Uygulama
           _bigCard([
-            _title('Namaz Vakitleri'),
+            _title('Uygulama'),
             _divider(),
             Row(children: [
               const Icon(Icons.location_on, color: Colors.white, size: 20),
@@ -545,12 +439,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(AppSettings.cityName,
-                      style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
+                      style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600)),
                   Text(
                     LocationHelper.permissionDenied
                         ? 'Konum izni yok — İstanbul vakitleri gösteriliyor'
                         : 'GPS ile otomatik · sadece telefonda tutulur',
-                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                    style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8)),
                   ),
                 ]),
               ),
@@ -562,35 +456,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: const TextStyle(color: AppColors.prayedMint, fontWeight: FontWeight.bold)),
               ),
             ]),
-            if (_times != null) ...[
-              _divider(),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                for (final (n, t) in _times!.all)
-                  Container(
-                    width: 92,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(children: [
-                      Text(n, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
-                      Text(t, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-                    ]),
-                  ),
-              ]),
-            ],
-            const SizedBox(height: 10),
-            Text(
-              '${_hijriToday().isEmpty ? '' : '🌙 ${_hijriToday()} · '}Hesaplama: Diyanet İşleri yöntemi',
-              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
-            ),
-            const SizedBox(height: 6),
-          ]),
-          const SizedBox(height: 14),
-          // 4) Uygulama
-          _bigCard([
-            _title('Uygulama'),
             _divider(),
             InkWell(
               onTap: _showNotes,
@@ -602,9 +467,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('Sürüm v$_version',
-                          style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
+                          style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600)),
                       Text('Sürüm notları için dokun',
-                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
                     ]),
                   ),
                   Container(
@@ -654,7 +519,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
-          // 5) Diğer
+          // 3) Diğer
           _bigCard([
             _title('Diğer'),
             _divider(),
@@ -676,7 +541,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
-          // 6) Bildirimler
+          // 4) Bildirimler
           _bigCard([
             _title('Bildirimler'),
             _divider(),
@@ -687,7 +552,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text('Vakitlerden 11 dk önce ve her gün 12:00\'de bildirim gelir (zorunlu).',
-                      style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9))),
+                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
                 ),
               ]),
             ),
@@ -755,7 +620,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             const SizedBox(height: 6),
           ]),
-          // 7) Hesabı sil (en altta)
+          // 5) Hesabı sil (en altta)
           if (!guest) ...[
             const SizedBox(height: 18),
             Center(
@@ -763,7 +628,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: _deleteAccount,
                 icon: const Icon(Icons.delete_forever, color: AppColors.missed),
                 label: const Text('Hesabımı ve verilerimi sil',
-                    style: TextStyle(fontSize: 15, color: AppColors.missed, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

@@ -5,6 +5,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'content/approaching_quotes.dart';
 import 'content/daily_content.dart';
 import 'prayer_times.dart';
+import 'dini_gunler.dart';
 import 'settings.dart';
 
 /// Vakit hatırlatmaları ve günlük ayet/hadis bildirimi (cihaz içinde zamanlanır,
@@ -171,6 +172,17 @@ class Notifications {
             await _schedule(100 + d, q.title, q.text, at, _contentChannel);
           }
         }
+      }
+      // Mübarek günler: 1 gün kala akşam 19:00'da açıklamalı hatırlatma (önümüzdeki 60 gün)
+      await DiniGunler.ensure();
+      var did = 300;
+      for (final e in DiniGunler.events) {
+        final at = DateTime(e.date.year, e.date.month, e.date.day, 19).subtract(const Duration(days: 1));
+        if (!at.isAfter(now) || at.difference(now).inDays > 60) continue;
+        final g = e.gun;
+        final when = g.eveBefore ? 'Yarın akşam' : 'Yarın';
+        final title = g.bayram ? '${g.emoji} $when ${g.name} · Bayramınız mübarek olsun!' : '${g.emoji} $when ${g.name}';
+        await _schedule(did++, title, g.meaning, at, _contentChannel);
       }
     } catch (_) {
       // Bildirim izni yoksa vb. sessizce geç.
