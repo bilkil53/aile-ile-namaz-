@@ -71,6 +71,9 @@ jobs:
           # Çökme kaydedici için kendi Application sınıfımız
           s = s.replace('android:name="${applicationName}"', 'android:name=".App"', 1)
           assert 'android:name=".App"' in s, 'Application adı değiştirilemedi'
+          # Tek pencere: güncelleme kurulumundan sonra "Aç" denince eski ve yeni iki kopya görünmesin
+          s = s.replace('android:launchMode="singleTop"', 'android:launchMode="singleTask"', 1)
+          assert 'android:launchMode="singleTask"' in s, 'launchMode değiştirilemedi'
           # Android otomatik yedeklemesi kapalı: oturum bilgisi Drive yedeğine / başka cihaza taşınmaz.
           # Kişinin namaz ve kaza kayıtları zaten hesabına bağlı bulutta; girişte otomatik geri gelir.
           if 'android:allowBackup' not in s:
