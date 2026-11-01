@@ -24,6 +24,8 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - Tekrarlayan bilgiler kaldırıldı ("Uygulama: Aile ile Namaz", alt yazılar, "Geliştirici", alttaki sürüm yazısı).
 - GitHub tek satır: "Kaynak kod · Yıldız ver ⭐". Sürüm satırına dokununca sürüm notları uygulama içinde açılır.
 - "Anlık bildirim" satırı sadece sorun varsa görünür.
+- Muaf için ayrı cinsiyet seçimi kaldırıldı: kadın veya kız simgesi seçilince "Muaf" otomatik açılır; reis "Anne" ünvanını seçerse kendisi için de açılır.
+- Simgeler: Kadın/Anne/Eş grubunda tek başörtülü simge 🧕. Kız çocuğu simgelerinin ikisinde de fiyonk var: başörtülü 🧕🎀 ve başörtüsüz 👧🎀 (anneden ayırmak için küçük çizilir).
 
 **v1.9**
 - Hata popup'ı: uygulamada beklenmedik hata olursa ekranda sebebiyle (kod hatası / bellek) popup çıkar; "Mail gönder" ile ayrıntılar hazır mail olarak açılır. İnternet kesintisinde popup çıkmaz.

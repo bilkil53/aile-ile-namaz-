@@ -68,14 +68,14 @@ const reisTitles = {
   'Eşi': '🧕',
   'Oğlu': '👦',
   'Kızı': '🧕🎀',
-  'Annesi': '🧕🏽',
+  'Annesi': '🧕',
   'Babası': '🧔',
   'Kardeşi': '🧒',
   'Torunu': '🧒',
-  'Gelini': '🧕🏼',
+  'Gelini': '🧕',
   'Damadı': '👨',
   'Dedesi': '👴',
-  'Ninesi': '🧕🏾',
+  'Ninesi': '👵',
   'Aile Ferdi': '👥',
 };
 
@@ -86,7 +86,10 @@ const maleIcons = {'🧔', '👨', '👴', '👱‍♂️', '👦', '🏡'};
 
 /// Başörtülü kız çocuğu: 🧕 + 🎀 (anneden ayırmak için küçük fiyonk rozetiyle çizilir).
 const girlScarf = '🧕🎀';
-const femaleIcons = {'🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿', '👩', '👵', '👱‍♀️', '👧', girlScarf};
+
+/// Başörtüsüz kız çocuğu: 👧 + 🎀.
+const girlPlain = '👧🎀';
+const femaleIcons = {'🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿', '👩', '👵', '👱‍♀️', '👧', girlScarf, girlPlain};
 
 /// Muaf seçeneği bu kişi için geçerli mi? Bilinmiyorsa (bireysel mod) gösterilir.
 bool canBeExcused(String role, String icon, [String? gender]) {
@@ -117,11 +120,15 @@ String titleFor(String role, {required bool viewerIsReis}) => viewerIsReis ? (_p
 
 /// Reisin seçebileceği simgeler (eski uygulamadaki gruplar).
 const iconGroups = <String, List<String>>{
-  'Kadın / Anne / Eş': ['🧕', '🧕🏼', '🧕🏽', '🧕🏾', '👩', '👵', '👱‍♀️'],
+  'Kadın / Anne / Eş': ['🧕', '👩', '👵', '👱‍♀️'],
   'Erkek / Baba / Eş': ['🧔', '👨', '👴', '👱‍♂️'],
-  'Erkek / Kız / Çocuk': ['👦', girlScarf, '👧', '🧒'],
+  'Erkek / Kız / Çocuk': ['👦', girlScarf, girlPlain, '🧒'],
   'Diğer': ['🏡', '👤', '👥', '🌟', '🕌'],
 };
+
+/// Simgeden cinsiyet: kadın/kız simgesi → 'f' (Muaf açılır), erkek simgesi → 'm', diğerleri → null.
+String? genderOfIcon(String icon) =>
+    femaleIcons.contains(icon) ? 'f' : (maleIcons.contains(icon) ? 'm' : null);
 
 class Pool {
   final String id;

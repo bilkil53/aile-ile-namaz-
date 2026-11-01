@@ -1404,23 +1404,18 @@ class _TitleDialogState extends State<_TitleDialog> {
   late String _title = widget.initialTitle;
   late String _icon = widget.initialIcon;
   late String _owner = widget.initialOwner;
-  late String? _gender = widget.initialGender ?? _genderOf(widget.initialTitle);
-  late String? _ownerGender = widget.initialOwnerGender;
 
   static String? _genderOf(String title) =>
       femaleTitles.contains(title) ? 'f' : (maleTitles.contains(title) ? 'm' : null);
 
-  Widget _genderRow(String label, String? value, ValueChanged<String> onPick) => Padding(
-        padding: const EdgeInsets.only(top: 6, bottom: 4),
-        child: Row(children: [
-          Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
-          for (final (code, text) in const [('m', '🧔 Erkek'), ('f', '🧕 Kadın')])
-            Padding(
-              padding: const EdgeInsets.only(left: 6),
-              child: ChoiceChip(label: Text(text), selected: value == code, onSelected: (_) => onPick(code)),
-            ),
-        ]),
-      );
+  /// Cinsiyet ayrıca seçilmez: simgeden çıkar (kadın/kız simgesi → Muaf açılır).
+  /// Nötr simgede (🧒, 👤…) ünvandan, o da yoksa önceki kayıttan alınır.
+  String? get _gender => genderOfIcon(_icon) ?? _genderOf(_title) ?? widget.initialGender;
+
+  /// Reisin kendisi: Anne → kadın, Baba → erkek, Aile Reisi → önceki kayıt (yoksa erkek).
+  String? get _ownerGender =>
+      _owner == 'Anne' ? 'f' : (_owner == 'Baba' ? 'm' : (widget.initialOwnerGender ?? 'm'));
+
   late final _ctrl =
       TextEditingController(text: reisTitles.containsKey(widget.initialTitle) ? '' : widget.initialTitle);
 
@@ -1451,8 +1446,6 @@ class _TitleDialogState extends State<_TitleDialog> {
                     onSelected: (_) => setState(() => _owner = e.key),
                   ),
               ]),
-              if (_owner == 'Aile Reisi')
-                _genderRow('Senin cinsiyetin', _ownerGender, (g) => setState(() => _ownerGender = g)),
               const Divider(height: 22),
             ],
             Text(widget.subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
@@ -1468,7 +1461,6 @@ class _TitleDialogState extends State<_TitleDialog> {
                     _ctrl.clear();
                     _title = e.key;
                     _icon = e.value;
-                    _gender = _genderOf(e.key) ?? _gender;
                   }),
                 ),
             ]),
@@ -1479,8 +1471,9 @@ class _TitleDialogState extends State<_TitleDialog> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 4),
-            _genderRow('Cinsiyeti (Muaf için)', _gender, (g) => setState(() => _gender = g)),
             const Text('Simgesi', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Kadın ve kız simgelerinde "Muaf" seçeneği otomatik açılır.',
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
             for (final g in iconGroups.entries) ...[
               const SizedBox(height: 6),
               Text(g.key, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
