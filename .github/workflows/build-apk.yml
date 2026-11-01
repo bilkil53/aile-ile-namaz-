@@ -253,6 +253,17 @@ jobs:
           fi
           exit $code
 
+      - name: Bildirim alıcısı koruma kontrolü (R8)
+        run: |
+          apk=build/app/outputs/flutter-apk/app-release.apk
+          mkdir -p /tmp/dexchk && unzip -o -q "$apk" 'classes*.dex' -d /tmp/dexchk
+          # Kural uygulandıysa eklentinin model sınıfı adıyla (karıştırılmadan) durur
+          strings -n 8 /tmp/dexchk/classes*.dex | grep -q 'Lcom/dexterous/flutterlocalnotifications/models/NotificationDetails;' \
+            || { echo '::error::proguard-rules.pro uygulanmadı (bildirim alıcısı bozulur)'; exit 1; }
+          strings -n 8 /tmp/dexchk/classes*.dex | grep -q 'Lcom/bilkil53/aile_ile_namaz/App;' \
+            || { echo '::error::App sınıfı APK içinde yok'; exit 1; }
+          echo 'R8 koruma kuralları APK içinde ✓'
+
       - name: APK dosya adını sabitle + işlemci türüne göre küçük APK'lar
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
