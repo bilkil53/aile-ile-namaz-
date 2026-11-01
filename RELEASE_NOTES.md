@@ -1,4 +1,4 @@
-Kişiye özel dua: çocuğuna gönderdiğin dua yalnızca ona gider, "Aileye Dua Gönder" herkese. Yazılar küçüldü.
+Aile Havuzu sadeleşti: Son Hareketler bölümü kaldırıldı. Dualar bildirim olarak gelmeye devam eder.
 
 ## 🌟 Kullanıcı için
 
@@ -15,8 +15,8 @@ Kişiye özel dua: çocuğuna gönderdiğin dua yalnızca ona gider, "Aileye Dua
 - Davet kodu (**EMB-123456**) paylaşım penceresiyle gönderilir; tek bekleyen istek, 5 dakika onay süresi.
 - Aile Reisi katılanın ünvanını ve simgesini seçer. Kadın / kız simgesi seçilince "Muaf" kendiliğinden açılır. Kız çocuğu simgeleri fiyonklu (🧕🎀, 👧🎀).
 - Herkes diğerlerini kendine göre görür: Reis "Kızın, Eşin"; kızı "Baban (Aile Reisi), Annen".
-- Ortak matris, Bugün Aile Başarısı, Dünü Gör, son hareketler.
-- **Dua:** "Aileye Dua Gönder" tüm aileye gider; bir kişinin kartından gönderilen dua yalnızca o kişiye gider ve son hareketlerde sadece gönderen ile alan görür.
+- Ortak matris, Bugün Aile Başarısı, Dünü Gör.
+- **Dua:** "Aileye Dua Gönder" tüm aileye gider; bir kişinin kartından gönderilen dua yalnızca o kişiye bildirim olarak gider.
 - Aile bildirimleri uygulama kapalıyken de gelir: dua, namaz, kaza, katılım.
 
 **Kaza**

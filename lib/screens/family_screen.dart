@@ -42,7 +42,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   RealtimeChannel? _poolChannel;
   RealtimeChannel? _meChannel;
-  Stream<List<Map<String, dynamic>>>? _events;
   String? _eventsPoolId;
   Timer? _debounce;
 
@@ -129,7 +128,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
         .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'join_requests', filter: f, callback: _refreshSoon)
         .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'kaza_summary', callback: _onKazaChange)
         .subscribe();
-    _events = Repo.eventsStream(poolId);
     _eventsPoolId = poolId;
   }
 
@@ -254,7 +252,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   // ---------- Gezinti (misafir) modu: her şey bellekte, uygulama kapanınca silinir ----------
-  final List<PoolEvent> _guestFeed = [];
 
   Future<void> _loadGuest() async {
     final me = Member(userId: myId, name: 'Misafir', roleTitle: 'Aile Ferdi', icon: '👤');
@@ -497,17 +494,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (text == null || text.trim().isEmpty || _pool == null) return;
     final msg = text.trim();
     if (isGuest) {
-      setState(() => _guestFeed.insert(
-          0,
-          PoolEvent(
-              id: _guestFeed.length,
-              senderId: myId,
-              type: 'DUA',
-              prayer: null,
-              message: msg,
-              targetId: to?.userId,
-              createdAt: DateTime.now())));
-      _toast('Dua bu oturumda kaydedildi 🤲 Ailene gitmesi için giriş yap.');
+      _toast('Duanın ailene gitmesi için Google ile giriş yap 🤲');
       return;
     }
     try {
@@ -609,8 +596,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
             const SizedBox(height: 16),
             _membersSection(),
-            const SizedBox(height: 16),
-            _feed(),
             const SizedBox(height: 16),
             if (_isOwner && _members.length > 1)
               TextButton.icon(
@@ -1286,88 +1271,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
     );
   }
 
-  // ---------- Akış ----------
-  String _describe(PoolEvent e) {
-    final whoM = _members.where((m) => m.userId == e.senderId).firstOrNull;
-    final who = (whoM == null ? null : _label(whoM)) ??
-        (e.message.isNotEmpty ? e.message : 'Bir üye');
-    final prayer = prayerLabels[e.prayer?.toLowerCase()] ?? '';
-    return switch (e.type) {
-      'PRAYED' => '$who $prayer namazını kıldı ✅',
-      'MISSED' => '$who $prayer namazını kılamadı',
-      'KAZA' => '$who bir kaza namazı eda etti 📿',
-      'DUA' => e.targetId == null
-          ? '$who → aileye: ${e.message}'
-          : (e.targetId == myId
-              ? '$who → sana: ${e.message}'
-              : '$who → ${_members.where((m) => m.userId == e.targetId).map(_label).firstOrNull ?? 'bir ferde'}: ${e.message}'),
-      'MEMBER_JOINED' => '$who aile havuzuna katıldı 🤝',
-      'MEMBER_LEFT' => '$who aile havuzundan ayrıldı',
-      _ => who,
-    };
-  }
-
-  Widget _feed() {
-    if (isGuest) {
-      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Son Hareketler (bu oturum)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        const SizedBox(height: 8),
-        _whiteCard(
-          child: _guestFeed.isEmpty
-              ? const Text('Henüz bir hareket yok. Uygulama kapanınca bu liste silinir.',
-                  style: TextStyle(color: AppColors.textMuted))
-              : Column(children: [
-                  for (final e in _guestFeed)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(children: [
-                        Expanded(child: Text(_describe(e), style: const TextStyle(fontSize: 13))),
-                        Text(DateFormat('HH:mm', 'tr').format(e.createdAt),
-                            style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                      ]),
-                    ),
-                ]),
-        ),
-      ]);
-    }
-    final stream = _events;
-    if (stream == null) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Son Hareketler (son 5)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        const SizedBox(height: 8),
-        _whiteCard(
-          child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: stream,
-            builder: (context, snap) {
-              if (!snap.hasData) {
-                return const Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator()));
-              }
-              final events = snap.data!.take(5).map(PoolEvent.fromMap).toList();
-              if (events.isEmpty) {
-                return const Text('Henüz bir hareket yok.', style: TextStyle(color: AppColors.textMuted));
-              }
-              return Column(children: [
-                for (final e in events)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Expanded(child: Text(_describe(e), style: const TextStyle(fontSize: 13))),
-                      const SizedBox(width: 8),
-                      Text(DateFormat('HH:mm', 'tr').format(e.createdAt),
-                          style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                    ]),
-                  ),
-              ]);
-            },
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 // ======================= Diyaloglar =======================
