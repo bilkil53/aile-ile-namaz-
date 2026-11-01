@@ -59,15 +59,23 @@ class CrashReport {
       final prefs = await SharedPreferences.getInstance();
       final seen = prefs.getInt(_kLastExit);
       await prefs.setInt(_kLastExit, time);
-      if (seen == null || time <= seen) return; // ilk kurulum ya da zaten gösterildi
+      final hasTrace = ((m['trace'] as String?) ?? '').isNotEmpty;
+      if (!hasTrace && (seen == null || time <= seen)) return; // ilk kurulum ya da zaten gösterildi
       final reason = (m['reason'] as num?)?.toInt() ?? 0;
       final importance = (m['importance'] as num?)?.toInt() ?? 1000;
       final rssMb = (((m['rssKb'] as num?)?.toInt() ?? 0) / 1024).round();
       final desc = (m['desc'] as String?) ?? '';
-      final info = _exitInfo(reason, foreground: importance <= 200);
+      final trace = (m['trace'] as String?) ?? '';
+      // Ekrandayken mi kapandı? (100 = ön planda, 200 = görünür). Kullanıcı uygulamayı
+      // kapatırken / arka plandayken olan kapanmalar sadece sessizce raporlanır, popup çıkmaz.
+      final foreground = importance <= 200;
+      final info = _exitInfo(reason, foreground: foreground);
       if (info == null) return; // normal kapanış (kullanıcı kapattı, güncelleme…)
-      final detail = 'Kapanma kodu: $reason (${info.$1})\nBellek: $rssMb MB\n${desc.isEmpty ? '' : 'Android: $desc'}';
-      unawaited(_send('EXIT ${info.$1}: $desc', null, fatal: true, ramMb: rssMb));
+      unawaited(_send('EXIT ${info.$1}: $desc (importance $importance${foreground ? ', ekrandaydı' : ', arka plandaydı'})',
+          null, fatal: true, ramMb: rssMb, rawStack: trace));
+      if (!foreground) return;
+      final detail = 'Kapanma kodu: $reason (${info.$1})\nBellek: $rssMb MB\n${desc.isEmpty ? '' : 'Android: $desc\n'}'
+          '${trace.isEmpty ? '' : '\n${trace.length > 1200 ? trace.substring(0, 1200) : trace}'}';
       _show(
         title: 'Uygulama son kullanımda kapandı',
         reason: info.$2,
@@ -190,11 +198,11 @@ class CrashReport {
     } catch (_) {}
   }
 
-  static Future<void> _send(String text, StackTrace? stack, {required bool fatal, int? ramMb}) async {
+  static Future<void> _send(String text, StackTrace? stack, {required bool fatal, int? ramMb, String? rawStack}) async {
     try {
       if (_sentThisRun >= 5) return;
       _sentThisRun++;
-      var st = stack?.toString() ?? '';
+      var st = rawStack ?? stack?.toString() ?? '';
       if (st.length > 7500) st = st.substring(0, 7500);
       var os = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
       if (os.length > 190) os = os.substring(0, 190);

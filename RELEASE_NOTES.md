@@ -18,6 +18,10 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
+**v1.11**
+- Kapanma uyarısı düzeltildi: "Uygulama son kullanımda kapandı" popup'ı artık yalnızca uygulama ekrandayken çökerse çıkar. Uygulamayı kapatırken ya da arka plandayken olan kapanmalar kullanıcıyı rahatsız etmeden sadece anonim olarak raporlanır.
+- Çökmenin kod satırları (Java/Kotlin tarafı) da kaydediliyor; hangi bileşenin çöktüğü bulunup düzeltilebilecek.
+
 **v1.10**
 - Ayarlar sadeleşti ve yeniden sıralandı: Hesap → Bildirimler → Konum → Uygulama → Diğer → en altta "Hesabımı sil".
 - Hesap kartı: Google adın ve e-postan, tek satır bulut durumu ("Bulut senkronize ☁️"; bekleyen kayıt varsa "⏳ 2 kayıt bekliyor", dokununca gönderir), Çıkış Yap. Uzun "Veritabanı Durumu" kutusu ve "Şimdi Yedekle" butonu kaldırıldı (yedekleme otomatik).
