@@ -545,8 +545,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _bigCard([
             _title('Bildirimler'),
             _divider(),
-              ]),
-            ),
             if (AppSettings.prayerReminders && !_exact)
               InkWell(
                 onTap: () async {
