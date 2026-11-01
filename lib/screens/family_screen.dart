@@ -279,7 +279,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         icon: const Text('🔐', style: TextStyle(fontSize: 34)),
-        title: const Text('Google Girişi Gerekir', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text('Google Girişi Gerekir', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         content: Text(
           '$what için Google ile giriş yapmalısın.\n\n'
           'Şu an gezinti modundasın: yaptığın işaretlemeler sadece bu oturumda tutulur ve uygulama kapanınca silinir. '
@@ -384,7 +384,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         builder: (ctx, setD) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           icon: const Icon(Icons.warning_amber_rounded, color: AppColors.missed, size: 32),
-          title: Text(title, style: const TextStyle(fontSize: 18)),
+          title: Text(title, style: const TextStyle(fontSize: 15)),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(text, style: const TextStyle(fontSize: 13, height: 1.4)),
             const SizedBox(height: 10),
@@ -656,7 +656,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ]),
           const SizedBox(height: 10),
           Text(pool?.name ?? 'Aile İbadet Havuzu',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 2),
           Text(
             pool == null
@@ -734,7 +734,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           const Row(children: [
-            Text('👀', style: TextStyle(fontSize: 20)),
+            Text('👀', style: TextStyle(fontSize: 17)),
             SizedBox(width: 8),
             Expanded(
               child: Text('Gezinti Modu',
@@ -771,7 +771,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(_myName.isNotEmpty ? _myName : 'Aile Ferdi',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             Text('${me?.roleTitle ?? 'Aile Ferdi'} · ${isGuest ? 'Gezinti modu (giriş yapılmadı)' : 'Google Hesabı Bağlı ✓'}',
                 style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ]),
@@ -830,7 +830,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(children: [
-              Text('📥', style: TextStyle(fontSize: 16)),
+              Text('📥', style: TextStyle(fontSize: 15)),
               SizedBox(width: 6),
               Expanded(
                 child: Text('Başka Bir Aile Havuzuna Katıl',
@@ -878,7 +878,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(children: [
-            Text('⏳', style: TextStyle(fontSize: 18)),
+            Text('⏳', style: TextStyle(fontSize: 15)),
             SizedBox(width: 8),
             Text('Katılım Talebi İletildi',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
@@ -915,7 +915,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(children: [
-              Text('🔔', style: TextStyle(fontSize: 18)),
+              Text('🔔', style: TextStyle(fontSize: 15)),
               SizedBox(width: 8),
               Expanded(
                 child: Text('Aşağıdaki aile ferdin havuzuna dahil olmak istiyor:',
@@ -980,7 +980,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           Row(children: [
             Expanded(
               child: Text(pool.displayCode,
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 3)),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2)),
             ),
             IconButton(
               tooltip: 'Paylaş',
@@ -1084,11 +1084,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const Text('👨‍👩‍👧', style: TextStyle(fontSize: 20)),
+            const Text('👨‍👩‍👧', style: TextStyle(fontSize: 17)),
             const SizedBox(width: 8),
             const Expanded(
               child: Text('Aile İbadet Halkası',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
             toggle('◄ Dünü Gör', _showYesterday, true),
             const SizedBox(width: 6),
@@ -1109,7 +1109,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
               child: Row(children: [
-                const Text('🏆', style: TextStyle(fontSize: 16)),
+                const Text('🏆', style: TextStyle(fontSize: 15)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text('${_showYesterday ? 'Dün' : 'Bugün'} Aile Başarısı: $done / $total Vakit',
@@ -1203,7 +1203,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Havuzdaki Bireyler ve Durumları',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         const SizedBox(height: 8),
         for (final m in _members) ...[
           _memberCard(m, pool),
@@ -1306,7 +1306,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (isGuest) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('Son Hareketler (bu oturum)',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         const SizedBox(height: 8),
         _whiteCard(
           child: _guestFeed.isEmpty
@@ -1332,7 +1332,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Son Hareketler (son 5)',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         const SizedBox(height: 8),
         _whiteCard(
           child: StreamBuilder<List<Map<String, dynamic>>>(
@@ -1429,7 +1429,7 @@ class _TitleDialogState extends State<_TitleDialog> {
   Widget build(BuildContext context) {
     final custom = _ctrl.text.trim();
     return AlertDialog(
-      title: Text(widget.title, style: const TextStyle(fontSize: 16)),
+      title: Text(widget.title, style: const TextStyle(fontSize: 15)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1536,7 +1536,7 @@ class _DuaDialogState extends State<_DuaDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.to == null ? '🤲 Dua ve Tebrik Gönder' : '🤲 ${widget.to} için dua',
-          style: const TextStyle(fontSize: 16)),
+          style: const TextStyle(fontSize: 15)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1549,7 +1549,7 @@ class _DuaDialogState extends State<_DuaDialog> {
                 margin: const EdgeInsets.symmetric(vertical: 3),
                 child: ListTile(
                   dense: true,
-                  leading: Text(g.emoji, style: const TextStyle(fontSize: 20)),
+                  leading: Text(g.emoji, style: const TextStyle(fontSize: 17)),
                   title: Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                   subtitle: Text(g.text, style: const TextStyle(fontSize: 12)),
                   onTap: () => Navigator.pop(context, g.text),

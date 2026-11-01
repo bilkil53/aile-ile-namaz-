@@ -18,6 +18,10 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
+**v1.18**
+- Yazılar küçüldü: Aile Havuzu ekranında başlık, davet kodu ve bölüm başlıkları küçültüldü (davet kodu artık tek satır).
+- Telefonun yazı boyutu çok büyük ayarlıysa uygulama yazıları en fazla %110 büyür; ekranlar taşmaz.
+
 **v1.17**
 - Bayram ve kandil kartı önizlemesi Ayarlar'dan kaldırıldı; kartlar yalnızca o gün Bugün ekranında kendiliğinden çıkar.
 

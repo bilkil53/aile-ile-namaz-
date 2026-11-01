@@ -45,6 +45,14 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Aile İle Namaz',
       navigatorKey: CrashReport.navigatorKey,
+      // Telefonda yazı boyutu çok büyük ayarlıysa ekranlar taşmasın: en fazla %110 büyüt
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.1)),
+          child: child!,
+        );
+      },
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: const AuthGate(),
