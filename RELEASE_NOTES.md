@@ -1,4 +1,4 @@
-Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebilir. Simgeler yenilendi (başörtülü kız çocuğu 🧕🎀).
+Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebilir. Simgeler yenilendi (başörtülü kız çocuğu 🧕🎀). Ayarlar sadeleşti.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,13 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.10**
+- Ayarlar sadeleşti ve yeniden sıralandı: Hesap → Bildirimler → Konum → Uygulama → Diğer → en altta "Hesabımı sil".
+- Hesap kartı: Google adın ve e-postan, tek satır bulut durumu ("Bulut senkronize ☁️"; bekleyen kayıt varsa "⏳ 2 kayıt bekliyor", dokununca gönderir), Çıkış Yap. Uzun "Veritabanı Durumu" kutusu ve "Şimdi Yedekle" butonu kaldırıldı (yedekleme otomatik).
+- Tekrarlayan bilgiler kaldırıldı ("Uygulama: Aile ile Namaz", alt yazılar, "Geliştirici", alttaki sürüm yazısı).
+- GitHub tek satır: "Kaynak kod · Yıldız ver ⭐". Sürüm satırına dokununca sürüm notları uygulama içinde açılır.
+- "Anlık bildirim" satırı sadece sorun varsa görünür.
 
 **v1.9**
 - Hata popup'ı: uygulamada beklenmedik hata olursa ekranda sebebiyle (kod hatası / bellek) popup çıkar; "Mail gönder" ile ayrıntılar hazır mail olarak açılır. İnternet kesintisinde popup çıkmaz.
