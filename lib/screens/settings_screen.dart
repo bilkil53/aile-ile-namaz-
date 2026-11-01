@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../config.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -104,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _mail() async {
     final uri = Uri(
       scheme: 'mailto',
-      path: 'e.bilkil5391@gmail.com',
+      path: AppConfig.supportEmail,
       query: _enc({
         'subject': 'Aile ile Namaz – Öneri / Destek (v$_version)',
         'body': 'Merhaba,\n\n\n\n---\nSürüm: v$_version (iç derleme $_build)',

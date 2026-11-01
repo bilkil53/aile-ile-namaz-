@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../content/daily_content.dart';
 import '../data.dart';
 import '../local_store.dart';
+import '../member_icon.dart';
 import '../models.dart';
 import '../settings.dart';
 import '../theme.dart';
@@ -764,7 +765,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         CircleAvatar(
           radius: 24,
           backgroundColor: AppColors.emeraldContainer,
-          child: Text(me?.icon ?? '👤', style: const TextStyle(fontSize: 24)),
+          child: MemberIcon(me?.icon ?? '👤', size: 24),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -923,7 +924,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ]),
             const SizedBox(height: 8),
             Row(children: [
-              Text(r.icon, style: const TextStyle(fontSize: 28)),
+              MemberIcon(r.icon, size: 28),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1143,7 +1144,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     SizedBox(
                       width: colW,
                       child: Column(children: [
-                        Text(m.icon, style: const TextStyle(fontSize: 18)),
+                        MemberIcon(m.icon, size: 18),
                         Text(m.userId == myId ? 'Sen' : _label(m),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1230,7 +1231,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Text(m.icon, style: const TextStyle(fontSize: 30)),
+            MemberIcon(m.icon, size: 30),
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1497,7 +1498,7 @@ class _TitleDialogState extends State<_TitleDialog> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _icon == ic ? AppColors.emerald : AppColors.cardBorder, width: 1.5),
                       ),
-                      child: Text(ic, style: const TextStyle(fontSize: 22)),
+                      child: MemberIcon(ic, size: 22),
                     ),
                   ),
               ]),

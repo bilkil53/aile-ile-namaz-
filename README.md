@@ -185,6 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.9:** Hata popup'ı (sebep + mail gönder), Android kapanma sebebi okuma (ApplicationExitInfo: RAM/çökme/donma), yeni simge grupları (başörtülü kız 🧕🎀, bebek kaldırıldı).
 * **v1.8:** Hata raporu: beklenmedik hatalar anonim olarak Supabase `crash_reports` tablosuna gider (sürüm, Android sürümü, RAM kullanımı, hata ve kod satırları; kişisel veri yok, 30 gün saklanır).
 * **v1.7:** Ayarlar'daki "Sıradaki hatırlatma" satırı kaldırıldı.
 * **v1.6:** Ayarlar'dan vakit hatırlatması ve günün ayeti yazıları kaldırıldı (ikisi de zorunlu ve her zaman açık; "Sıradaki hatırlatma" satırı duruyor).

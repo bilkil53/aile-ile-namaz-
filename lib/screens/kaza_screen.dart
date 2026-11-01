@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data.dart';
+import '../member_icon.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
@@ -215,7 +216,7 @@ class _KazaScreenState extends State<KazaScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(children: [
-                      Text(m.icon, style: const TextStyle(fontSize: 20)),
+                      MemberIcon(m.icon, size: 20),
                       const SizedBox(width: 8),
                       Expanded(child: Text(_me == null ? m.shownName : kinLabel(viewer: _me!, target: m, reis: _reis), style: const TextStyle(fontWeight: FontWeight.w600))),
                       Builder(builder: (_) {

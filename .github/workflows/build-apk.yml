@@ -34,6 +34,12 @@ jobs:
       - name: Android platform dosyalarını oluştur
         run: flutter create . --org com.bilkil53 --project-name aile_ile_namaz --platforms android
 
+      - name: Kapanma sebebi okuyucu (MainActivity)
+        run: |
+          f=$(find android/app/src/main -name 'MainActivity.kt' | head -1)
+          cp android-config/kotlin/MainActivity.kt "$f"
+          grep -q getHistoricalProcessExitReasons "$f"
+
       - name: Manifest düzenle (internet izni, giriş dönüş bağlantısı, uygulama adı)
         run: |
           python3 - <<'PY'

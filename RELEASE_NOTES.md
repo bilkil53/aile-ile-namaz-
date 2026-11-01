@@ -1,4 +1,4 @@
-Hata raporu: uygulama hata verirse geliştiriciye anonim rapor gider.
+Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebilir. Simgeler yenilendi (başörtülü kız çocuğu 🧕🎀).
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,11 @@ Hata raporu: uygulama hata verirse geliştiriciye anonim rapor gider.
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.9**
+- Hata popup'ı: uygulamada beklenmedik hata olursa ekranda sebebiyle (kod hatası / bellek) popup çıkar; "Mail gönder" ile ayrıntılar hazır mail olarak açılır. İnternet kesintisinde popup çıkmaz.
+- Kapanma sebebi: uygulama tamamen kapanırsa (RAM doldu, çöktü, dondu, aşırı işlemci kullanımı) Android 11+ sebebi kaydeder; bir sonraki açılışta popup ile gösterilir ve anonim rapor gider.
+- Simgeler: "Bebek" kaldırıldı; ayrı "Başörtülü" grubu kaldırıldı. Kadın/Anne/Eş grubunda başörtülü simgeler var. Yeni "Erkek / Kız / Çocuk" grubu: 👦, başörtülü kız 🧕🎀, başörtüsüz kız 👧, 🧒. Başörtülü kız çocuğu anneden ayrılsın diye küçük çizilir ve pembe fiyonk rozeti taşır. "Kızı" ünvanının varsayılan simgesi 🧕🎀.
 
 **v1.8**
 - Hata raporu: beklenmedik hatalarda Supabase `crash_reports` tablosuna anonim rapor (uygulama sürümü, Android sürümü, o anki RAM kullanımı, hata metni, kod satırları). Kişisel veri yok; uygulama tabloyu okuyamaz; 30 gün sonra silinir. Bir açılışta en fazla 5 rapor, aynı hata bir kez.

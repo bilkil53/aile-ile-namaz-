@@ -44,6 +44,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Aile İle Namaz',
+      navigatorKey: CrashReport.navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: const AuthGate(),
@@ -66,6 +67,7 @@ class _AuthGateState extends State<AuthGate> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) UpdateChecker.check(context);
+      CrashReport.checkLastExit();
     });
   }
 

@@ -67,11 +67,11 @@ const ownerTitles = {'Aile Reisi': '🏡', 'Baba': '🧔', 'Anne': '🧕'};
 const reisTitles = {
   'Eşi': '🧕',
   'Oğlu': '👦',
-  'Kızı': '🧕🏻',
+  'Kızı': '🧕🎀',
   'Annesi': '🧕🏽',
   'Babası': '🧔',
   'Kardeşi': '🧒',
-  'Torunu': '👶',
+  'Torunu': '🧒',
   'Gelini': '🧕🏼',
   'Damadı': '👨',
   'Dedesi': '👴',
@@ -83,7 +83,10 @@ const reisTitles = {
 const femaleTitles = {'Anne', 'Kızı', 'Annesi', 'Ninesi', 'Gelini'};
 const maleTitles = {'Aile Reisi', 'Baba', 'Oğlu', 'Babası', 'Dedesi', 'Damadı'};
 const maleIcons = {'🧔', '👨', '👴', '👱‍♂️', '👦', '🏡'};
-const femaleIcons = {'🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿', '👩', '👵', '👱‍♀️', '👧'};
+
+/// Başörtülü kız çocuğu: 🧕 + 🎀 (anneden ayırmak için küçük fiyonk rozetiyle çizilir).
+const girlScarf = '🧕🎀';
+const femaleIcons = {'🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿', '👩', '👵', '👱‍♀️', '👧', girlScarf};
 
 /// Muaf seçeneği bu kişi için geçerli mi? Bilinmiyorsa (bireysel mod) gösterilir.
 bool canBeExcused(String role, String icon, [String? gender]) {
@@ -114,10 +117,9 @@ String titleFor(String role, {required bool viewerIsReis}) => viewerIsReis ? (_p
 
 /// Reisin seçebileceği simgeler (eski uygulamadaki gruplar).
 const iconGroups = <String, List<String>>{
-  'Başörtülü': ['🧕', '🧕🏻', '🧕🏼', '🧕🏽', '🧕🏾', '🧕🏿'],
-  'Kadın / Anne / Eş': ['👩', '👵', '👱‍♀️', '👧'],
+  'Kadın / Anne / Eş': ['🧕', '🧕🏼', '🧕🏽', '🧕🏾', '👩', '👵', '👱‍♀️'],
   'Erkek / Baba / Eş': ['🧔', '👨', '👴', '👱‍♂️'],
-  'Çocuk & Bebek': ['👦', '👧', '🧒', '👶'],
+  'Erkek / Kız / Çocuk': ['👦', girlScarf, '👧', '🧒'],
   'Diğer': ['🏡', '👤', '👥', '🌟', '🕌'],
 };
 

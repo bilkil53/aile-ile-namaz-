@@ -24,4 +24,7 @@ class AppConfig {
   /// Google girişinden sonra uygulamaya dönüş adresi (yedek tarayıcı girişi için).
   /// AndroidManifest / Info.plist içindeki şema ile aynı olmalıdır.
   static const authRedirect = 'io.supabase.aileilenamaz://login-callback/';
+
+  /// Öneri ve hata bildirimlerinin gideceği adres (kullanıcı mail uygulamasıyla gönderir).
+  static const supportEmail = 'e.bilkil5391@gmail.com';
 }
