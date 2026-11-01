@@ -1,4 +1,4 @@
-Aile Havuzu sadeleşti: Son Hareketler bölümü kaldırıldı. Dualar bildirim olarak gelmeye devam eder.
+Aile ile Namaz: aile havuzu ve kişiye özel dua, Diyanet vakitleri, bayram ve kandil kartları, mübarek gün bildirimleri, kaza takibi ve ibadet karnesi.
 
 ## 🌟 Kullanıcı için
 
@@ -36,7 +36,11 @@ Aile Havuzu sadeleşti: Son Hareketler bölümü kaldırıldı. Dualar bildirim 
 - Hesap (ad, e-posta, üyelik tarihi, bulut durumu, çıkış), Uygulama (konum, sürüm ve sürüm notları, güncelleme, önbelleği temizle), Diğer (paylaş, öneri yaz, GitHub, gizlilik), Bildirimler, Hesabımı sil.
 
 **Hata bildirimi**
-- Uygulama kullanılırken hata olursa sebebiyle birlikte bir pencere çıkar; istenirse ayrıntılar mail ile gönderilir. Hata kaydı anonimdir.
+- Uygulama kullanılırken hata olursa sebebiyle birlikte bir pencere çıkar; istenirse ayrıntılar mail ile gönderilir. Uygulama ekrandayken kapanırsa sebebi bir sonraki açılışta gösterilir. Hata kaydı anonimdir.
+
+**Güncelleme ve görünüm**
+- Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; uygulama tek pencerede kalır.
+- Telefonda yazı boyutu büyükse uygulama yazıları en fazla %10 büyür.
 
 **Güvenlik**
 - Sadece Google ile giriş. Android otomatik yedeklemesi kapalı. Kişi başı bildirim sınırı. Aile hareketleri 1 hafta saklanır.
