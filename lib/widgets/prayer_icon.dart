@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Eski uygulamadaki ince çizgili (outlined) vakit simgeleri.
+/// İnce çizgili (outlined) vakit simgeleri.
 const prayerIcons = <String, IconData>{
   'fajr': Icons.wb_twilight,
   'dhuhr': Icons.wb_sunny_outlined,

@@ -1,4 +1,4 @@
-// Eski uygulamadan taşındı: vakte özel hatırlatma sözleri (DailyContentProvider.getPrayerApproachingQuote).
+// Vakte özel hatırlatma sözleri.
 import 'daily_content.dart';
 
 const approachingQuotes = <String, List<DailyQuote>>{

@@ -102,12 +102,12 @@ async function accessToken(sa: { client_email: string; private_key: string }): P
   return cachedToken.value;
 }
 
-function text(type: string, who: string, prayer: string | null, message: string): [string, string] | null {
+function text(type: string, who: string, prayer: string | null, message: string, toMe = false): [string, string] | null {
   const p = prayer ? PRAYERS[prayer.toUpperCase()] ?? "" : "";
   switch (type) {
     case "PRAYED": return [`${who} namazını kıldı 🤲`, `${p} namazını kıldı. Allah kabul etsin.`];
     case "KAZA": return [`${who} kaza namazı kıldı 📿`, "Bir kaza namazı eda etti. Allah kabul etsin."];
-    case "DUA": return [`${who} dua gönderdi 🤲`, message || "Allah ibadetlerimizi kabul etsin."];
+    case "DUA": return [toMe ? `${who} sana dua gönderdi 🤲` : `${who} aileye dua gönderdi 🤲`, message || "Allah ibadetlerimizi kabul etsin."];
     case "MEMBER_JOINED": return ["Aile havuzuna katılım 🤝", `${message || who} aile havuzuna katıldı.`];
     default: return null;
   }
@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
     const { data: ev } = await db.from("pool_events")
       .update({ pushed_at: new Date().toISOString() })
       .eq("id", event_id).is("pushed_at", null).gte("created_at", since)
-      .select("id, pool_id, sender_id, event_type, prayer, message").maybeSingle();
+      .select("id, pool_id, sender_id, event_type, prayer, message, target_id").maybeSingle();
     if (!ev) return Response.json({ skipped: true });
 
     const saRaw = Deno.env.get("FCM_SERVICE_ACCOUNT");
@@ -151,7 +151,10 @@ Deno.serve(async (req) => {
       db.from("pool_members").select("user_id, role_title, icon, gender").eq("pool_id", ev.pool_id),
     ]);
     const sender = (members ?? []).find((m) => m.user_id === ev.sender_id);
-    const recipients = (members ?? []).map((m) => m.user_id).filter((id) => id !== ev.sender_id);
+    // Kişiye özel dua yalnızca o kişiye; diğer olaylar göndereni hariç herkese
+    const recipients = ev.target_id
+      ? [ev.target_id].filter((id) => id !== ev.sender_id && (members ?? []).some((m) => m.user_id === id))
+      : (members ?? []).map((m) => m.user_id).filter((id) => id !== ev.sender_id);
     if (!recipients.length) return Response.json({ sent: 0 });
 
     // Kişinin bildirim tercihi: namaz / kaza / dua (katılım bildirimi herkese)
@@ -171,7 +174,7 @@ Deno.serve(async (req) => {
       // Alıcıya göre akrabalık hitabı: reis "Kızın", kızı "Baban (Aile Reisi)" / "Annen" …
       const viewer = (members ?? []).find((m) => m.user_id === d.user_id) as M | undefined;
       const who = icon + (sender && viewer ? kinLabel(viewer, sender as M, reis) : (sender?.role_title || "Aile ferdin"));
-      const t = text(ev.event_type, who, ev.prayer, ev.message ?? "");
+      const t = text(ev.event_type, who, ev.prayer, ev.message ?? "", !!ev.target_id);
       if (!t) return;
       const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
         method: "POST",

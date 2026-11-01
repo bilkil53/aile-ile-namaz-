@@ -1,4 +1,4 @@
-// Eski uygulamadan taşındı (DailyContentProvider.kt).
+// Günün ayeti / hadisi / duası içerikleri.
 
 class DailyQuote {
   final String category, title, text, source;

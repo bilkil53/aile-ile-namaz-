@@ -1,4 +1,4 @@
-# 👨‍👩‍👧‍👦 Aile ile Namaz — v1
+# 👨‍👩‍👧‍👦 Aile ile Namaz
 
 <p align="center">
   <b>Aile Havuzu & İbadet Halkası · Diyanet Vakitleri · Kaza Takibi · İbadet Karnesi · Kıble Pusulası</b>
@@ -29,11 +29,9 @@
 2. İnen dosyayı aç; Android "bilinmeyen kaynaklardan yükleme" izni isterse ver.
 3. Açılan **Hoş Geldiniz** penceresinde **Google ile Hızlı Giriş Yap**'a dokun ve telefondaki Gmail hesabını seç. İstersen **Giriş Yapmadan Devam Et** ile önce gezinebilirsin.
 
-> **Not (31.10.2026):** Derleme 6–11 arasında uygulama içi güncelleme yeni sürümü görmüyordu. Bir kez telefonuna uygun APK'yı elle kur, sonrası yine otomatik: çoğu telefon için [aile-ile-namaz-arm64-v8a.apk](https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz-arm64-v8a.apk) (eski telefonlarda [armeabi-v7a](https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz-armeabi-v7a.apk)).
-
 **Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
-**Sürüm:** Her yayın bir artar: **v1.1, v1.2, v1.3 …** (yayın başlığında tarih ve saat de yazar). Büyük bir değişiklikte **v2.x**'e geçilir. Arka planda derleme numarası tutulur (v1.0 ile **1**'den başladı, her resmi yayında bir artar; Android güncellemeyi bununla tanır), ekranda görünmez.
+**Sürüm:** Her yayın bir artar: **v1.1, v1.2, v1.3 …** (yayın başlığında tarih ve saat de yazar). Büyük bir değişiklikte **v2.x**'e geçilir. Arka planda derleme numarası tutulur (her resmi yayında bir artar; Android güncellemeyi bununla tanır), ekranda görünmez.
 
 ---
 
@@ -74,7 +72,7 @@
 * **Kaza ilerlemen** ve **kişisel rozetler** (Sabah Namazı Muhafızı, 5'te 5, 7 ve 30 Gün Serisi, Kaza Avcısı, İstikrar Yıldızı).
 
 ### 5. 🔔 Bildirimler
-* Her vakitten **11 dakika önce** hatırlatma; eski uygulamadaki gibi **vakte özel** hadis / ayet / dua.
+* Her vakitten **11 dakika önce** hatırlatma; **vakte özel** hadis / ayet / dua.
 * **Cuma:** "Cuma Namazı 🕌" kartı ve "Hayırlı Cumalar!" hatırlatması.
 * **Tam zamanında:** "Alarm ve hatırlatıcılar" izniyle dakikası dakikasına (izin yoksa Ayarlar'da uyarı).
 * Her gün **12:00**'de günün ayeti / hadisi.
@@ -93,21 +91,21 @@
 
 ## 🔒 Güvenlik ve Gizlilik
 
-| Konu | Eski sürüm (Kotlin) | v1.0 |
-|---|---|---|
-| Aile verisi | Herkese açık ntfy kanalları | Supabase + satır düzeyi güvenlik (RLS): sadece havuz üyeleri görür |
-| Davet kodu | `REIS-00XXXX` (tahmin edilebilir) | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre (sunucu her dakika süresi dolanı düşürür), reis onayı |
-| Bildirim taşması | — | Kişi başı sınır: dua dakikada 1 / saatte 3 / günde 10; aynı vakit günde 2 |
-| Kod | — | Release derlemesi karıştırılmış (obfuscate) |
-| E-posta | Kanallarda dolaşıyordu | `profiles.email` sütununa istemci erişimi kapalı; hiçbir kullanıcı diğerinin e-postasını göremez |
-| Kaza detayı | — | Veritabanı kuralıyla sadece sahibine açık; aile `kaza_summary` toplamını görür |
-| Ünvan değiştirme | Herkes | Sadece Aile Reisi (sunucu fonksiyonunda kontrol) |
-| Konum | — | Sadece telefonda; sunucuya gönderilmez |
-| Misafir verisi | — | Telefona yazılmaz, sadece bellekte |
-| Telefon yedeği | — | Android otomatik yedeklemesi kapalı; oturum bilgisi başka cihaza taşınamaz. Kişisel kayıtlar hesaba bağlı bulutta |
-| Giriş yöntemi | — | Sadece Google; e-posta/şifre ile kayıt kapalı |
-| Hesap silme | — | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
-| İmza anahtarı | — | GitHub Secrets'ta; repoda değil |
+| Konu | Nasıl korunuyor |
+|---|---|
+| Aile verisi | Supabase + satır düzeyi güvenlik (RLS): sadece havuz üyeleri görür |
+| Davet kodu | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre (sunucu her dakika süresi dolanı düşürür), reis onayı |
+| Bildirim taşması | Kişi başı sınır: dua dakikada 1 / saatte 3 / günde 10; aynı vakit günde 2 |
+| Kod | Release derlemesi karıştırılmış (obfuscate) |
+| E-posta | `profiles.email` sütununa istemci erişimi kapalı; hiçbir kullanıcı diğerinin e-postasını göremez |
+| Kaza detayı | Veritabanı kuralıyla sadece sahibine açık; aile `kaza_summary` toplamını görür |
+| Ünvan değiştirme | Sadece Aile Reisi (sunucu fonksiyonunda kontrol) |
+| Konum | Sadece telefonda; sunucuya gönderilmez |
+| Misafir verisi | Telefona yazılmaz, sadece bellekte |
+| Telefon yedeği | Android otomatik yedeklemesi kapalı; oturum bilgisi başka cihaza taşınamaz. Kişisel kayıtlar hesaba bağlı bulutta |
+| Giriş yöntemi | Sadece Google; e-posta/şifre ile kayıt kapalı |
+| Hesap silme | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
+| İmza anahtarı | GitHub Secrets'ta; repoda değil |
 
 📄 [Gizlilik Politikası](https://bilkil53.github.io/aile-ile-namaz-/privacy.html) · 🗑 [Hesap silme](https://bilkil53.github.io/aile-ile-namaz-/delete-account.html) · 🏪 [Play Store rehberi](docs/PLAY_STORE.md)
 
@@ -159,10 +157,10 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 
 Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function `supabase/functions/push-family` → FCM HTTP v1. Gizli ayar `FCM_SERVICE_ACCOUNT` (Supabase Edge Function secret, Firebase hizmet hesabı JSON'u); repoda yoktur.
 
-Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis`.
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua`.
 
 ### Derleme ve dallar
-* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0 — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).
+* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).
 * Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
 * İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
 
@@ -173,61 +171,3 @@ flutter pub get
 flutter run
 ```
 `lib/config.dart` içindeki anahtar **publishable** anahtardır (istemcide olması normaldir). `service_role` anahtarını asla repoya koyma.
-
----
-
-## 📋 Sürüm Geçmişi
-
-### v1.0 — İlk resmi sürüm (31 Ekim 2026)
-Yukarıdaki tüm özellikler. Görünen sürüm **v1.0**; güncellemeler tarihle ayrılır.
-Bu sürümdeki son eklemeler:
-* Toplu kaza eklemede **yıl** seçeneği ve hızlı yıl düğmeleri.
-* Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
-* Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
-* Derleme numarası **1**'den başladı.
-* **v1.16:** Güncelleme kurulumu kendi FileProvider (`.aileupdate`) + `FLAG_ACTIVITY_NEW_TASK`, ardından `finishAndRemoveTask()`; bayram/kandil kartı önizlemesi.
-* **v1.15:** MainActivity `launchMode=singleTask`: güncelleme sonrası çift görev (recents) sorunu.
-* **v1.14:** `lib/dini_gunler.dart`: Diyanet hicri takvimi (aladhan `calendarMethod=DIYANET`, hToG/gToH) ile dini günler, ayda bir kontrol / 120 günden az kalınca yenileme; 1 gün kala 19:00 bildirim. Ayarlar sadeleşti.
-* **v1.13:** Ayarlar: Hesap / Aile Havuzu / Namaz Vakitleri (hicri tarih, `hijri` paketi) / Uygulama (önbelleği temizle) / Diğer / Bildirimler.
-* **v1.12:** Zamanlanmış bildirim alıcısı R8 düzeltmesi (android-config/proguard-rules.pro: Gson Signature + com.dexterous). Çökme kaydedici Application sınıfında (android-config/kotlin/App.kt).
-* **v1.11:** Kapanma popup'ı yalnızca ekrandayken çökmede; arka plan kapanmaları sessiz rapor. Kotlin çökme izi (uncaught handler → last_crash.txt) rapora eklenir.
-* **v1.10:** Ayarlar sadeleşti: Hesap / Bildirimler / Konum / Uygulama / Diğer kartları, tek satır bulut durumu, sürüm notları uygulama içinde, anlık bildirim satırı sadece sorunda.
-* **v1.9:** Hata popup'ı (sebep + mail gönder), Android kapanma sebebi okuma (ApplicationExitInfo: RAM/çökme/donma), yeni simge grupları (başörtülü kız 🧕🎀, bebek kaldırıldı).
-* **v1.8:** Hata raporu: beklenmedik hatalar anonim olarak Supabase `crash_reports` tablosuna gider (sürüm, Android sürümü, RAM kullanımı, hata ve kod satırları; kişisel veri yok, 30 gün saklanır).
-* **v1.7:** Ayarlar'daki "Sıradaki hatırlatma" satırı kaldırıldı.
-* **v1.6:** Ayarlar'dan vakit hatırlatması ve günün ayeti yazıları kaldırıldı (ikisi de zorunlu ve her zaman açık; "Sıradaki hatırlatma" satırı duruyor).
-* **v1.5:** Aile Havuzunda (matris ve üye listesi) ilk sırada kullanıcının kendisi, sonra Aile Reisi. Düzeltme: anlık bildirim kaydını engelleyen hata bulundu ("FirebaseCrashlytics component is not present"). Çökme raporu eklentisi (Crashlytics) kaldırıldı; Firebase artık sorunsuz açılır, uygulama kapalıyken aile bildirimleri gelir.
-* **v1.4:** Yeni İbadet Karnesi (okul karnesi mantığı, sadece kişinin kendi verisi): dönem seçimi (hafta / 30 gün / 3 ay), genel not (Pekiyi/İyi/Orta), vakit vakit karne ve en çok aksatılan vakit, şu anki ve en uzun seri, aylık takvim, kaza ilerlemesi, kişisel rozetler. Anlık bildirim hatasına dokununca ayrıntı + kopyala + tekrar dene; Firebase yedek başlatma.
-* **v1.3:** Anlık bildirim (Firebase) başlatma düzeltmesi: aynı anda iki kez başlatma yarışı giderildi, sessizce 3 kez denenir, olmazsa Ayarlar'da uyarı. Dua penceresinde boş gönderimde hangi duanın gideceği önizlenir. Ayarlar'a "GitHub'da yıldız ver ⭐".
-* **v1.2:** Akrabalık hitapları her kullanıcıya göre (Reis: "Kızın"; Eşi: "Eşin (Aile Reisi)", "Kızın"; Kızı: "Baban (Aile Reisi)", "Annen"; ayrıca Kardeşin, Ninen, Amcan/Dayın…). Havuzu kapatma ve havuzdan ayrılma tek pencerede 1. ve 2. onay ister. Vakit hatırlatması (11 dk önce) ve 12:00 günün ayeti/hadisi bildirimi zorunlu; Ayarlar'da kapatma anahtarı yok.
-* **v1.1 (derleme 13):** Sürüm adları v1.1, v1.2 … biçiminde. Düzeltme: "Anlık bildirim: Firebase başlatılamadı" — Firebase iki kez başlatılmaya çalışılıyordu; artık mevcut olan kullanılıyor, anlık bildirimler çalışır.
-* **Derleme 12:** Düzeltme: küçük (işlemci türüne göre) APK'larda Android sürüm kodu 3000+N olduğu için uygulama içi güncelleme yeni sürümü görmüyordu; karşılaştırma artık derleme numarasıyla yapılıyor. Bir kez elle kurulum gerekir (aşağıya bakın).
-* **Derleme 11:** Cinsiyeti Aile Reisi verir: katılımı onaylarken ve ünvan değiştirirken ünvan + simge + cinsiyet (🧔 Erkek / 🧕 Kadın); reis "Aile Reisi" seçerse kendi cinsiyetini de seçer (Baba/Anne'de otomatik). Muaf buna göre gösterilir; kullanıcıya sorulan cinsiyet penceresi ve Ayarlar'daki seçim kaldırıldı.
-* **Derleme 10:** Ayarlar'da "Sıradaki hatırlatma: Yatsı 19:20 (vakit 19:31)" satırı ve hatırlatmanın tam zamanında mı yoksa gecikmeli mi geleceği bilgisi.
-* **Derleme 9:** Aile Havuzu internetsiz de açılır (ailenin son bilinen durumu + "İnternet yok" uyarısı, bağlantı gelince kendiliğinden yenilenir). Kilit ekranı ve cinsiyet soruları internet beklemeden hemen sorulur; açılıştaki ağ işleri arka plana alındı.
-* **Derleme 8:** Kıldı/kılmadı: aileye bildirim 15 sn, buluta yazma 20 sn sonra (son duruma göre). İlk açılışta "Telefon kilitliyken bildirim yazısı görünsün mü?" sorusu. Cinsiyet seçimi (Ayarlar + ünvandan anlaşılmıyorsa bir kez sorulur): Muaf sadece kadınlarda.
-* **Derleme 7:** İnternet yokken uygulama açılışta takılmıyor (oturum telefondan yüklenir, en fazla 3 sn beklenir); ad ve kayıtlar çevrimdışı telefondan gösterilir, ağ isteklerine zaman aşımı eklendi.
-* **Derleme 6:** Kıldı/kılmadı buluta da 5 saniye sonra yazılır (aile matrisi ve bildirim son duruma göre); internet yoksa telefonda bekler, 20 saniyede bir arka planda tekrar denenir. Erkek ünvan/simgelerde "Muaf" seçeneği yok. Bildirimlerde kişinin simgesi (ör. "🧕🏻 Kızın kaza namazı kıldı"). Ayarlar'da hangi aile bildirimlerinin alınacağı (namaz / kaza / dua) ve kilit ekranında içerik gösterimi.
-* **Derleme 5:** Android otomatik yedeklemesi kapatıldı (oturum bilgisi Drive'a/başka cihaza taşınmaz; kişisel kayıtlar zaten bulutta ve girişte geri gelir); sadece Google ile giriş (e-posta/şifre kaydı kapatıldı); güncelleme telefonun işlemci türüne uygun küçük APK'yı indirir.
-* **Derleme 4:** Güvenlik ve Play hazırlığı: kişi başı bildirim sınırı (dua: dakikada 1, saatte 3, günde 10; aynı vakit günde 2), süresi dolan istekler sunucuda otomatik düşer, eski onay fonksiyonu kaldırıldı, aile hareketleri 1 hafta saklanır ve son 5'i görünür, aile ekranı sadece değişen kişiyi günceller, kod karıştırma, Firebase Crashlytics, Play paketi (AAB) + Google Play uygulama içi güncelleme, web'den hesap silme sayfası, gizlilik politikası güncellendi. Ayrıntı: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
-* **Derleme 3:** Kaza kayıtlarını sıfırlama (iki aşamalı onay). Ayarlar'da "Anlık bildirim: Hazır ✓" durumu ve tekrar deneme; sunucu anahtarı etkinleştirildi.
-* **Derleme 2:** Aile bildirimleri uygulama kapalıyken de (Firebase Cloud Messaging). Konum her açılışta otomatik (10 sn arayla tekrar deneme); konum sadece Ayarlar'da.
-* Vakit hatırlatması **11 dk önce** + her bildirimde hadis/dua/özlü söz.
-* Aile Reisi simgesi **🏡** (taç simgesi kaldırıldı), **başörtülü** simgeler.
-* Sürüm açıklamalarında teknik ayrıntılar.
-
-<details>
-<summary>Geliştirme geçmişi (v1.0 öncesi test derlemeleri)</summary>
-
-* **Derleme 36:** Temiz başlangıç (test önbelleği bir kez temizlenir), Öneri Yaz mail ile, vakitler yüklenmeden işaretleme kilitli, matriste boş vakitler "—".
-* **Derleme 32:** Paylaşım penceresi (uygulama + davet kodu), ince çizgili vakit simgeleri.
-* **Derleme 27:** Eski tasarım geri döndü; Hoş Geldiniz penceresi; gezinti modu; EMB kodları; 5 dk onay; Bağlantıyı Teyit Et; çevrimdışı kuyruk; aile bildirimleri; hesap silme; Kaza/Karne/Ayarlar yenilendi.
-* **Derleme 21:** Herkese otomatik havuz ve kod; ünvanları reis verir.
-* **Derleme 17:** Gizlilik: e-postalar gizlendi, commit geçmişi temizlendi; ayrıntılı README.
-* **Derleme 16:** Aile Havuzu eski tasarım + v1.13–v1.18 revizeleri.
-* **Derleme 13:** Eski uygulamanın tüm yapısı (GPS, Kıble, Karne, bildirimler).
-* **Derleme 10:** Uygulama içi güncelleme.
-* **Derleme 9:** Çam yeşili tasarım.
-* **Derleme 6–8:** Telefondan hesap seçerek Google girişi.
-* **Derleme 2:** İlk Flutter sürümü.
-</details>

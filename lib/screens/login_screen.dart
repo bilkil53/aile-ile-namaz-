@@ -8,7 +8,7 @@ import '../config.dart';
 import '../local_store.dart';
 import '../theme.dart';
 
-/// İlk açılışta uygulamanın üzerinde çıkan "Hoş Geldiniz" penceresi (eski uygulamadaki gibi).
+/// İlk açılışta uygulamanın üzerinde çıkan "Hoş Geldiniz" penceresi.
 /// Dönüş: true = Google ile giriş yapıldı, false = giriş yapmadan devam edildi.
 Future<bool> showWelcome(BuildContext context) async {
   final r = await showDialog<bool>(

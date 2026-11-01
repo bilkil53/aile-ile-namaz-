@@ -12,7 +12,7 @@ class City {
   const City(this.name, this.lat, this.lng);
 }
 
-/// 81 il (+ Mekke, Medine, Kudüs) — eski uygulamadan.
+/// 81 il (+ Mekke, Medine, Kudüs).
 const turkeyCities = <City>[
   City('Adana', 37.0000, 35.3213), City('Adıyaman', 37.7648, 38.2786),
   City('Afyonkarahisar', 38.7569, 30.5387), City('Ağrı', 39.7191, 43.0503),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Eski Kotlin uygulamasının renkleri (çam yeşili + krem zemin).
+/// Uygulama renkleri (çam yeşili + krem zemin).
 class AppColors {
   static const emerald = Color(0xFF0E5A4A);
   static const emeraldDark = Color(0xFF074336);

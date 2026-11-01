@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'prayer_times.dart';
 import 'settings.dart';
 
-/// Konum GPS ile otomatik bulunur (eski uygulama v1.13: şehir seçimi kaldırıldı).
+/// Konum GPS ile otomatik bulunur.
 /// Konum sadece cihazda tutulur, sunucuya gönderilmez.
 class LocationHelper {
   /// Konum değişince artar; ekranlar dinleyip vakitleri yeniler.

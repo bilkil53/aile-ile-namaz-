@@ -17,7 +17,7 @@ import '../settings.dart';
 import '../theme.dart';
 import '../update_checker.dart';
 
-/// Ayarlar (eski uygulamadaki "Uygulama Bilgileri" kartı + eklemeler).
+/// Ayarlar.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 

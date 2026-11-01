@@ -7,7 +7,7 @@ import '../models.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
 
-/// Kaza namazı takibi (eski uygulamadaki düzen).
+/// Kaza namazı takibi.
 /// Hangi vakit kaza edildiği sadece sahibine görünür; aile yalnızca toplamı görür.
 class KazaScreen extends StatefulWidget {
   const KazaScreen({super.key});

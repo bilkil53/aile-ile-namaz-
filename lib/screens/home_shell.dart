@@ -134,6 +134,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           callback: (payload) {
             final r = payload.newRecord;
             if (r['sender_id'] == myId || !AppSettings.familyAlerts) return;
+            if (r['target_id'] != null && r['target_id'] != myId) return; // başkasına özel dua
             // Arka plandayken bildirimi FCM gösterir; çift bildirim olmasın
             if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
             final type = r['event_type'] as String?;
@@ -145,7 +146,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             final (title, body) = switch (r['event_type']) {
               'PRAYED' => ('$who namazını kıldı 🤲', '$prayer namazını kıldı. Allah kabul etsin.'),
               'KAZA' => ('$who kaza namazı kıldı', 'Bir kaza namazı eda etti.'),
-              'DUA' => ('$who dua gönderdi 🤲', (r['message'] as String?) ?? ''),
+              'DUA' => (r['target_id'] == myId ? '$who sana dua gönderdi 🤲' : '$who aileye dua gönderdi 🤲',
+                  (r['message'] as String?) ?? ''),
               'MEMBER_JOINED' => ('Aile havuzuna katılım 🤝', '${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.'),
               _ => ('', ''),
             };

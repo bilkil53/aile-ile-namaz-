@@ -513,12 +513,14 @@ class Repo {
       .order('created_at', ascending: false)
       .limit(5); // Son 5 hareket (sunucu 1 haftalık kaydı tutar)
 
-  static Future<void> sendDua(String poolId, String message) async {
+  /// [targetId] verilirse dua yalnızca o kişiye gider; verilmezse tüm aileye.
+  static Future<void> sendDua(String poolId, String message, {String? targetId}) async {
     await supa.from('pool_events').insert({
       'pool_id': poolId,
       'sender_id': myId,
       'event_type': 'DUA',
       'message': message,
+      if (targetId != null) 'target_id': targetId,
     });
   }
 }

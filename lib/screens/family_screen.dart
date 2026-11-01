@@ -16,7 +16,7 @@ import '../settings.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
 
-/// Aile Havuzu • İbadet Halkası (eski uygulama v1.14–v1.18 akışı).
+/// Aile Havuzu • İbadet Halkası.
 class FamilyScreen extends StatefulWidget {
   const FamilyScreen({super.key});
 
@@ -495,7 +495,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Future<void> _sendDua({Member? to}) async {
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || text.trim().isEmpty || _pool == null) return;
-    final msg = to == null ? text.trim() : '${to.shownName} için: ${text.trim()}';
+    final msg = text.trim();
     if (isGuest) {
       setState(() => _guestFeed.insert(
           0,
@@ -505,13 +505,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
               type: 'DUA',
               prayer: null,
               message: msg,
+              targetId: to?.userId,
               createdAt: DateTime.now())));
       _toast('Dua bu oturumda kaydedildi 🤲 Ailene gitmesi için giriş yap.');
       return;
     }
     try {
-      await Repo.sendDua(_pool!.id, msg.length > 280 ? msg.substring(0, 280) : msg);
-      _toast('Dua gönderildi 🤲');
+      await Repo.sendDua(_pool!.id, msg.length > 280 ? msg.substring(0, 280) : msg, targetId: to?.userId);
+      _toast(to == null ? 'Dua tüm aileye gönderildi 🤲' : 'Dua yalnızca ona gönderildi 🤲 (${_label(to)})');
     } catch (e) {
       _toast(_err(e));
     }
@@ -1295,7 +1296,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
       'PRAYED' => '$who $prayer namazını kıldı ✅',
       'MISSED' => '$who $prayer namazını kılamadı',
       'KAZA' => '$who bir kaza namazı eda etti 📿',
-      'DUA' => '$who: ${e.message}',
+      'DUA' => e.targetId == null
+          ? '$who → aileye: ${e.message}'
+          : (e.targetId == myId
+              ? '$who → sana: ${e.message}'
+              : '$who → ${_members.where((m) => m.userId == e.targetId).map(_label).firstOrNull ?? 'bir ferde'}: ${e.message}'),
       'MEMBER_JOINED' => '$who aile havuzuna katıldı 🤝',
       'MEMBER_LEFT' => '$who aile havuzundan ayrıldı',
       _ => who,

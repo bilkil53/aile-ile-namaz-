@@ -150,7 +150,7 @@ class Notifications {
           for (final (name, key, hhmm) in list) {
             final at = t.at(hhmm).subtract(Duration(minutes: lead));
             if (at.isAfter(now)) {
-              // Eski uygulamadaki gibi vakte özel hadis / ayet / dua (gün gün döner)
+              // Vakte özel hadis / ayet / dua (gün gün döner)
               final quotes = approachingQuotes[key] ?? _pool;
               final q = quotes[(_dayOfYear(day) + day.year) % quotes.length];
               final cuma = key == 'cuma';

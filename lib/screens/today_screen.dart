@@ -144,7 +144,7 @@ class _TodayScreenState extends State<TodayScreen> {
     }
   }
 
-  /// Cuma günü öğle kartı "Cuma Namazı 🕌" olarak görünür (eski uygulamadaki gibi).
+  /// Cuma günü öğle kartı "Cuma Namazı 🕌" olarak görünür.
   String _prayerName(String key) =>
       key == 'dhuhr' && !_showYesterday && DateTime.now().weekday == DateTime.friday
           ? 'Cuma Namazı 🕌'

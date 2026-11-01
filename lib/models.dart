@@ -118,7 +118,7 @@ const _possessive = {
 /// diğer üyeler ünvanı reise göre (Kızı, Oğlu) görür. Veritabanında hep reise göre saklanır.
 String titleFor(String role, {required bool viewerIsReis}) => viewerIsReis ? (_possessive[role] ?? role) : role;
 
-/// Reisin seçebileceği simgeler (eski uygulamadaki gruplar).
+/// Reisin seçebileceği simge grupları.
 const iconGroups = <String, List<String>>{
   'Kadın / Anne / Eş': ['🧕', '👩', '👵', '👱‍♀️'],
   'Erkek / Baba / Eş': ['🧔', '👨', '👴', '👱‍♂️'],
@@ -233,7 +233,11 @@ class PoolEvent {
   final String message;
   final DateTime createdAt;
 
+  /// Kişiye özel dua: yalnızca bu kişiye gider (ve sadece gönderen ile alan görür).
+  final String? targetId;
+
   PoolEvent({
+    this.targetId,
     required this.id,
     required this.senderId,
     required this.type,
@@ -249,6 +253,7 @@ class PoolEvent {
         prayer: m['prayer'] as String?,
         message: m['message'] as String? ?? '',
         createdAt: DateTime.parse(m['created_at'] as String).toLocal(),
+        targetId: m['target_id'] as String?,
       );
 }
 
