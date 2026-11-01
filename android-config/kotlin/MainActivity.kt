@@ -7,38 +7,15 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
 
 /// Android 11+ uygulamanın son kapanma sebebini (bellek, çökme, donma…) kaydeder;
-/// ayrıca Java/Kotlin tarafındaki çökmenin kod satırlarını dosyaya yazar.
+/// çökme kod satırlarını (App.kt'nin yazdığı dosya) okur.
 /// Uygulama bir sonraki açılışta bunları okuyup raporlar.
 class MainActivity : FlutterActivity() {
-    companion object {
-        @Volatile private var installed = false
-    }
-
     private fun crashFile() = File(filesDir, "last_crash.txt")
-
-    private fun installCrashWriter() {
-        if (installed) return
-        installed = true
-        val prev = Thread.getDefaultUncaughtExceptionHandler()
-        val file = crashFile()
-        Thread.setDefaultUncaughtExceptionHandler { t, e ->
-            try {
-                val sw = StringWriter()
-                e.printStackTrace(PrintWriter(sw))
-                val txt = "thread=${t.name}\n$sw"
-                file.writeText(if (txt.length > 7000) txt.substring(0, 7000) else txt)
-            } catch (_: Throwable) {}
-            prev?.uncaughtException(t, e)
-        }
-    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        installCrashWriter()
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "aile/exit").setMethodCallHandler { call, result ->
             if (call.method != "lastExit") { result.notImplemented(); return@setMethodCallHandler }
             var trace = ""

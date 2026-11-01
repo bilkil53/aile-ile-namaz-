@@ -38,7 +38,10 @@ jobs:
         run: |
           f=$(find android/app/src/main -name 'MainActivity.kt' | head -1)
           cp android-config/kotlin/MainActivity.kt "$f"
+          cp android-config/kotlin/App.kt "$(dirname "$f")/App.kt"
           grep -q getHistoricalProcessExitReasons "$f"
+          # Zamanlanmış bildirim alıcısı R8 küçültmesinde bozulmasın
+          cp android-config/proguard-rules.pro android/app/proguard-rules.pro
 
       - name: Manifest düzenle (internet izni, giriş dönüş bağlantısı, uygulama adı)
         run: |
@@ -65,6 +68,9 @@ jobs:
                       </intent-filter>'''
           s = s.replace('</activity>', intent + '\n        </activity>', 1)
           s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
+          # Çökme kaydedici için kendi Application sınıfımız
+          s = s.replace('android:name="${applicationName}"', 'android:name=".App"', 1)
+          assert 'android:name=".App"' in s, 'Application adı değiştirilemedi'
           # Android otomatik yedeklemesi kapalı: oturum bilgisi Drive yedeğine / başka cihaza taşınmaz.
           # Kişinin namaz ve kaza kayıtları zaten hesabına bağlı bulutta; girişte otomatik geri gelir.
           if 'android:allowBackup' not in s:

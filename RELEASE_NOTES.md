@@ -18,6 +18,10 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
+**v1.12**
+- Vakit hatırlatmaları (11 dk önce) ve 12:00 günün sözü bildirimi gelmiyordu: bildirim zamanı geldiğinde Android tarafındaki bildirim alıcısı, yayın derlemesindeki kod küçültme (R8) yüzünden çöküyordu. Gerekli koruma kuralları eklendi (proguard-rules.pro).
+- Çökme kaydedici artık uygulamanın tamamında çalışıyor (ekran açık olmasa da, ör. bildirim zamanı geldiğinde). Çökmenin kod satırları rapora eklenir.
+
 **v1.11**
 - Kapanma uyarısı düzeltildi: "Uygulama son kullanımda kapandı" popup'ı artık yalnızca uygulama ekrandayken çökerse çıkar. Uygulamayı kapatırken ya da arka plandayken olan kapanmalar kullanıcıyı rahatsız etmeden sadece anonim olarak raporlanır.
 - Çökmenin kod satırları (Java/Kotlin tarafı) da kaydediliyor; hangi bileşenin çöktüğü bulunup düzeltilebilecek.
