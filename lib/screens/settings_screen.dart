@@ -14,7 +14,9 @@ import '../location.dart';
 import '../notifications.dart';
 import '../push.dart';
 import '../settings.dart';
+import '../dini_gunler.dart';
 import '../theme.dart';
+import '../widgets/dini_gun_card.dart';
 import '../update_checker.dart';
 
 /// Ayarlar (eski uygulamadaki "Uygulama Bilgileri" kartı + eklemeler).
@@ -85,6 +87,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     unawaited(Notifications.reschedule());
     _toast(n == 0 ? 'Önbellek zaten temiz ✓' : 'Önbellek temizlendi ✓ ($n kayıt)');
+  }
+
+  /// Bayram / kandil kartı önizlemesi (gerçek günü beklemeden telefonda görmek için).
+  void _previewCards() {
+    DiniGun g(String k) => diniGunler.firstWhere((x) => x.key == k);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        builder: (_, sc) => ListView(
+          controller: sc,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            Center(
+              child: Container(width: 40, height: 4,
+                  decoration: BoxDecoration(color: AppColors.segmentInactive, borderRadius: BorderRadius.circular(2))),
+            ),
+            const SizedBox(height: 12),
+            const Text('Önizleme · Bugün ekranında o gün böyle görünür',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            const SizedBox(height: 10),
+            DiniGunCard(preview: g('ramazan_bayrami'), previewDay: 1),
+            DiniGunCard(preview: g('kurban_bayrami'), previewDay: 2),
+            DiniGunCard(preview: g('mirac')),
+            DiniGunCard(preview: g('kadir')),
+            DiniGunCard(preview: g('ramazan')),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Anlık bildirim hatası: ayrıntı + kopyala + tekrar dene (destek için).
@@ -514,6 +551,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: _outlineBtn(_checking ? 'Sorgulanıyor…' : 'Güncellemeleri Kontrol Et', _checking ? null : _check),
               ),
             _divider(),
+            _tapRow('Bayram ve kandil kartı önizleme', Icons.celebration_outlined, _previewCards,
+                sub: 'Özel günlerde Bugün ekranında çıkan kartlar'),
             _tapRow('Önbelleği temizle', Icons.cleaning_services_outlined, _clearCache,
                 sub: 'Vakitler ve aile özeti yeniden alınır · kayıtların silinmez'),
             const SizedBox(height: 6),

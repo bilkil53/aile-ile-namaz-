@@ -4,6 +4,7 @@ import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -227,7 +228,12 @@ class UpdateChecker {
 
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
 
-      // Android'in "Bu uygulamayı güncellemek istiyor musunuz?" ekranı
+      // Android'in "Bu uygulamayı güncellemek istiyor musunuz?" ekranı.
+      // Önce kendi yöntemimiz: kurulum ayrı görevde açılır, eski pencere kapanır (çift kopya olmaz).
+      try {
+        final ok = await const MethodChannel('aile/exit').invokeMethod<bool>('installApk', {'path': file.path});
+        if (ok == true) return;
+      } catch (_) {}
       final result = await OpenFilex.open(
         file.path,
         type: 'application/vnd.android.package-archive',

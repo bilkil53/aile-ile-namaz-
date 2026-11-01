@@ -18,6 +18,10 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
+**v1.16**
+- Güncellemede çift kopya kesin çözüm: kurulum ekranı ayrı açılır, uygulamanın eski penceresi son kullanılanlardan kaldırılır; kurulumdan sonra "Aç" denince tek kopya kalır.
+- Ayarlar > Uygulama: "Bayram ve kandil kartı önizleme" (Ramazan/Kurban bayramı, Miraç, Kadir, Ramazan kartlarını özel günü beklemeden görmek için).
+
 **v1.15**
 - Güncellemeden sonra uygulama son kullanılanlar listesinde iki kez (eski ve yeni) görünüyordu. Uygulama artık her zaman tek pencerede açılır (launchMode singleTask).
 - Bayram kartı: bayram günlerinde Bugün ekranının en üstünde "… Bayramınız mübarek olsun", bayramın kaçıncı günü olduğu, bayramın anlamı, "Bayramlaş" (paylaş) ve "Aileye gönder" (aile havuzuna bayram mesajı) butonları.

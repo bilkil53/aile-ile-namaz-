@@ -71,6 +71,16 @@ jobs:
           # Çökme kaydedici için kendi Application sınıfımız
           s = s.replace('android:name="${applicationName}"', 'android:name=".App"', 1)
           assert 'android:name=".App"' in s, 'Application adı değiştirilemedi'
+          # Güncelleme APK'sını kurulum ekranına vermek için kendi FileProvider'ımız
+          provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.aileupdate" android:exported="false" android:grantUriPermissions="true">
+                      <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/aile_update_paths" />
+                  </provider>'''
+          s = s.replace('</application>', provider + '\n    </application>', 1)
+          import os as _os
+          _os.makedirs('android/app/src/main/res/xml', exist_ok=True)
+          open('android/app/src/main/res/xml/aile_update_paths.xml', 'w', encoding='utf-8').write(
+              '<?xml version="1.0" encoding="utf-8"?>\n<paths>\n  <cache-path name="cache" path="." />\n  <files-path name="files" path="." />\n'
+              '  <external-cache-path name="ext_cache" path="." />\n  <external-files-path name="ext_files" path="." />\n</paths>\n')
           # Tek pencere: güncelleme kurulumundan sonra "Aç" denince eski ve yeni iki kopya görünmesin
           s = s.replace('android:launchMode="singleTop"', 'android:launchMode="singleTask"', 1)
           assert 'android:launchMode="singleTask"' in s, 'launchMode değiştirilemedi'
@@ -115,14 +125,14 @@ jobs:
               s = open(kts, encoding='utf-8').read()
               if 'isCoreLibraryDesugaringEnabled' not in s:
                   s = s.replace('compileOptions {', 'compileOptions {\n        isCoreLibraryDesugaringEnabled = true', 1)
-                  s += '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
+                  s += '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n    implementation("androidx.core:core:1.13.1")\n}\n'
               open(kts, 'w', encoding='utf-8').write(s)
           else:
               p = 'android/app/build.gradle'
               s = open(p, encoding='utf-8').read()
               if 'coreLibraryDesugaringEnabled' not in s:
                   s = s.replace('compileOptions {', 'compileOptions {\n        coreLibraryDesugaringEnabled true', 1)
-                  s += "\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n}\n"
+                  s += "\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n    implementation 'androidx.core:core:1.13.1'\n}\n"
               open(p, 'w', encoding='utf-8').write(s)
           print('desugaring ok')
           PY

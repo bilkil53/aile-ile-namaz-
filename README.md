@@ -185,6 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.16:** Güncelleme kurulumu kendi FileProvider (`.aileupdate`) + `FLAG_ACTIVITY_NEW_TASK`, ardından `finishAndRemoveTask()`; bayram/kandil kartı önizlemesi.
 * **v1.15:** MainActivity `launchMode=singleTask`: güncelleme sonrası çift görev (recents) sorunu.
 * **v1.14:** `lib/dini_gunler.dart`: Diyanet hicri takvimi (aladhan `calendarMethod=DIYANET`, hToG/gToH) ile dini günler, ayda bir kontrol / 120 günden az kalınca yenileme; 1 gün kala 19:00 bildirim. Ayarlar sadeleşti.
 * **v1.13:** Ayarlar: Hesap / Aile Havuzu / Namaz Vakitleri (hicri tarih, `hijri` paketi) / Uygulama (önbelleği temizle) / Diğer / Bildirimler.
