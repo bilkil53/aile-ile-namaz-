@@ -185,6 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.13:** Ayarlar: Hesap / Aile Havuzu / Namaz Vakitleri (hicri tarih, `hijri` paketi) / Uygulama (önbelleği temizle) / Diğer / Bildirimler.
 * **v1.12:** Zamanlanmış bildirim alıcısı R8 düzeltmesi (android-config/proguard-rules.pro: Gson Signature + com.dexterous). Çökme kaydedici Application sınıfında (android-config/kotlin/App.kt).
 * **v1.11:** Kapanma popup'ı yalnızca ekrandayken çökmede; arka plan kapanmaları sessiz rapor. Kotlin çökme izi (uncaught handler → last_crash.txt) rapora eklenir.
 * **v1.10:** Ayarlar sadeleşti: Hesap / Bildirimler / Konum / Uygulama / Diğer kartları, tek satır bulut durumu, sürüm notları uygulama içinde, anlık bildirim satırı sadece sorunda.

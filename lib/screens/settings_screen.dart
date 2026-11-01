@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../config.dart';
 import 'package:flutter/services.dart';
+import 'package:hijri/hijri_calendar.dart';
+import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +12,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data.dart';
 import '../local_store.dart';
 import '../location.dart';
+import '../member_icon.dart';
+import '../models.dart';
+import '../prayer_times.dart';
 import '../notifications.dart';
 import '../push.dart';
 import '../settings.dart';
@@ -36,6 +41,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _gpsBusy = false;
   String _lastSync = '';
   bool _exact = true;
+  Pool? _pool;
+  Member? _me;
+  int _memberCount = 0;
+  bool _poolLoaded = false;
+  DayTimes? _times;
 
   @override
   void initState() {
@@ -43,6 +53,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Notifications.exactAllowed().then((v) {
       if (mounted) setState(() => _exact = v);
     });
+    _loadTimes();
+    _loadPool();
     PackageInfo.fromPlatform().then((i) {
       if (!mounted) return;
       setState(() {
@@ -50,6 +62,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _build = UpdateChecker.buildOf(i.buildNumber);
       });
     });
+  }
+
+  Future<void> _loadTimes() async {
+    try {
+      final t = await PrayerTimesService.forDate(DateTime.now());
+      if (mounted) setState(() => _times = t);
+    } catch (_) {}
+  }
+
+  Future<void> _loadPool() async {
+    if (isGuest) {
+      if (mounted) setState(() => _poolLoaded = true);
+      return;
+    }
+    try {
+      final pools = await Repo.myPools().timeout(const Duration(seconds: 6));
+      Pool? p = pools.isEmpty ? null : pools.first;
+      List<Member> ms = const [];
+      if (p != null) ms = await Repo.members(p.id).timeout(const Duration(seconds: 6));
+      if (!mounted) return;
+      setState(() {
+        _pool = p;
+        _memberCount = ms.length;
+        _me = ms.where((m) => m.userId == myId).firstOrNull;
+        _poolLoaded = true;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _poolLoaded = true);
+    }
+  }
+
+  static const _hijriMonths = [
+    'Muharrem', 'Safer', 'Rebiülevvel', 'Rebiülahir', 'Cemaziyelevvel', 'Cemaziyelahir',
+    'Recep', 'Şaban', 'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce',
+  ];
+
+  String _hijriToday() {
+    try {
+      final h = HijriCalendar.fromDate(DateTime.now());
+      return '${h.hDay} ${_hijriMonths[h.hMonth - 1]} ${h.hYear}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  static String _fmtDate(String? iso) {
+    if (iso == null) return '';
+    final d = DateTime.tryParse(iso)?.toLocal();
+    return d == null ? '' : DateFormat('d MMMM yyyy', 'tr').format(d);
+  }
+
+  /// Önbelleği temizle: telefondaki vakit önbelleği ve aile özeti silinir.
+  /// Namaz kayıtların, bekleyen gönderimler ve bulut verin silinmez.
+  Future<void> _clearCache() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Önbelleği temizle', style: TextStyle(fontSize: 17)),
+        content: const Text('Telefonda saklanan namaz vakitleri ve aile havuzu özeti silinir, internetten yeniden alınır.\n\n'
+            'Namaz kayıtların, kaza sayıların ve buluttaki verilerin silinmez.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Temizle')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final prefs = AppSettings.prefs;
+    var n = 0;
+    for (final k in prefs.getKeys().toList()) {
+      if (k.startsWith('pt_') || k == 'familySnapshot') {
+        await prefs.remove(k);
+        n++;
+      }
+    }
+    await _loadTimes();
+    unawaited(Notifications.reschedule());
+    unawaited(_loadPool());
+    _toast(n == 0 ? 'Önbellek zaten temiz ✓' : 'Önbellek temizlendi ✓ ($n kayıt)');
   }
 
   /// Anlık bildirim hatası: ayrıntı + kopyala + tekrar dene (destek için).
@@ -353,6 +444,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
                   if (!guest && email.isNotEmpty)
                     Text(email, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                  if (!guest && _fmtDate(user?.createdAt).isNotEmpty)
+                    Text('Üyelik: ${_fmtDate(user?.createdAt)}'
+                        '${_fmtDate(user?.lastSignInAt).isEmpty ? '' : ' · Son giriş: ${_fmtDate(user?.lastSignInAt)}'}',
+                        style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
                 ]),
               ),
             ]),
@@ -390,10 +485,212 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
-          // 2) Bildirimler
+          // 2) Aile Havuzu
+          if (!guest) ...[
+            _bigCard([
+              _title('Aile Havuzu'),
+              _divider(),
+              if (!_poolLoaded)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('Yükleniyor…', style: TextStyle(color: Colors.white)),
+                )
+              else if (_pool == null)
+                Text('Henüz bir aile havuzunda değilsin. Aile sekmesinden havuz kurabilir ya da davet koduyla katılabilirsin.',
+                    style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9)))
+              else ...[
+                Row(children: [
+                  MemberIcon(_me?.icon ?? '👥', size: 26),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(_pool!.name,
+                          style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+                      Text(
+                          '${_pool!.ownerId == myId ? 'Aile Reisi' : (_me?.roleTitle ?? 'Üye')} · $_memberCount üye',
+                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
+                    ]),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                Row(children: [
+                  const Icon(Icons.vpn_key, size: 18, color: AppColors.prayedMint),
+                  const SizedBox(width: 8),
+                  Text('Davet kodu: ', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
+                  SelectableText(_pool!.displayCode,
+                      style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                  const Spacer(),
+                  _outlineBtn('Paylaş', () async {
+                    await Share.share(
+                      '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
+                      'Davet kodu: ${_pool!.displayCode}\n'
+                      '(Kodu 5 dakika içinde onaylarım.)\n\n'
+                      'Uygulama: $_repo/releases/latest/download/aile-ile-namaz.apk',
+                      subject: 'Aile Havuzu davet kodu',
+                    );
+                  }, icon: Icons.share),
+                ]),
+              ],
+              const SizedBox(height: 6),
+            ]),
+            const SizedBox(height: 14),
+          ],
+          // 3) Namaz Vakitleri
+          _bigCard([
+            _title('Namaz Vakitleri'),
+            _divider(),
+            Row(children: [
+              const Icon(Icons.location_on, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(AppSettings.cityName,
+                      style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
+                  Text(
+                    LocationHelper.permissionDenied
+                        ? 'Konum izni yok — İstanbul vakitleri gösteriliyor'
+                        : 'GPS ile otomatik · sadece telefonda tutulur',
+                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                  ),
+                ]),
+              ),
+              TextButton(
+                onPressed: _gpsBusy
+                    ? null
+                    : (LocationHelper.permissionDenied ? LocationHelper.openSettings : _gps),
+                child: Text(LocationHelper.permissionDenied ? 'İzin ver' : (_gpsBusy ? '…' : 'Yenile'),
+                    style: const TextStyle(color: AppColors.prayedMint, fontWeight: FontWeight.bold)),
+              ),
+            ]),
+            if (_times != null) ...[
+              _divider(),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final (n, t) in _times!.all)
+                  Container(
+                    width: 92,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(children: [
+                      Text(n, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                      Text(t, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ]),
+                  ),
+              ]),
+            ],
+            const SizedBox(height: 10),
+            Text(
+              '${_hijriToday().isEmpty ? '' : '🌙 ${_hijriToday()} · '}Hesaplama: Diyanet İşleri yöntemi',
+              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
+            ),
+            const SizedBox(height: 6),
+          ]),
+          const SizedBox(height: 14),
+          // 4) Uygulama
+          _bigCard([
+            _title('Uygulama'),
+            _divider(),
+            InkWell(
+              onTap: _showNotes,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(children: [
+                  const Icon(Icons.info_outline, size: 20, color: Colors.white),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Sürüm v$_version',
+                          style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
+                      Text('Sürüm notları için dokun',
+                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                    ]),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: hasUpdate ? AppColors.goldContainer : Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: hasUpdate ? AppColors.gold : AppColors.prayedMint),
+                    ),
+                    child: Text(hasUpdate ? 'Güncelleme var!' : '✓ Güncel',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: hasUpdate ? const Color(0xFF78350F) : AppColors.prayedMint)),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 6),
+            if (hasUpdate)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(14)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Yeni Güncelleme Hazır 🎉',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
+                  if (_notes.isNotEmpty)
+                    Text(_notes, maxLines: 6, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+                  const SizedBox(height: 8),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+                    onPressed: () => UpdateChecker.install(context, _latest!),
+                    icon: const Icon(Icons.system_update, size: 18),
+                    label: const Text('Hemen Güncelle'),
+                  ),
+                ]),
+              )
+            else
+              Align(
+                alignment: Alignment.centerRight,
+                child: _outlineBtn(_checking ? 'Sorgulanıyor…' : 'Güncellemeleri Kontrol Et', _checking ? null : _check),
+              ),
+            _divider(),
+            _tapRow('Önbelleği temizle', Icons.cleaning_services_outlined, _clearCache,
+                sub: 'Vakitler ve aile özeti yeniden alınır · kayıtların silinmez'),
+            const SizedBox(height: 6),
+          ]),
+          const SizedBox(height: 14),
+          // 5) Diğer
+          _bigCard([
+            _title('Diğer'),
+            _divider(),
+            _tapRow('Uygulamayı paylaş', Icons.share, () async {
+              // Telefonun paylaşım penceresi: WhatsApp, Gmail, Mesajlar, Telegram…
+              await Share.share(
+                '🕌 Aile ile Namaz — ailenle birlikte namaz takibi, kaza takibi ve aile havuzu.\n\n'
+                'Android için indir: $_repo/releases/latest/download/aile-ile-namaz.apk',
+                subject: 'Aile ile Namaz uygulaması',
+              );
+            }),
+            _tapRow('Öneri yaz', Icons.mail_outline, _mail, sub: 'Mail uygulaması açılır'),
+            _tapRow('GitHub', Icons.star_rounded, () => _open(_repo),
+                sub: 'Kaynak kod · Yıldız ver ⭐',
+                trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
+            _tapRow('Gizlilik politikası', Icons.privacy_tip_outlined,
+                () => _open('https://bilkil53.github.io/aile-ile-namaz-/privacy.html'),
+                trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
+            const SizedBox(height: 6),
+          ]),
+          const SizedBox(height: 14),
+          // 6) Bildirimler
           _bigCard([
             _title('Bildirimler'),
             _divider(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(children: [
+                const Icon(Icons.alarm_on, size: 18, color: AppColors.prayedMint),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Vakitlerden 11 dk önce ve her gün 12:00\'de bildirim gelir (zorunlu).',
+                      style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.9))),
+                ),
+              ]),
+            ),
             if (AppSettings.prayerReminders && !_exact)
               InkWell(
                 onTap: () async {
@@ -458,122 +755,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             const SizedBox(height: 6),
           ]),
-          const SizedBox(height: 14),
-          // 3) Konum
-          _bigCard([
-            _title('Konum'),
-            _divider(),
-            Row(children: [
-              const Icon(Icons.location_on, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(AppSettings.cityName,
-                      style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
-                  Text(
-                    LocationHelper.permissionDenied
-                        ? 'Konum izni yok — İstanbul vakitleri gösteriliyor'
-                        : 'GPS ile otomatik · sadece telefonda tutulur',
-                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
-                  ),
-                ]),
-              ),
-              TextButton(
-                onPressed: _gpsBusy
-                    ? null
-                    : (LocationHelper.permissionDenied ? LocationHelper.openSettings : _gps),
-                child: Text(LocationHelper.permissionDenied ? 'İzin ver' : (_gpsBusy ? '…' : 'Yenile'),
-                    style: const TextStyle(color: AppColors.prayedMint, fontWeight: FontWeight.bold)),
-              ),
-            ]),
-            const SizedBox(height: 6),
-          ]),
-          const SizedBox(height: 14),
-          // 4) Uygulama
-          _bigCard([
-            _title('Uygulama'),
-            _divider(),
-            InkWell(
-              onTap: _showNotes,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(children: [
-                  const Icon(Icons.info_outline, size: 20, color: Colors.white),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Sürüm v$_version',
-                          style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
-                      Text('Sürüm notları için dokun',
-                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
-                    ]),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: hasUpdate ? AppColors.goldContainer : Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: hasUpdate ? AppColors.gold : AppColors.prayedMint),
-                    ),
-                    child: Text(hasUpdate ? 'Güncelleme var!' : '✓ Güncel',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: hasUpdate ? const Color(0xFF78350F) : AppColors.prayedMint)),
-                  ),
-                ]),
-              ),
-            ),
-            const SizedBox(height: 6),
-            if (hasUpdate)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(14)),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Yeni Güncelleme Hazır 🎉',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
-                  if (_notes.isNotEmpty)
-                    Text(_notes, maxLines: 6, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF78350F))),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
-                    onPressed: () => UpdateChecker.install(context, _latest!),
-                    icon: const Icon(Icons.system_update, size: 18),
-                    label: const Text('Hemen Güncelle'),
-                  ),
-                ]),
-              )
-            else
-              Align(
-                alignment: Alignment.centerRight,
-                child: _outlineBtn(_checking ? 'Sorgulanıyor…' : 'Güncellemeleri Kontrol Et', _checking ? null : _check),
-              ),
-            const SizedBox(height: 6),
-          ]),
-          const SizedBox(height: 14),
-          // 5) Diğer
-          _bigCard([
-            _title('Diğer'),
-            _divider(),
-            _tapRow('Uygulamayı paylaş', Icons.share, () async {
-              // Telefonun paylaşım penceresi: WhatsApp, Gmail, Mesajlar, Telegram…
-              await Share.share(
-                '🕌 Aile ile Namaz — ailenle birlikte namaz takibi, kaza takibi ve aile havuzu.\n\n'
-                'Android için indir: $_repo/releases/latest/download/aile-ile-namaz.apk',
-                subject: 'Aile ile Namaz uygulaması',
-              );
-            }),
-            _tapRow('Öneri yaz', Icons.mail_outline, _mail, sub: 'Mail uygulaması açılır'),
-            _tapRow('GitHub', Icons.star_rounded, () => _open(_repo),
-                sub: 'Kaynak kod · Yıldız ver ⭐',
-                trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
-            _tapRow('Gizlilik politikası', Icons.privacy_tip_outlined,
-                () => _open('https://bilkil53.github.io/aile-ile-namaz-/privacy.html'),
-                trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
-            const SizedBox(height: 6),
-          ]),
-          // 6) Hesabı sil (en altta)
+          // 7) Hesabı sil (en altta)
           if (!guest) ...[
             const SizedBox(height: 18),
             Center(

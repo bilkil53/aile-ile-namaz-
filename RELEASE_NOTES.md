@@ -18,6 +18,14 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
 
+**v1.13**
+- Ayarlar yeni sıralama: Hesap → Aile Havuzu → Namaz Vakitleri → Uygulama → Diğer → Bildirimler (en altta) → Hesabımı sil.
+- Hesap: üyelik ve son giriş tarihi.
+- Aile Havuzu kartı (yeni): havuz adı, rolün, üye sayısı, davet kodu ve Paylaş.
+- Namaz Vakitleri kartı: şehir, bugünün vakitleri, hicri tarih, hesaplama yöntemi (Diyanet).
+- Uygulama: "Önbelleği temizle" (vakit önbelleği ve aile özeti silinir, kayıtların silinmez).
+- Bildirimler: "Vakitlerden 11 dk önce ve her gün 12:00'de bildirim gelir" bilgi satırı.
+
 **v1.12**
 - Vakit hatırlatmaları (11 dk önce) ve 12:00 günün sözü bildirimi gelmiyordu: bildirim zamanı geldiğinde Android tarafındaki bildirim alıcısı, yayın derlemesindeki kod küçültme (R8) yüzünden çöküyordu. Gerekli koruma kuralları eklendi (proguard-rules.pro).
 - Çökme kaydedici artık uygulamanın tamamında çalışıyor (ekran açık olmasa da, ör. bildirim zamanı geldiğinde). Çökmenin kod satırları rapora eklenir.
