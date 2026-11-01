@@ -8,10 +8,7 @@ import '../theme.dart';
 /// Bugün ekranının en üstünde: bayram günlerinde büyük bayram kartı,
 /// kandil / mübarek gün olan günlerde sade bilgi kartı. Başka günlerde hiçbir şey göstermez.
 class DiniGunCard extends StatefulWidget {
-  /// Önizleme: gerçek tarihe bakmadan bu günü gösterir (Ayarlar > önizleme).
-  final DiniGun? preview;
-  final int previewDay;
-  const DiniGunCard({super.key, this.preview, this.previewDay = 1});
+  const DiniGunCard({super.key});
 
   @override
   State<DiniGunCard> createState() => _DiniGunCardState();
@@ -53,8 +50,6 @@ class _DiniGunCardState extends State<DiniGunCard> {
 
   @override
   Widget build(BuildContext context) {
-    final p = widget.preview;
-    if (p != null) return p.bayram ? _bayram(p, widget.previewDay) : _special(p);
     final now = DateTime.now();
     final b = DiniGunler.bayramOn(now);
     if (b != null) return _bayram(b.$1, b.$2);
