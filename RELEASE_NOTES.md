@@ -1,4 +1,4 @@
-Ayarlar sadeleşti: "Sıradaki hatırlatma" satırı kaldırıldı.
+Hata raporu: uygulama hata verirse geliştiriciye anonim rapor gider.
 
 ## 🌟 Kullanıcı için
 
@@ -17,6 +17,9 @@ Ayarlar sadeleşti: "Sıradaki hatırlatma" satırı kaldırıldı.
 - Reis, fertleri **Kızın / Oğlun / Eşin** olarak görür.
 - **Bağlantıyı Teyit Et**, BEKLEMEDE / AKTİF rozeti, Bugün Aile Başarısı, ortak matris, Dünü Gör, dua gönderme, son hareketler.
 - Aile bildirimleri **uygulama kapalıyken de** gelir (Firebase Cloud Messaging): dua, namaz, kaza, katılım. İşaretten 5 sn sonra son duruma göre tek bildirim; reis "Kızın dua gönderdi" gibi görür.
+
+**v1.8**
+- Hata raporu: beklenmedik hatalarda Supabase `crash_reports` tablosuna anonim rapor (uygulama sürümü, Android sürümü, o anki RAM kullanımı, hata metni, kod satırları). Kişisel veri yok; uygulama tabloyu okuyamaz; 30 gün sonra silinir. Bir açılışta en fazla 5 rapor, aynı hata bir kez.
 
 **v1.7**
 - Ayarlar'daki "Sıradaki hatırlatma" satırı kaldırıldı (hatırlatmalar aynen çalışır).

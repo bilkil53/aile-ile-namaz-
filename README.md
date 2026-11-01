@@ -126,6 +126,7 @@
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → telefonun işlemci türüne uygun APK (arm64-v8a / armeabi-v7a / x86_64, yaklaşık 20 MB; bulunamazsa hepsini içeren APK) uygulama içinde indirilir → open_filex ile kurulum · Play sürümünde Google Play uygulama içi güncelleme |
 | Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → imzalı, karıştırılmış APK (GitHub) + AAB (Google Play) → GitHub Releases |
+| Hata takibi | Kendi `crash_reports` tablomuz (anonim; uygulama okuyamaz; 30 gün) |
 | Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; her gece 7 günden eski aile hareketlerini temizler |
 
 ### Paketler
@@ -184,6 +185,7 @@ Bu sürümdeki son eklemeler:
 * Reis için sahiplik ekli ünvanlar (**Kızın, Oğlun, Eşin**).
 * Vakte özel hatırlatma sözleri, Cuma kartı ve hatırlatması, tam zamanında (kesin alarm) hatırlatma.
 * Derleme numarası **1**'den başladı.
+* **v1.8:** Hata raporu: beklenmedik hatalar anonim olarak Supabase `crash_reports` tablosuna gider (sürüm, Android sürümü, RAM kullanımı, hata ve kod satırları; kişisel veri yok, 30 gün saklanır).
 * **v1.7:** Ayarlar'daki "Sıradaki hatırlatma" satırı kaldırıldı.
 * **v1.6:** Ayarlar'dan vakit hatırlatması ve günün ayeti yazıları kaldırıldı (ikisi de zorunlu ve her zaman açık; "Sıradaki hatırlatma" satırı duruyor).
 * **v1.5:** Aile Havuzunda (matris ve üye listesi) ilk sırada kullanıcının kendisi, sonra Aile Reisi. Düzeltme: anlık bildirim kaydını engelleyen hata bulundu ("FirebaseCrashlytics component is not present"). Çökme raporu eklentisi (Crashlytics) kaldırıldı; Firebase artık sorunsuz açılır, uygulama kapalıyken aile bildirimleri gelir.

@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
+import 'crash_report.dart';
 import 'local_store.dart';
 import 'notifications.dart';
 import 'push.dart';
@@ -31,6 +32,7 @@ Future<void> main() async {
   } catch (_) {
     // Çevrimdışı / zaman aşımı: istemci hazır, uygulama yerel verilerle açılır
   }
+  unawaited(CrashReport.install());
   unawaited(Push.init());
   runApp(const App());
 }
