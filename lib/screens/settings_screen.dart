@@ -545,15 +545,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _bigCard([
             _title('Bildirimler'),
             _divider(),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(children: [
-                const Icon(Icons.alarm_on, size: 18, color: AppColors.prayedMint),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('Vakitlerden 11 dk önce ve her gün 12:00\'de bildirim gelir (zorunlu).',
-                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
-                ),
               ]),
             ),
             if (AppSettings.prayerReminders && !_exact)
@@ -623,12 +614,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // 5) Hesabı sil (en altta)
           if (!guest) ...[
             const SizedBox(height: 18),
-            Center(
-              child: TextButton.icon(
-                onPressed: _deleteAccount,
-                icon: const Icon(Icons.delete_forever, color: AppColors.missed),
-                label: const Text('Hesabımı ve verilerimi sil',
-                    style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: _deleteAccount,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(children: [
+                    const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Hesabımı ve verilerimi sil',
+                            style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
+                        Text('Tüm kayıtların kalıcı olarak silinir',
+                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                      ]),
+                    ),
+                    Icon(Icons.chevron_right, color: AppColors.missed.withValues(alpha: 0.7)),
+                  ]),
+                ),
               ),
             ),
           ],

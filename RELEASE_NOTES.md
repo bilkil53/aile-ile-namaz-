@@ -20,6 +20,9 @@ Hata bildirimi: hata olursa sebebi popup ile gösterilir, mail ile gönderilebil
 
 **v1.15**
 - Güncellemeden sonra uygulama son kullanılanlar listesinde iki kez (eski ve yeni) görünüyordu. Uygulama artık her zaman tek pencerede açılır (launchMode singleTask).
+- Bayram kartı: bayram günlerinde Bugün ekranının en üstünde "… Bayramınız mübarek olsun", bayramın kaçıncı günü olduğu, bayramın anlamı, "Bayramlaş" (paylaş) ve "Aileye gönder" (aile havuzuna bayram mesajı) butonları.
+- Kandil / mübarek gün kartı: o gün sade bir kartla "Bu akşam Miraç Kandili" ve kısa açıklama.
+- Ayarlar: Bildirimler'deki "11 dk önce ve 12:00" bilgi yazısı kaldırıldı; "Hesabımı ve verilerimi sil" bir çerçeve içine alındı.
 
 **v1.14**
 - Mübarek gün hatırlatmaları: Hicri Yılbaşı, Aşure, Mevlid / Regaib / Miraç / Berat kandilleri, Üç Ayların ve Ramazan'ın başlangıcı, Kadir Gecesi, arefeler, Ramazan ve Kurban bayramları için 1 gün kala akşam 19:00'da anlamını anlatan açıklamalı bildirim.

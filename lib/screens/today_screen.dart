@@ -9,6 +9,7 @@ import '../location.dart';
 import '../models.dart';
 import '../prayer_times.dart';
 import '../theme.dart';
+import '../widgets/dini_gun_card.dart';
 import '../widgets/prayer_icon.dart';
 import '../widgets/qibla_card.dart';
 
@@ -171,6 +172,7 @@ class _TodayScreenState extends State<TodayScreen> {
           _dayToggle(),
           const SizedBox(height: 12),
           if (!_showYesterday) ...[
+            const DiniGunCard(),
             _heroCard(),
             const SizedBox(height: 12),
             _quoteCard(),
