@@ -101,6 +101,7 @@
 * Giriş yapılırsa o oturumdakiler buluta kaydedilir (kaza sayıları hesaptakilerin üzerine eklenir).
 
 ### 9. 📲 Güncelleme ve görünüm
+* **Uygulama simgesi:** yeşil zeminde altın minare, hilal ve E harfi (Android uyarlanabilir simge: `android-config/res`).
 * Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; kurulum ekranı ayrı açılır ve uygulama tek pencerede kalır.
 * Telefonda yazı boyutu büyük ayarlıysa uygulama yazıları en fazla %10 büyür; ekranlar taşmaz.
 

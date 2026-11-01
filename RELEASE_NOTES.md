@@ -1,4 +1,4 @@
-Aile ile Namaz: aile havuzu ve kişiye özel dua, Diyanet vakitleri, bayram ve kandil kartları, mübarek gün bildirimleri, kaza takibi ve ibadet karnesi.
+Uygulama simgesi: minare, hilal ve E harfli logo. Aile Havuzu sade görünüm, kişiye özel dua.
 
 ## 🌟 Kullanıcı için
 
@@ -39,6 +39,7 @@ Aile ile Namaz: aile havuzu ve kişiye özel dua, Diyanet vakitleri, bayram ve k
 - Uygulama kullanılırken hata olursa sebebiyle birlikte bir pencere çıkar; istenirse ayrıntılar mail ile gönderilir. Uygulama ekrandayken kapanırsa sebebi bir sonraki açılışta gösterilir. Hata kaydı anonimdir.
 
 **Güncelleme ve görünüm**
+- Uygulama simgesi: yeşil zeminde altın minare, hilal ve E harfi.
 - Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; uygulama tek pencerede kalır.
 - Telefonda yazı boyutu büyükse uygulama yazıları en fazla %10 büyür.
 

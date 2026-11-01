@@ -40,6 +40,9 @@ jobs:
           cp android-config/kotlin/MainActivity.kt "$f"
           cp android-config/kotlin/App.kt "$(dirname "$f")/App.kt"
           grep -q getHistoricalProcessExitReasons "$f"
+          # Uygulama simgesi (eski uygulamanın logosu: minare, hilal ve E harfi)
+          cp -r android-config/res/. android/app/src/main/res/
+          test -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           # Zamanlanmış bildirim alıcısı R8 küçültmesinde bozulmasın
           cp android-config/proguard-rules.pro android/app/proguard-rules.pro
 
@@ -68,6 +71,8 @@ jobs:
                       </intent-filter>'''
           s = s.replace('</activity>', intent + '\n        </activity>', 1)
           s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
+          if 'android:roundIcon' not in s:
+              s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
           # Çökme kaydedici için kendi Application sınıfımız
           s = s.replace('android:name="${applicationName}"', 'android:name=".App"', 1)
           assert 'android:name=".App"' in s, 'Application adı değiştirilemedi'
