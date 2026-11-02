@@ -14,6 +14,7 @@ import '../member_icon.dart';
 import '../models.dart';
 import '../settings.dart';
 import '../theme.dart';
+import '../widgets/danger_box.dart';
 import '../widgets/prayer_icon.dart';
 
 /// Aile Havuzu • İbadet Halkası.
@@ -598,14 +599,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
             _membersSection(),
             const SizedBox(height: 16),
             if (_isOwner && _members.length > 1)
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
-                ),
-                child: InkWell(
-                borderRadius: BorderRadius.circular(16),
+              DangerBox(
+                title: 'Havuzu Kapat & Sıfırla',
+                subtitle: 'Tüm üyeler havuzdan çıkarılır',
                 onTap: () async {
                   if (!await _doubleConfirm(
                     title: 'Havuzu Kapat & Sıfırla',
@@ -623,23 +619,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     _toast(_err(e));
                   }
                 },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  child: Row(children: [
-                    Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Havuzu Kapat & Sıfırla',
-                            style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
-                        Text('Tüm üyeler havuzdan çıkarılır',
-                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                      ]),
-                    ),
-                    Icon(Icons.chevron_right, color: AppColors.missed),
-                  ]),
-                ),
-                ),
               ),
           ],
         ],
@@ -1035,16 +1014,23 @@ class _FamilyScreenState extends State<FamilyScreen> {
     );
   }
 
-  Widget _memberStatusCard(Pool pool) => _whiteCard(
-        child: Row(children: [
-          const Text('🕌', style: TextStyle(fontSize: 24)),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text('Aile İbadet Havuzundasın',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          ),
-          TextButton(
-            onPressed: () async {
+  Widget _memberStatusCard(Pool pool) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        _whiteCard(
+          child: const Row(children: [
+            Text('🕌', style: TextStyle(fontSize: 24)),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text('Aile İbadet Havuzundasın',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 10),
+        DangerBox(
+          title: 'Havuzdan Ayrıl',
+          subtitle: 'Ailenin namaz durumunu artık göremezsin',
+          icon: Icons.logout,
+          onTap: () async {
               if (!await _doubleConfirm(
                 title: 'Havuzdan Ayrıl',
                 text: 'Ayrılırsan ailen senin namaz durumunu artık göremez, sen de onlarınkini göremezsin. '
@@ -1060,11 +1046,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
               } catch (e) {
                 _toast(_err(e));
               }
-            },
-            child: const Text('Havuzdan Ayrıl', style: TextStyle(color: AppColors.missed)),
-          ),
-        ]),
-      );
+          },
+        ),
+      ]);
 
   // ---------- Ortak matris (vakit × kişi) ----------
   Widget _matrix() {

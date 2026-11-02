@@ -1,4 +1,4 @@
-Karne: yeni manevi rozetler, Bronz/Gümüş/Altın/Elmas seviyeleri, ilerleme çubukları ve yeni rozet tebrik bildirimi.
+Riskli işlemler çerçeveli kutularda: Kaza kayıtlarını sıfırla, Havuzdan Ayrıl, Havuzu Kapat & Sıfırla, Hesabımı sil.
 
 ## 🌟 Kullanıcı için
 

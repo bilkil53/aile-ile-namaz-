@@ -5,6 +5,7 @@ import '../data.dart';
 import '../member_icon.dart';
 import '../models.dart';
 import '../theme.dart';
+import '../widgets/danger_box.dart';
 import '../widgets/prayer_icon.dart';
 
 /// Kaza namazı takibi.
@@ -255,13 +256,15 @@ class _KazaScreenState extends State<KazaScreen> {
             icon: const Icon(Icons.playlist_add),
             label: const Text('Toplu Ekle (yıl veya gün)'),
           ),
-          TextButton.icon(
-            onPressed: _reset,
-            icon: const Icon(Icons.restart_alt, size: 18, color: AppColors.missed),
-            label: const Text('Kaza kayıtlarını sıfırla', style: TextStyle(color: AppColors.missed)),
-          ),
           const SizedBox(height: 12),
           for (final t in _types) ...[_row(t), const SizedBox(height: 10)],
+          const SizedBox(height: 8),
+          DangerBox(
+            title: 'Kaza kayıtlarını sıfırla',
+            subtitle: 'Tüm kaza borcu ve kılınan sayıları sıfırlanır',
+            icon: Icons.restart_alt,
+            onTap: _reset,
+          ),
         ],
       ),
     );
