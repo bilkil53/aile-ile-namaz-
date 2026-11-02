@@ -37,6 +37,10 @@ class Repo {
     return res != null;
   }
 
+  /// Havuzun adını değiştir (yalnızca Aile Reisi; veritabanı kuralı da bunu denetler).
+  static Future<void> renamePool(String poolId, String name) =>
+      supa.from('pools').update({'name': name}).eq('id', poolId);
+
   static Future<void> leavePool(String poolId) {
     invalidatePools();
     return supa.rpc('leave_pool', params: {'p_pool': poolId});

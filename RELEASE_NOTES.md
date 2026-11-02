@@ -1,4 +1,4 @@
-Uygulama simgesi: minare, hilal ve E harfli logo. Aile Havuzu sade görünüm, kişiye özel dua.
+Havuz adı: başlıkta Aile Reisinin adı yerine "Ailemiz"; Aile Reisi istediği adı verebilir.
 
 ## 🌟 Kullanıcı için
 
@@ -12,6 +12,7 @@ Uygulama simgesi: minare, hilal ve E harfli logo. Aile Havuzu sade görünüm, k
 - **Bayram ve kandil kartları:** bayram günlerinde bayram kartı (bayramın anlamı, Bayramlaş, Aileye gönder), kandil ve mübarek günlerde sade bilgi kartı. Diğer günlerde görünmez.
 
 **Aile Havuzu**
+- Havuzun başlığı "Ailemiz"; Aile Reisi kalem simgesiyle istediği adı verebilir.
 - Davet kodu (**EMB-123456**) paylaşım penceresiyle gönderilir; tek bekleyen istek, 5 dakika onay süresi.
 - Aile Reisi katılanın ünvanını ve simgesini seçer. Kadın / kız simgesi seçilince "Muaf" kendiliğinden açılır. Kız çocuğu simgeleri fiyonklu (🧕🎀, 👧🎀).
 - Herkes diğerlerini kendine göre görür: Reis "Kızın, Eşin"; kızı "Baban (Aile Reisi), Annen".

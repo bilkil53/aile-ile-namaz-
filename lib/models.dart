@@ -151,6 +151,10 @@ class Pool {
       );
 
   /// EMB-123456 biçiminde gösterim.
+  /// Ekranda görünen havuz adı. Otomatik verilen "<Reis adı> Ailesi" yerine "Ailemiz";
+  /// Aile Reisi kendi ad verdiyse o ad görünür.
+  String get displayName => name.trim().isEmpty || name.trim().endsWith(' Ailesi') ? 'Ailemiz' : name.trim();
+
   String get displayCode => inviteCode.startsWith('EMB') && inviteCode.length > 3
       ? 'EMB-${inviteCode.substring(3)}'
       : inviteCode;

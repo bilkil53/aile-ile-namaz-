@@ -49,6 +49,7 @@
 
 ### 2. 👨‍👩‍👧‍👦 Aile Havuzu • İbadet Halkası
 * Uygulamayı kuran herkes **Aile Ferdi** olarak başlar (**Bireysel Mod**). Giriş yapınca **EMB-123456** biçiminde davet kodu otomatik hazırdır.
+* **Havuzun adı:** Başlıkta "Ailemiz" yazar; Aile Reisi kalem simgesiyle istediği adı verebilir (en fazla 30 karakter).
 * **Davet kodunu paylaş:** Telefonun paylaşım penceresiyle WhatsApp, Gmail, Mesajlar… (mesajda kod ve indirme linki hazır).
 * **Katılma:** Aile ferdi sadece kodu girer. Aynı anda **tek istek**; istek **5 dakika** içinde onaylanmazsa sunucuda kendiliğinden düşer. İki tarafta canlı geri sayım.
 * **Reis onayı:** Reis kendi ünvanını (🏡 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer (Eşi, Oğlu, Kızı, Annesi, Babası, Kardeşi, Torunu, Gelini, Damadı, Dedesi, Ninesi).
