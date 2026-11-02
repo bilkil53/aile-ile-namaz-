@@ -140,23 +140,23 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 14),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
-            width: 84,
-            height: 84,
+            width: 64,
+            height: 64,
             decoration: const BoxDecoration(color: AppColors.emeraldContainer, shape: BoxShape.circle),
             child: const Icon(Icons.mosque, size: 42, color: AppColors.emerald),
           ),
           const SizedBox(height: 16),
           const Text("Aile ile Namaz'a Hoş Geldiniz",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 6),
           const Text('Birlikte namaz kılın, kaza borçlarınızı takip edin ve ortak ibadet havuzunda buluşun 🤲',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.35)),
-          const SizedBox(height: 18),
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.35)),
+          const SizedBox(height: 12),
           const _Feature(
             icon: Icons.home,
             bg: AppColors.emeraldContainer,
@@ -194,27 +194,27 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
               borderRadius: BorderRadius.circular(22),
               onTap: _busy ? null : _signIn,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+                padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
                 child: Row(children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 38,
+                    height: 38,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
                     child: _busy
                         ? const SizedBox(
                             width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
                         : const Text('G',
-                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
+                            style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
                   ),
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('Google ile Hızlı Giriş Yap',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                       SizedBox(height: 2),
                       Text('Kayıtların buluta yedeklenir, ailenle eşitlenir',
-                          style: TextStyle(fontSize: 12, color: Colors.white70)),
+                          style: TextStyle(fontSize: 11, color: Colors.white70)),
                     ]),
                   ),
                   const Icon(Icons.arrow_forward, color: Colors.white),
@@ -226,7 +226,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
           TextButton(
             onPressed: _busy ? null : _guest,
             child: const Text('Giriş Yapmadan Devam Et',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
           ),
         ]),
       ),
@@ -242,8 +242,8 @@ class _Feature extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.circular(18),
@@ -251,17 +251,17 @@ class _Feature extends StatelessWidget {
         ),
         child: Row(children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
             child: Icon(icon, color: fg, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
               const SizedBox(height: 2),
-              Text(text, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3)),
+              Text(text, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, height: 1.3)),
             ]),
           ),
         ]),
@@ -278,7 +278,7 @@ class _Bullet extends StatelessWidget {
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(emoji, style: const TextStyle(fontSize: 16)),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, height: 1.35))),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 12, height: 1.35))),
         ]),
       );
 }

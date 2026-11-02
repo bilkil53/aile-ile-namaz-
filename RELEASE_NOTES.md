@@ -1,4 +1,4 @@
-Açılır pencerelerin yazıları küçüldü (başlık, metin, seçenekler ve alt bildirimler).
+Hoş Geldiniz penceresi ve diğer açılır pencereler küçüldü; telefonun büyük yazı ayarı uygulamayı büyütmez.
 
 ## 🌟 Kullanıcı için
 
@@ -44,7 +44,7 @@ Açılır pencerelerin yazıları küçüldü (başlık, metin, seçenekler ve a
 **Güncelleme ve görünüm**
 - Uygulama simgesi: yeşil zeminde altın minare, hilal ve E harfi.
 - Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; uygulama tek pencerede kalır.
-- Telefonda yazı boyutu büyükse uygulama yazıları en fazla %10 büyür.
+- Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
 
 **Güvenlik**
 - Sadece Google ile giriş. Android otomatik yedeklemesi kapalı. Kişi başı bildirim sınırı. Aile hareketleri 1 hafta saklanır.

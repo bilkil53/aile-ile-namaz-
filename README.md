@@ -106,7 +106,7 @@
 ### 9. 📲 Güncelleme ve görünüm
 * **Uygulama simgesi:** yeşil zeminde altın minare, hilal ve E harfi (Android uyarlanabilir simge: `android-config/res`).
 * Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; kurulum ekranı ayrı açılır ve uygulama tek pencerede kalır.
-* Telefonda yazı boyutu büyük ayarlıysa uygulama yazıları en fazla %10 büyür; ekranlar taşmaz.
+* Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
 
 ---
 
@@ -138,7 +138,7 @@
 
 | Katman | Kullanılan |
 |---|---|
-| Uygulama | Flutter (Dart 3), Material 3 · görünen sürüm `1.N`, `versionCode` = derleme no · tek pencere (`launchMode=singleTask`) · yazı ölçeği en fazla 1.1 |
+| Uygulama | Flutter (Dart 3), Material 3 · görünen sürüm `1.N`, `versionCode` = derleme no · tek pencere (`launchMode=singleTask`) · yazı ölçeği en fazla 1.0 |
 | Arka uç | Supabase — PostgreSQL, Row Level Security, Auth, Realtime, Edge Functions, pg_cron, pg_net (Frankfurt / eu-central-1) |
 | Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
 | Vakitler | aladhan.com, method 13 (Diyanet) → önbellek → çevrimdışı yerel hesap; 81 il koordinatı |
