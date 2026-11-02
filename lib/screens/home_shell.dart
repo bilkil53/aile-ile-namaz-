@@ -83,7 +83,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           icon: const Icon(Icons.lock_outline, color: AppColors.emerald, size: 32),
-          title: const Text('Telefon kilitliyken bildirimler', style: TextStyle(fontSize: 18)),
+          title: const Text('Telefon kilitliyken bildirimler', style: TextStyle(fontSize: 17)),
           content: const Text(
             'Aileden biri namaz kılınca veya dua gönderince bildirim gelir.\n\n'
             'Telefon kilitliyken bildirimin yazısı kilit ekranında görünsün mü? '

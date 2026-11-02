@@ -44,5 +44,16 @@ ThemeData buildAppTheme() {
       elevation: 3,
       surfaceTintColor: Colors.transparent,
     ),
+    // Açılır pencereler: başlık ve metin daha küçük ve dengeli
+    dialogTheme: const DialogThemeData(
+      titleTextStyle: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+      contentTextStyle: TextStyle(fontSize: 14, height: 1.4, color: AppColors.textPrimary),
+    ),
+    listTileTheme: const ListTileThemeData(
+      titleTextStyle: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+      subtitleTextStyle: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+    ),
+    snackBarTheme: const SnackBarThemeData(contentTextStyle: TextStyle(fontSize: 13, color: Colors.white)),
+    bottomSheetTheme: const BottomSheetThemeData(surfaceTintColor: Colors.transparent),
   );
 }

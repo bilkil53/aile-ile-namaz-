@@ -1,4 +1,4 @@
-Gezinti modunda Aile Havuzu sade: büyük uyarı kartı yerine tek satır "Gezinti modundasın · Ailene bağlanmak için giriş yap".
+Açılır pencerelerin yazıları küçüldü (başlık, metin, seçenekler ve alt bildirimler).
 
 ## 🌟 Kullanıcı için
 

@@ -106,7 +106,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
           decoration: const BoxDecoration(color: AppColors.goldContainer, shape: BoxShape.circle),
           child: const Icon(Icons.phone_android, color: AppColors.gold, size: 28),
         ),
-        title: const Text('Giriş Yapmadan Devam Et', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text('Giriş Yapmadan Devam Et', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
         content: const Column(mainAxisSize: MainAxisSize.min, children: [
           _Bullet('👀', 'Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.'),
           _Bullet('⏳', 'İşaretlediklerin sadece bu oturumda tutulur; uygulama kapanınca silinir.'),
@@ -151,7 +151,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
           const SizedBox(height: 16),
           const Text("Aile ile Namaz'a Hoş Geldiniz",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 6),
           const Text('Birlikte namaz kılın, kaza borçlarınızı takip edin ve ortak ibadet havuzunda buluşun 🤲',
               textAlign: TextAlign.center,
