@@ -74,7 +74,10 @@
 * **Vakit vakit karne** ve **en çok aksatılan vakit** uyarısı.
 * **Seri:** Şu anki ve en uzun 5 vakit serisi.
 * **Aylık takvim:** Ayın her günü renkli (5 vakit / kısmen / kılınmadı / işaretsiz).
-* **Kaza ilerlemesi** ve **kişisel rozetler** (Sabah Namazı Muhafızı, 5'te 5, 7 ve 30 Gün Serisi, Kaza Avcısı, İstikrar Yıldızı).
+* **Kaza ilerlemesi.**
+* **Manevi rozetler:** Sabah Namazı Muhafızı, 5'te 5 Sadakati, Namaz Serisi (7 / 30 / 100 / 365 gün), Sabah Serisi (7 / 21 / 40 gün), Yatsı Nöbetçisi, Cuma Sadığı, İstikrar Yıldızı, Yeniden Başlangıç, Kaza Avcısı (10 / 100 / 500 / 1000), Borçsuz Kul.
+* **Mübarek gün rozetleri** (Diyanet takvimine göre, yalnızca o dönem gelince görünür): Ramazan Rozeti, Kandil Gecesi, Bayram Sabahı, Üç Aylar Yolcusu.
+* Seviyeli rozetlerde **Bronz / Gümüş / Altın / Elmas** etiketi; kazanılmayanlar soluk, altında ilerleme çubuğu. Yeni rozet kazanınca tebrik bildirimi. Rozetler son 400 günün kişisel kayıtlarından hesaplanır (`lib/karne_badges.dart`).
 
 ### 5. 🔔 Bildirimler
 * Her vakitten **11 dakika önce** hatırlatma; vakte özel hadis / ayet / dua ile.

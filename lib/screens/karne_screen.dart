@@ -3,6 +3,10 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../data.dart';
+import '../dini_gunler.dart';
+import '../karne_badges.dart';
+import '../notifications.dart';
+import '../settings.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
@@ -40,21 +44,54 @@ class _KarneScreenState extends State<KarneScreen> {
     final now = DateTime.now();
     try {
       final r = await Future.wait<dynamic>([
-        Repo.myRange(now.subtract(const Duration(days: 89)), now),
+        Repo.myRange(now.subtract(const Duration(days: 399)), now),
+        DiniGunler.ensure(),
         Repo.myKaza(),
         Repo.myDisplayName(),
       ]);
       if (!mounted) return;
       setState(() {
         _data = r[0] as Map<String, Map<String, PrayerStatus>>;
-        _kaza = r[1] as Map<String, (int, int)>;
-        _name = r[2] as String;
+        _kaza = r[2] as Map<String, (int, int)>;
+        _name = r[3] as String;
       });
     } catch (_) {
       // çevrimdışı: eldeki veriyle göster
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+    _announceNewBadges();
+  }
+
+  List<KarneBadge> _badges() {
+    var owed = 0, done = 0;
+    for (final v in _kaza.values) {
+      owed += v.$1;
+      done += v.$2;
+    }
+    return KarneBadges(_data, owed, done).all();
+  }
+
+  /// Yeni kazanılan rozet / seviye için tebrik bildirimi (ilk açılışta sadece kaydedilir).
+  Future<void> _announceNewBadges() async {
+    try {
+      const k = 'karne.earnedBadges';
+      final earned = _badges().where((b) => b.earned).toList();
+      final keys = earned.map((b) => b.key).toSet();
+      final prev = AppSettings.prefs.getStringList(k);
+      await AppSettings.prefs.setStringList(k, keys.toList());
+      if (prev == null) return;
+      final fresh = earned.where((b) => !prev.contains(b.key)).toList();
+      for (var i = 0; i < fresh.length && i < 3; i++) {
+        final b = fresh[i];
+        final name = b.levelName.isEmpty ? b.title : '${b.title} · ${b.levelName}';
+        await Notifications.showFamily(9100 + i, '🏅 Tebrikler! Yeni rozet: $name', '${b.emoji} ${b.desc}');
+      }
+      if (fresh.isNotEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('🏅 Yeni rozet: ${fresh.first.title}${fresh.length > 1 ? ' (+${fresh.length - 1})' : ''}')));
+      }
+    } catch (_) {}
   }
 
   String _k(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
@@ -145,18 +182,7 @@ class _KarneScreenState extends State<KarneScreen> {
       done += v.$2;
     }
     final kazaPct = owed == 0 ? 0.0 : (done / owed).clamp(0.0, 1.0).toDouble();
-    final week = _days.length == 7 ? days : [for (var i = 6; i >= 0; i--) DateTime.now().subtract(Duration(days: i))];
-    final fajrWeek = week.where((d) => _st(d, 'fajr') == PrayerStatus.prayed).length;
-    final (wp, wt) = _score(week);
-    final weekPct = wt == 0 ? 0 : (wp * 100 / wt).round();
-    final badges = [
-      ('🌅', 'Sabah Namazı Muhafızı', 'Son 7 günün en az 5\'inde sabah namazı', fajrWeek >= 5, '$fajrWeek/5'),
-      ('🏆', '5\'te 5 Sadakati', 'Bir günün 5 vaktini eksiksiz kıl', bestStreak >= 1, bestStreak >= 1 ? 'Kazanıldı' : '0/1'),
-      ('🔥', '7 Gün Serisi', '7 gün üst üste 5 vakit', bestStreak >= 7, '${bestStreak.clamp(0, 7)}/7'),
-      ('🌙', '30 Gün Serisi', '30 gün üst üste 5 vakit', bestStreak >= 30, '${bestStreak.clamp(0, 30)}/30'),
-      ('📿', 'Kaza Avcısı', 'En az 10 kaza namazı eda et', done >= 10, '${done.clamp(0, 10)}/10'),
-      ('⭐', 'İstikrar Yıldızı', 'Haftalık başarı %80 ve üzeri', weekPct >= 80, '%$weekPct'),
-    ];
+    final badges = _badges();
 
     return RefreshIndicator(
       onRefresh: _load,
@@ -303,31 +329,14 @@ class _KarneScreenState extends State<KarneScreen> {
           const Text('🏅 Manevi Rozetler',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 8),
-          for (final (emoji, title, desc, earned, progress) in badges)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: earned ? AppColors.goldContainer : AppColors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: earned ? AppColors.gold : AppColors.cardBorder),
-              ),
-              child: Row(children: [
-                Opacity(opacity: earned ? 1 : 0.35, child: Text(emoji, style: const TextStyle(fontSize: 26))),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                    Text(desc, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                  ]),
-                ),
-                Text(earned ? 'Kazanıldı ✓' : progress,
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: earned ? const Color(0xFF78350F) : AppColors.textMuted)),
-              ]),
-            ),
+          if (badges.any((b) => b.seasonal)) ...[
+            const Text('Mübarek günler', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+            const SizedBox(height: 6),
+            for (final b in badges.where((b) => b.seasonal)) _badgeTile(b),
+            const SizedBox(height: 6),
+          ],
+          for (final b in badges.where((b) => b.earned && !b.seasonal)) _badgeTile(b),
+          for (final b in badges.where((b) => !b.earned && !b.seasonal)) _badgeTile(b),
           const SizedBox(height: 10),
           Center(
             child: Text('Karne sadece senin kayıtlarından hazırlanır · Aile ile Namaz v$_version',
@@ -335,6 +344,63 @@ class _KarneScreenState extends State<KarneScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  static const _tierColors = [Color(0xFFB0703C), Color(0xFF8A94A0), Color(0xFFC8961E), Color(0xFF3B9BB3)];
+
+  /// Rozet satırı: kazanılan altın zeminde (seviyeli ise Bronz/Gümüş/Altın/Elmas etiketi),
+  /// kazanılmayan soluk ve altında ilerleme çubuğu.
+  Widget _badgeTile(KarneBadge b) {
+    final next = b.nextTarget;
+    final prog = next == 0 ? 0.0 : (b.value / next).clamp(0.0, 1.0).toDouble();
+    final showBar = !b.maxed && next > 1;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: b.earned ? AppColors.goldContainer : AppColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: b.earned ? AppColors.gold : AppColors.cardBorder),
+      ),
+      child: Row(children: [
+        Opacity(opacity: b.earned ? 1 : 0.35, child: Text(b.emoji, style: const TextStyle(fontSize: 26))),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Flexible(child: Text(b.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+              if (b.levelName.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(color: _tierColors[b.level - 1], borderRadius: BorderRadius.circular(6)),
+                  child: Text(b.levelName,
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ],
+            ]),
+            Text(b.desc, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            if (showBar) ...[
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                    value: prog, minHeight: 5, color: AppColors.gold, backgroundColor: AppColors.segmentInactive),
+              ),
+            ],
+          ]),
+        ),
+        const SizedBox(width: 8),
+        Text(
+            b.maxed
+                ? 'Kazanıldı ✓'
+                : next == 1
+                    ? (b.earned ? 'Kazanıldı ✓' : 'Henüz yok')
+                    : '${b.value.clamp(0, next)}/$next',
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.bold, color: b.earned ? const Color(0xFF78350F) : AppColors.textMuted)),
+      ]),
     );
   }
 

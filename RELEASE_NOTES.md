@@ -1,4 +1,4 @@
-Aile Havuzu: "Havuzu Kapat & Sıfırla" çerçeveli ayrı bir kutuda.
+Karne: yeni manevi rozetler, Bronz/Gümüş/Altın/Elmas seviyeleri, ilerleme çubukları ve yeni rozet tebrik bildirimi.
 
 ## 🌟 Kullanıcı için
 
@@ -26,6 +26,9 @@ Aile Havuzu: "Havuzu Kapat & Sıfırla" çerçeveli ayrı bir kutuda.
 
 **Karne**
 - Okul karnesi mantığı: dönem seçimi, genel not, vakit vakit karne, seri, aylık takvim, kaza ilerlemesi, rozetler. Sadece kişinin kendi verisi.
+- **Manevi rozetler:** Sabah Namazı Muhafızı, 5'te 5 Sadakati, Namaz Serisi (7 / 30 / 100 / 365 gün), Sabah Serisi (7 / 21 / 40 gün), Yatsı Nöbetçisi (14 gün), Cuma Sadığı (4 Cuma), İstikrar Yıldızı, Yeniden Başlangıç, Kaza Avcısı (10 / 100 / 500 / 1000), Borçsuz Kul.
+- **Mübarek gün rozetleri** o dönem gelince görünür: Ramazan Rozeti, Kandil Gecesi, Bayram Sabahı, Üç Aylar Yolcusu.
+- Seviyeli rozetlerde Bronz / Gümüş / Altın / Elmas etiketi; kazanılmayan rozetler soluk ve altında ilerleme çubuğu. Yeni rozet ya da seviye kazanınca tebrik bildirimi.
 
 **Bildirimler**
 - Her vakitten **11 dk önce** hatırlatma, vakte özel hadis / ayet / dua ile. Cuma'ya özel hatırlatma. Her gün 12:00'de günün ayeti/hadisi.
