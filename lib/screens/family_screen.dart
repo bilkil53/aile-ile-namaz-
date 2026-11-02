@@ -489,38 +489,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   String get _myRole => _members.where((m) => m.userId == myId).firstOrNull?.roleTitle ?? 'Aile Ferdi';
 
-  /// Aile Reisi havuza ad verir (ör. "Ailemiz", "Evimizin Halkası"). Boş bırakılırsa "Ailemiz".
-  Future<void> _renamePool() async {
-    final pool = _pool;
-    if (pool == null) return;
-    final ctrl = TextEditingController(text: pool.displayName == 'Ailemiz' ? '' : pool.displayName);
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Havuzun adı', style: TextStyle(fontSize: 16)),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          maxLength: 30,
-          decoration: const InputDecoration(hintText: 'Ailemiz'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Vazgeç')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Kaydet')),
-        ],
-      ),
-    );
-    ctrl.dispose();
-    if (name == null) return;
-    try {
-      await Repo.renamePool(pool.id, name.isEmpty ? 'Ailemiz' : name);
-      _toast('Havuzun adı kaydedildi');
-      await _load();
-    } catch (e) {
-      _toast(_err(e));
-    }
-  }
-
   Future<void> _sendDua({Member? to}) async {
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || text.trim().isEmpty || _pool == null) return;
@@ -673,20 +641,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1)),
           ]),
           const SizedBox(height: 10),
-          Row(children: [
-            Flexible(
-              child: Text(pool?.displayName ?? 'Ailemiz',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
-            ),
-            if (pool != null && _isOwner && !isGuest)
-              IconButton(
-                tooltip: 'Havuzun adını değiştir',
-                visualDensity: VisualDensity.compact,
-                onPressed: _renamePool,
-                icon: const Icon(Icons.edit, size: 18, color: Colors.white70),
-              ),
-          ]),
-          const SizedBox(height: 2),
           Text(
             pool == null
                 ? 'Aile havuzun hazırlanıyor…'
