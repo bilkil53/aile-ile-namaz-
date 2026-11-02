@@ -53,7 +53,7 @@
 * **Katılma:** Aile ferdi sadece kodu girer. Aynı anda **tek istek**; istek **5 dakika** içinde onaylanmazsa sunucuda kendiliğinden düşer. İki tarafta canlı geri sayım.
 * **Reis onayı:** Reis kendi ünvanını (🏡 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer (Eşi, Oğlu, Kızı, Annesi, Babası, Kardeşi, Torunu, Gelini, Damadı, Dedesi, Ninesi).
 * **Simgeler:** Kadın / Anne / Eş · Erkek / Baba / Eş · Erkek / Kız / Çocuk · Diğer. Kız çocuğu simgeleri anneden ayrılsın diye küçük çizilir ve fiyonk taşır (başörtülü 🧕🎀, başörtüsüz 👧🎀). Kadın veya kız simgesi seçilince **Muaf** kendiliğinden açılır; ayrıca cinsiyet sorulmaz.
-* **Herkese göre hitap:** Ünvanlar reise göre saklanır, her kullanıcı diğerlerini kendine göre görür: Reis "Kızın, Oğlun, Eşin"; eşi "Eşin (Aile Reisi), Kızın"; kızı "Baban (Aile Reisi), Annen, Kardeşin". Aynı hitaplar bildirimlerde de kullanılır.
+* **Herkese göre hitap:** Ünvanlar reise göre saklanır, her kullanıcı diğerlerini kendine göre görür: Reis "Kızın, Oğlun, Eşin"; eşi "Eşin (Aile Reisi), Kızın"; kızı "Baban (Aile Reisi), Annen, Kardeşin". Bildirimlerde hitabın yanında kişinin ilk adı da yazar ("Kızın Ayşe namazını kıldı"); aynı ünvanlı iki kişi böylece ayırt edilir.
 * **Liste sırası:** Önce kişinin kendisi, sonra Aile Reisi, sonra diğer fertler.
 * **Bağlantıyı Teyit Et 🔄**, **BEKLEMEDE / AKTİF** rozeti, Bireysel / Aile Modu profil kartı.
 * **Ortak Matris:** Ailenin 5 vakit durumu (vakit × kişi), **"Bugün Aile Başarısı: x / y Vakit (%)"**, **◄ Dünü Gör**. Yalnızca gerçekten işaretlenen vakitler görünür; boş vakitler "—".

@@ -1,4 +1,4 @@
-Hoş Geldiniz penceresi ve diğer açılır pencereler küçüldü; telefonun büyük yazı ayarı uygulamayı büyütmez.
+Aile bildirimlerinde kişinin ilk adı: "Kızın Ayşe namazını kıldı" (aynı ünvanlı iki kişi ayırt edilir).
 
 ## 🌟 Kullanıcı için
 
@@ -17,7 +17,7 @@ Hoş Geldiniz penceresi ve diğer açılır pencereler küçüldü; telefonun b�
 - Herkes diğerlerini kendine göre görür: Reis "Kızın, Eşin"; kızı "Baban (Aile Reisi), Annen".
 - Ortak matris, Bugün Aile Başarısı, Dünü Gör.
 - **Dua:** "Aileye Dua Gönder" tüm aileye gider; bir kişinin kartından gönderilen dua yalnızca o kişiye bildirim olarak gider.
-- Aile bildirimleri uygulama kapalıyken de gelir: dua, namaz, kaza, katılım.
+- Aile bildirimleri uygulama kapalıyken de gelir: dua, namaz, kaza, katılım. Bildirimde hitap ve ilk ad birlikte yazar ("Kızın Ayşe", "Baban Erdinç (Aile Reisi)").
 
 **Kaza**
 - Kalan / Kılınan kutuları, vakit başına −/Borç/+, Kaza Kıldım.

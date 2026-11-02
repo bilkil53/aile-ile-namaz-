@@ -151,6 +151,17 @@ Deno.serve(async (req) => {
       db.from("pool_members").select("user_id, role_title, icon, gender").eq("pool_id", ev.pool_id),
     ]);
     const sender = (members ?? []).find((m) => m.user_id === ev.sender_id);
+    // Gönderenin ilk adı: aynı ünvanlı iki kişi ("Kızın") ayırt edilsin → "Kızın Ayşe"
+    const { data: prof } = await db.from("profiles").select("display_name").eq("id", ev.sender_id).maybeSingle();
+    const firstRaw = String(prof?.display_name ?? "").trim().split(/\s+/)[0] ?? "";
+    const mixed = firstRaw !== firstRaw.toLocaleUpperCase("tr") && firstRaw !== firstRaw.toLocaleLowerCase("tr");
+    const first = !firstRaw ? "" : mixed ? firstRaw
+      : firstRaw[0].toLocaleUpperCase("tr") + firstRaw.slice(1).toLocaleLowerCase("tr");
+    const withName = (label: string) => {
+      if (!first || label.includes(first)) return label;
+      const i = label.indexOf(" (");
+      return i < 0 ? `${label} ${first}` : `${label.slice(0, i)} ${first}${label.slice(i)}`;
+    };
     // Kişiye özel dua yalnızca o kişiye; diğer olaylar göndereni hariç herkese
     const recipients = ev.target_id
       ? [ev.target_id].filter((id) => id !== ev.sender_id && (members ?? []).some((m) => m.user_id === id))
@@ -173,7 +184,7 @@ Deno.serve(async (req) => {
     await Promise.all(devices.map(async (d) => {
       // Alıcıya göre akrabalık hitabı: reis "Kızın", kızı "Baban (Aile Reisi)" / "Annen" …
       const viewer = (members ?? []).find((m) => m.user_id === d.user_id) as M | undefined;
-      const who = icon + (sender && viewer ? kinLabel(viewer, sender as M, reis) : (sender?.role_title || "Aile ferdin"));
+      const who = icon + withName(sender && viewer ? kinLabel(viewer, sender as M, reis) : (sender?.role_title || "Aile ferdin"));
       const t = text(ev.event_type, who, ev.prayer, ev.message ?? "", !!ev.target_id);
       if (!t) return;
       const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {

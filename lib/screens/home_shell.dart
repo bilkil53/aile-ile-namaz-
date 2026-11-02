@@ -121,7 +121,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         final me = ms.where((x) => x.userId == myId).firstOrNull;
         final reis = ms.where((x) => x.userId == p.ownerId).firstOrNull;
         for (final m in ms) {
-          _names[m.userId] = '${m.icon} ${me == null ? m.labelFor(viewerIsReis: p.ownerId == myId) : kinLabel(viewer: me, target: m, reis: reis)}';
+          final label = me == null ? m.labelFor(viewerIsReis: p.ownerId == myId) : kinLabel(viewer: me, target: m, reis: reis);
+          _names[m.userId] = '${m.icon} ${withFirstName(label, m.firstName)}';
         }
       }
     } catch (_) {}

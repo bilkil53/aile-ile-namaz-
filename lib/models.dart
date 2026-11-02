@@ -192,6 +192,17 @@ class Member {
   /// Ekranda gösterilecek ad: önce rol, yoksa profil adı.
   String get shownName => roleTitle.isNotEmpty ? roleTitle : name;
 
+  /// Kişinin ilk adı (bildirimde aynı ünvanlı iki kişiyi ayırmak için: "Kızın Ayşe").
+  String get firstName {
+    final n = name.trim().split(RegExp(r'\s+')).first;
+    if (n.isEmpty || n == 'Misafir') return '';
+    // Hepsi büyük ya da hepsi küçük yazılmışsa Türkçe kurallarıyla düzelt (ERDİNÇ → Erdinç)
+    if (n != n.toUpperCase() && n != n.toLowerCase()) return n;
+    String up(String c) => c == 'i' ? 'İ' : (c == 'ı' ? 'I' : c.toUpperCase());
+    String low(String t) => t.replaceAll('I', 'ı').replaceAll('İ', 'i').toLowerCase();
+    return up(low(n[0])) + low(n.substring(1));
+  }
+
   /// Bakan kişiye göre ad (reis için "Kızın", diğerleri için "Kızı").
   String labelFor({required bool viewerIsReis}) => titleFor(shownName, viewerIsReis: viewerIsReis);
 }
@@ -347,4 +358,11 @@ String kinLabel({required Member viewer, required Member target, required Member
   if (rel != null) return rel;
   // İlişki çıkarılamıyorsa reise göre yaz: "Aile Reisinin Kızı"
   return reisTitles.containsKey(t) && t != 'Aile Ferdi' ? 'Aile Reisinin $t' : target.shownName;
+}
+
+/// Hitaba ilk adı ekler: "Kızın" → "Kızın Ayşe", "Baban (Aile Reisi)" → "Baban Erdinç (Aile Reisi)".
+String withFirstName(String label, String first) {
+  if (first.isEmpty || label.contains(first)) return label;
+  final i = label.indexOf(' (');
+  return i < 0 ? '$label $first' : '${label.substring(0, i)} $first${label.substring(i)}';
 }
