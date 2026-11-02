@@ -565,8 +565,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
             const SizedBox(height: 12),
           ],
-          _profileCard(),
-          const SizedBox(height: 12),
+          if (!isGuest) ...[_profileCard(), const SizedBox(height: 12)],
           _hero(),
           const SizedBox(height: 12),
           if (pool != null) ...[
@@ -709,36 +708,26 @@ class _FamilyScreenState extends State<FamilyScreen> {
     );
   }
 
-  Widget _guestBanner() => Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.goldContainer,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.gold),
+  /// Gezinti modu: tek satır sade uyarı; dokununca giriş penceresi açılır.
+  Widget _guestBanner() => Material(
+        color: AppColors.goldContainer,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => LocalStore.setGuestMode(false),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(children: [
+              Icon(Icons.visibility_outlined, size: 18, color: Color(0xFF78350F)),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('Gezinti modundasın · Ailene bağlanmak için giriş yap',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF78350F), fontWeight: FontWeight.w600)),
+              ),
+              Icon(Icons.chevron_right, color: Color(0xFF78350F)),
+            ]),
+          ),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Row(children: [
-            Text('👀', style: TextStyle(fontSize: 17)),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text('Gezinti Modu',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
-            ),
-          ]),
-          const SizedBox(height: 4),
-          const Text(
-            'Aile Havuzunu deneyebilirsin; yaptıkların sadece bu oturumda tutulur ve uygulama kapanınca silinir. '
-            'Ailenle gerçekten bağlanmak ve kayıtlarını buluta almak için giriş yap.',
-            style: TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.35),
-          ),
-          const SizedBox(height: 10),
-          FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
-            onPressed: () => LocalStore.setGuestMode(false),
-            icon: const Icon(Icons.login, size: 18),
-            label: const Text('Google ile Giriş Yap & Buluta Kaydet', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ]),
       );
 
   Widget _profileCard() {

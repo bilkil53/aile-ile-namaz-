@@ -1,4 +1,4 @@
-Riskli işlemler çerçeveli kutularda: Kaza kayıtlarını sıfırla, Havuzdan Ayrıl, Havuzu Kapat & Sıfırla, Hesabımı sil.
+Gezinti modunda Aile Havuzu sade: büyük uyarı kartı yerine tek satır "Gezinti modundasın · Ailene bağlanmak için giriş yap".
 
 ## 🌟 Kullanıcı için
 
