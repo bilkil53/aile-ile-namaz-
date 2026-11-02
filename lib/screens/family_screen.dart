@@ -598,8 +598,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
             _membersSection(),
             const SizedBox(height: 16),
             if (_isOwner && _members.length > 1)
-              TextButton.icon(
-                onPressed: () async {
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
+                ),
+                child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () async {
                   if (!await _doubleConfirm(
                     title: 'Havuzu Kapat & Sıfırla',
                     text: 'Havuz kapatılırsa bütün aile fertleri havuzdan çıkarılır; ünvanlar, dua ve hareket kayıtları silinir. '
@@ -616,8 +623,23 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     _toast(_err(e));
                   }
                 },
-                icon: const Icon(Icons.delete_forever, color: AppColors.missed),
-                label: const Text('Havuzu Kapat & Sıfırla', style: TextStyle(color: AppColors.missed)),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(children: [
+                    Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Havuzu Kapat & Sıfırla',
+                            style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
+                        Text('Tüm üyeler havuzdan çıkarılır',
+                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                      ]),
+                    ),
+                    Icon(Icons.chevron_right, color: AppColors.missed),
+                  ]),
+                ),
+                ),
               ),
           ],
         ],

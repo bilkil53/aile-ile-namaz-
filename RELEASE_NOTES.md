@@ -1,4 +1,4 @@
-Aile Havuzu kartı sade: havuz başlığında kişi adı yok. Uygulama simgesi: minare, hilal ve E harfli logo.
+Aile Havuzu: "Havuzu Kapat & Sıfırla" çerçeveli ayrı bir kutuda.
 
 ## 🌟 Kullanıcı için
 
