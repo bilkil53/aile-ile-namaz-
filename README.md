@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/İndir-Aile%20ile%20Namaz%20(APK)-0E5A4A?style=for-the-badge&logo=android&logoColor=white" alt="APK İndir" />
   </a>
   <a href="https://github.com/bilkil53/aile-ile-namaz-/releases/latest">
-    <img src="https://img.shields.io/github/v/release/bilkil53/aile-ile-namaz-?style=for-the-badge&color=0E5A4A&label=Son%20Sürüm&display_name=release" alt="Son Sürüm" />
+    <img src="https://img.shields.io/badge/Son%20S%C3%BCr%C3%BCm-Notlar%C4%B1%20G%C3%B6r-0E5A4A?style=for-the-badge&logo=github&logoColor=white" alt="Son Sürüm" />
   </a>
   <img src="https://img.shields.io/badge/Flutter-Android-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20RLS-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
