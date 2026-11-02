@@ -246,8 +246,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          last=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName \
+          # Yayınlar ve etiketlerin en büyüğü: bir yayın yanlışlıkla silinse bile numara geri gitmez
+          rel=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName \
             -q '[.[].tagName | select(test("^r[0-9]+$")) | ltrimstr("r") | tonumber] | max // 0')
+          tag=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/r" --paginate \
+            -q '[.[].ref | ltrimstr("refs/tags/") | select(test("^r[0-9]+$")) | ltrimstr("r") | tonumber] | max // 0')
+          last=$(( rel > tag ? rel : tag ))
           echo "BUILD_NO=$((last + 1))" >> "$GITHUB_ENV"
           # Görünen sürüm: v1.1, v1.2, v1.3 … (derleme 13 = v1.1)
           minor=$((last + 1 - ${{ env.MINOR_BASE }})); [ "$minor" -lt 0 ] && minor=0

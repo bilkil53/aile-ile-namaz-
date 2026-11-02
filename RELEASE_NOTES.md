@@ -1,4 +1,4 @@
-Aile Havuzu kartı sadeleşti: Aile Reisinin adından oluşan havuz başlığı kaldırıldı.
+Aile Havuzu kartı sade: havuz başlığında kişi adı yok. Uygulama simgesi: minare, hilal ve E harfli logo.
 
 ## 🌟 Kullanıcı için
 
