@@ -1,4 +1,4 @@
-Aile bildirimlerinde kişinin ilk adı: "Kızın Ayşe namazını kıldı" (aynı ünvanlı iki kişi ayırt edilir).
+KVKK: girişte açık rıza onayı ve aydınlatma metni; mevcut kullanıcılara bir kez sorulur.
 
 ## 🌟 Kullanıcı için
 
@@ -47,6 +47,7 @@ Aile bildirimlerinde kişinin ilk adı: "Kızın Ayşe namazını kıldı" (ayn�
 - Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
 
 **Güvenlik**
+- KVKK: Google ile girişte aydınlatma metni ve yurt dışına aktarım için açık rıza onayı; rıza tarihi hesapta saklanır. Daha önce giriş yapmış kullanıcılara bir kez sorulur.
 - Sadece Google ile giriş. Android otomatik yedeklemesi kapalı. Kişi başı bildirim sınırı. Aile hareketleri 1 hafta saklanır.
 
 ## 🛠 Teknik ayrıntılar

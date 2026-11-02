@@ -127,6 +127,7 @@
 | Telefon yedeği | Android otomatik yedeklemesi kapalı; oturum bilgisi başka cihaza taşınamaz. Kişisel kayıtlar hesaba bağlı bulutta |
 | Giriş yöntemi | Sadece Google; e-posta/şifre ile kayıt kapalı |
 | Hesap silme | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
+| KVKK | Girişte aydınlatma metni + yurt dışına aktarım için açık rıza (onay kutusu); rıza tarihi `profiles.kvkk_consent_at`; mevcut kullanıcılara bir kez sorulur |
 | İmza anahtarı | GitHub Secrets'ta; repoda değil |
 | Hata kayıtları | Anonim; uygulama okuyamaz, sadece yazabilir; 30 gün sonra silinir |
 
@@ -188,7 +189,7 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 
 Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function `supabase/functions/push-family` → FCM HTTP v1. Gizli ayar `FCM_SERVICE_ACCOUNT` (Supabase Edge Function secret, Firebase hizmet hesabı JSON'u); repoda yoktur.
 
-Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua`.
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua` → `20_kvkk_consent`.
 
 ### Derleme ve dallar
 * `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).

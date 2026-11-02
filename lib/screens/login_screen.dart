@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
+import '../kvkk.dart';
 import '../local_store.dart';
 import '../theme.dart';
 
@@ -55,7 +56,15 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
 
   /// 1) Telefondaki Google hesaplarından seçtirir (tarayıcı açılmaz).
   /// 2) Bu yol çalışmazsa (ör. Google Play Hizmetleri yok) tarayıcı girişine düşer.
+  bool _consent = Kvkk.given;
+  bool _consentWarn = false;
+
   Future<void> _signIn() async {
+    if (!_consent) {
+      setState(() => _consentWarn = true);
+      return;
+    }
+    await Kvkk.give();
     setState(() => _busy = true);
     try {
       final ok = await _nativeSignIn();
@@ -186,6 +195,56 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
             text: 'Haftalık başarı oranınız, manevi rozetler ve günün hadisi.',
           ),
           const SizedBox(height: 8),
+          // KVKK açık rızası: işaretlenmeden giriş yapılamaz
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: Checkbox(
+                value: _consent,
+                activeColor: AppColors.emerald,
+                onChanged: (v) => setState(() {
+                  _consent = v ?? false;
+                  if (_consent) _consentWarn = false;
+                }),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _consent = !_consent;
+                    if (_consent) _consentWarn = false;
+                  }),
+                  child: Text(Kvkk.consentText,
+                      style: TextStyle(
+                          fontSize: 11,
+                          height: 1.35,
+                          color: _consentWarn ? AppColors.missed : AppColors.textSecondary)),
+                ),
+                InkWell(
+                  onTap: Kvkk.openText,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Text('Aydınlatma metnini oku',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.emerald,
+                            decoration: TextDecoration.underline)),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+          if (_consentWarn)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 6),
+              child: Text('Google ile giriş için onay kutusunu işaretle.',
+                  style: TextStyle(fontSize: 11, color: AppColors.missed, fontWeight: FontWeight.bold)),
+            ),
+          const SizedBox(height: 6),
           Material(
             color: AppColors.emerald,
             borderRadius: BorderRadius.circular(22),

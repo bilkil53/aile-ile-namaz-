@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data.dart';
+import '../kvkk.dart';
 import '../local_store.dart';
 import '../location.dart';
 import '../models.dart';
@@ -42,7 +43,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         final loggedIn = await showWelcome(context);
         if (loggedIn || !mounted) return; // giriş yapıldıysa yeni oturum ekranı açılır
       }
+      if (!isGuest && !Kvkk.given && mounted) {
+        await Kvkk.askIfNeeded(context);
+        if (isGuest || !mounted) return; // kabul etmediyse oturum kapandı
+      }
       if (!isGuest) {
+        unawaited(Kvkk.syncServer());
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
         // Ağ işlerini arka planda başlat (internet yavaş/yoksa ekranı bekletmez)
         unawaited(() async {
