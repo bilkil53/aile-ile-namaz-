@@ -1,4 +1,4 @@
-KVKK: girişte açık rıza onayı ve aydınlatma metni; mevcut kullanıcılara bir kez sorulur.
+Bildirimlerde ad yalnızca çocuklarda (Kızın Ayşe); anne, baba ve eş adsız.
 
 ## 🌟 Kullanıcı için
 
@@ -17,7 +17,7 @@ KVKK: girişte açık rıza onayı ve aydınlatma metni; mevcut kullanıcılara 
 - Herkes diğerlerini kendine göre görür: Reis "Kızın, Eşin"; kızı "Baban (Aile Reisi), Annen".
 - Ortak matris, Bugün Aile Başarısı, Dünü Gör.
 - **Dua:** "Aileye Dua Gönder" tüm aileye gider; bir kişinin kartından gönderilen dua yalnızca o kişiye bildirim olarak gider.
-- Aile bildirimleri uygulama kapalıyken de gelir: dua, namaz, kaza, katılım. Bildirimde hitap ve ilk ad birlikte yazar ("Kızın Ayşe", "Baban Erdinç (Aile Reisi)").
+- Aile bildirimleri uygulama kapalıyken de gelir: dua, namaz, kaza, katılım. Çocuklarda bildirimde hitapla birlikte ilk ad yazar ("Kızın Ayşe"); anne, baba ve eş adsız.
 
 **Kaza**
 - Kalan / Kılınan kutuları, vakit başına −/Borç/+, Kaza Kıldım.

@@ -128,7 +128,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         final reis = ms.where((x) => x.userId == p.ownerId).firstOrNull;
         for (final m in ms) {
           final label = me == null ? m.labelFor(viewerIsReis: p.ownerId == myId) : kinLabel(viewer: me, target: m, reis: reis);
-          _names[m.userId] = '${m.icon} ${withFirstName(label, m.firstName)}';
+          // Ad yalnızca çocuklarda ya da aynı ünvanlı birden fazla kişi varsa ("Kızın Ayşe")
+          final same = ms.where((x) => x.roleTitle.isNotEmpty && x.roleTitle == m.roleTitle).length;
+          final needName = const {'Oğlu', 'Kızı', 'Torunu'}.contains(m.roleTitle) || same > 1;
+          _names[m.userId] = '${m.icon} ${needName ? withFirstName(label, m.firstName) : label}';
         }
       }
     } catch (_) {}

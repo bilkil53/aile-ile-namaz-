@@ -157,8 +157,13 @@ Deno.serve(async (req) => {
     const mixed = firstRaw !== firstRaw.toLocaleUpperCase("tr") && firstRaw !== firstRaw.toLocaleLowerCase("tr");
     const first = !firstRaw ? "" : mixed ? firstRaw
       : firstRaw[0].toLocaleUpperCase("tr") + firstRaw.slice(1).toLocaleLowerCase("tr");
+    // Ad yalnızca çocuklarda (Oğlu, Kızı, Torunu) ya da aynı ünvanlı birden fazla kişi varsa eklenir;
+    // anne, baba, eş ve Aile Reisi tek olduğu için adsız kalır.
+    const CHILD = new Set(["Oğlu", "Kızı", "Torunu"]);
+    const sameTitle = (members ?? []).filter((m) => m.role_title && m.role_title === sender?.role_title).length;
+    const needName = !!sender && (CHILD.has(sender.role_title) || sameTitle > 1);
     const withName = (label: string) => {
-      if (!first || label.includes(first)) return label;
+      if (!needName || !first || label.includes(first)) return label;
       const i = label.indexOf(" (");
       return i < 0 ? `${label} ${first}` : `${label.slice(0, i)} ${first}${label.slice(i)}`;
     };
