@@ -15,6 +15,11 @@ env:
   APP_MAJOR: "1"
   MINOR_BASE: "12"
 
+# Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın
+concurrency:
+  group: release-numbering
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
