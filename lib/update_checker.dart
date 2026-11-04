@@ -19,10 +19,21 @@ class UpdateChecker {
   static const store = String.fromEnvironment('STORE', defaultValue: 'github');
   static bool get isPlay => store == 'play';
 
-  static const _latestApi =
-      'https://api.github.com/repos/bilkil53/aile-ile-namaz-/releases/latest';
-  static const downloadUrl =
-      'https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz.apk';
+  /// Kanal (`--dart-define=CHANNEL=`): `stable` (varsayılan, ailenin uygulaması) ya da `demo`
+  /// (Pro/Demo test uygulaması). Demo sürümleri GitHub'da "ön sürüm" olarak yayınlanır;
+  /// stabil uygulama yalnızca normal son sürüme baktığı için demo'yu hiç görmez.
+  static const channel = String.fromEnvironment('CHANNEL', defaultValue: 'stable');
+  static bool get isDemo => channel == 'demo';
+
+  static const _repo = 'https://github.com/bilkil53/aile-ile-namaz-';
+  static const _api = 'https://api.github.com/repos/bilkil53/aile-ile-namaz-/releases';
+
+  /// Demo'da indirilecek yayının etiketi (rN); son sürüm sorgusunda bulunur.
+  static String _demoTag = '';
+
+  static String get _base => isDemo ? '$_repo/releases/download/$_demoTag' : '$_repo/releases/latest/download';
+  static String get _prefix => isDemo ? 'aile-ile-namaz-demo' : 'aile-ile-namaz';
+  static String get downloadUrl => '$_base/$_prefix.apk';
 
   static bool _checked = false;
 
@@ -34,9 +45,38 @@ class UpdateChecker {
       Abi.androidX64 => 'x86_64',
       _ => null,
     };
-    return abi == null
-        ? null
-        : 'https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz-$abi.apk';
+    return abi == null ? null : '$_base/$_prefix-$abi.apk';
+  }
+
+  /// Kanalın son yayını (GitHub API gövdesi). Stabil: /releases/latest. Demo: en yeni "demo" ön sürümü.
+  static Future<Map<String, dynamic>?> _fetchLatest() async {
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+    try {
+      final req = await client.getUrl(Uri.parse(isDemo ? '$_api?per_page=30' : '$_api/latest'));
+      req.headers.set('Accept', 'application/vnd.github+json');
+      req.headers.set('User-Agent', 'aile-ile-namaz-app');
+      final res = await req.close();
+      if (res.statusCode != 200) return null;
+      final data = jsonDecode(await res.transform(utf8.decoder).join());
+      Map<String, dynamic>? body;
+      if (isDemo) {
+        for (final r in (data as List).cast<Map<String, dynamic>>()) {
+          final name = (r['name'] as String? ?? '').toLowerCase();
+          if (r['prerelease'] == true && name.contains('demo')) {
+            body = r;
+            break;
+          }
+        }
+        if (body != null) _demoTag = body['tag_name'] as String? ?? '';
+      } else {
+        body = data as Map<String, dynamic>;
+      }
+      return body;
+    } catch (_) {
+      return null;
+    } finally {
+      client.close();
+    }
   }
 
   /// GitHub'daki son sürüm: (numara, açıklamanın ilk satırı). Hata olursa null.
@@ -45,23 +85,12 @@ class UpdateChecker {
       final cur = await currentBuild();
       return await _playAvailable() ? (cur + 1, 'Google Play\'de yeni güncelleme var.') : (cur, '');
     }
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
-    try {
-      final req = await client.getUrl(Uri.parse(_latestApi));
-      req.headers.set('Accept', 'application/vnd.github+json');
-      req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
-      if (res.statusCode != 200) return null;
-      final body = jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
-      final tag = body['tag_name'] as String? ?? '';
-      final n = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-      final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
-      return (n, notes);
-    } catch (_) {
-      return null;
-    } finally {
-      client.close();
-    }
+    final body = await _fetchLatest();
+    if (body == null) return null;
+    final tag = body['tag_name'] as String? ?? '';
+    final n = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
+    return (n, notes);
   }
 
   /// Yüklü derleme numarası. İşlemci türüne göre APK'larda Android sürüm kodu
@@ -113,19 +142,8 @@ class UpdateChecker {
       final info = await PackageInfo.fromPlatform();
       final current = buildOf(info.buildNumber);
 
-      final client = HttpClient()
-        ..connectionTimeout = const Duration(seconds: 8);
-      final req = await client.getUrl(Uri.parse(_latestApi));
-      req.headers.set('Accept', 'application/vnd.github+json');
-      req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
-      if (res.statusCode != 200) {
-        client.close();
-        return;
-      }
-      final body = jsonDecode(await res.transform(utf8.decoder).join())
-          as Map<String, dynamic>;
-      client.close();
+      final body = await _fetchLatest();
+      if (body == null) return;
 
       final tag = body['tag_name'] as String? ?? '';
       final latest = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;

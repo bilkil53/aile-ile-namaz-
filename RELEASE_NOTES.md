@@ -1,4 +1,4 @@
-Pro / Demo: ilk 7 gün Pro deneme; sonra demo sürümde karne geçmişi ve gelişmiş rozetler kilitli. Pro kodu ile açılır.
+Namaz Demo: Pro/Demo deneme uygulaması — 7 gün Pro deneme, Ayarlar'da "Demo süresini bitir" ve "Pro kodu gir" test düğmeleri.
 
 ## 🌟 Kullanıcı için
 
