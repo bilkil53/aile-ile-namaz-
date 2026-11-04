@@ -70,6 +70,43 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return true;
   }
 
+  /// Demo: üstte Pro bilgisi, altındaki havuz soluk (pasif); dokununca Pro uyarısı.
+  List<Widget> _demoDim(List<Widget> children) {
+    if (!_demo) return children;
+    return [
+      Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(16)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Row(children: [
+            Icon(Icons.lock_outline, size: 18, color: Color(0xFF78350F)),
+            SizedBox(width: 6),
+            Expanded(
+              child: Text('Aile Havuzu Pro\'da',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          const Text(
+              'Ailenin namaz durumlarını görme, dua gönderme, davet ve üye yönetimi Pro ile açılır.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu gir')),
+          ),
+        ]),
+      ),
+      for (final w in children)
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => showProRequired(context, feature: 'Aile Havuzu'),
+          child: AbsorbPointer(child: Opacity(opacity: 0.5, child: w)),
+        ),
+    ];
+  }
+
   void _proRebuild() {
     if (mounted) setState(() {});
   }
@@ -592,7 +629,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           if (!isGuest) ...[_profileCard(), const SizedBox(height: 12)],
           _hero(),
           const SizedBox(height: 12),
-          if (pool != null) ...[
+          if (pool != null) ..._demoDim([
             if (_members.length <= 1) ...[
               _codeCard(pool),
               const SizedBox(height: 12),
@@ -644,7 +681,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   }
                 },
               ),
-          ],
+          ]),
         ],
       ),
     );
@@ -1143,23 +1180,6 @@ class _FamilyScreenState extends State<FamilyScreen> {
               ]),
             );
           }),
-          if (_demo)
-            GestureDetector(
-              onTap: () => showProRequired(context, feature: 'Aile namaz durumları'),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-                child: const Row(children: [
-                  Icon(Icons.lock_outline, size: 14, color: Colors.white70),
-                  SizedBox(width: 6),
-                  Expanded(
-                      child: Text('Demo: aile namaz durumları Pro ile görünür',
-                          style: TextStyle(fontSize: 11, color: Colors.white70))),
-                ]),
-              ),
-            ),
           Row(children: [
             Text('ORTAK MATRİS',
                 style: TextStyle(fontSize: 10, letterSpacing: 1, color: Colors.white.withValues(alpha: 0.7))),

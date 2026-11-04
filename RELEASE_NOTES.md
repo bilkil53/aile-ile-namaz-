@@ -1,4 +1,4 @@
-Namaz Demo: tüm sekmeler açık. Aile Havuzu ve Kaza pasif görünür (sayılar "–", ekran soluk, üstte Pro bilgisi); Karne'de manevi rozetler yok; tüm bildirimler kapalı. Pro kodu girince hepsi açılır.
+Namaz Demo: tüm sekmeler açık. Aile Havuzu ve Kaza soluk ve pasif görünür (sayılar "–", üstte Pro bilgi kartı); Karne'de manevi rozetler yok; tüm bildirimler kapalı. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
