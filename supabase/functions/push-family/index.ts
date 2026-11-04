@@ -201,6 +201,8 @@ Deno.serve(async (req) => {
             notification: { title: t[0], body: t[1] },
             android: {
               priority: "HIGH",
+              // Ulaşamazsa 1 saat sonra düşsün: telefon uzun süre kapalı/kayıtsız kalınca eski bildirimler topluca gelmez
+              ttl: "3600s",
               notification: {
                 channel_id: "aile_olaylari",
                 sound: "default",

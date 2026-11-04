@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../cuma_reminder.dart';
 import '../data.dart';
 import '../integrity.dart';
 import '../pro.dart';
@@ -139,6 +140,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       for (final p in await Repo.myPools()) {
         final ms = await Repo.members(p.id);
         final me = ms.where((x) => x.userId == myId).firstOrNull;
+        if (me != null) unawaited(CumaReminder.rememberGender(genderOf(me)));
         final reis = ms.where((x) => x.userId == p.ownerId).firstOrNull;
         for (final m in ms) {
           final label = me == null ? m.labelFor(viewerIsReis: p.ownerId == myId) : kinLabel(viewer: me, target: m, reis: reis);
