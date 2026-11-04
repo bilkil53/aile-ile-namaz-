@@ -78,9 +78,16 @@ class _KazaScreenState extends State<KazaScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
-  (int, int) _of(String t) => _data[t] ?? (0, 0);
+  (int, int) _of(String t) => Pro.isDemo ? (0, 0) : (_data[t] ?? (0, 0));
+
+  /// Demo'da sayılar "–" görünür.
+  String _n(int v) => Pro.isDemo ? '–' : '$v';
 
   Future<void> _set(String type, int owed, int completed, {bool announce = false}) async {
+    if (Pro.isDemo) {
+      showProRequired(context, feature: 'Kaza takibi');
+      return;
+    }
     final before = _of(type);
     setState(() => _data = {..._data, type: (owed, completed)});
     try {
@@ -92,6 +99,10 @@ class _KazaScreenState extends State<KazaScreen> {
   }
 
   Future<void> _bulkAdd() async {
+    if (Pro.isDemo) {
+      showProRequired(context, feature: 'Kaza takibi');
+      return;
+    }
     final days = await showDialog<int>(context: context, builder: (_) => const _BulkDialog());
     if (days == null || days <= 0 || days > 36500) return;
     for (final (t, _, _, _) in _types) {
@@ -103,6 +114,10 @@ class _KazaScreenState extends State<KazaScreen> {
 
   /// Kaza kayıtlarını sıfırla: yanlışlıkla olmasın diye iki kez onay ister.
   Future<void> _reset() async {
+    if (Pro.isDemo) {
+      showProRequired(context, feature: 'Kaza takibi');
+      return;
+    }
     final first = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -168,36 +183,50 @@ class _KazaScreenState extends State<KazaScreen> {
     super.dispose();
   }
 
-  /// Demo: sekme açılır ama içi boş.
-  Widget _demoEmpty() => ListView(
-        padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.cardBorder),
+  /// Demo: üstte Pro bilgisi, altındaki ekran soluk (pasif) görünür; dokununca Pro uyarısı.
+  List<Widget> _demoWrap(List<Widget> children) {
+    if (!Pro.isDemo) return children;
+    return [
+      Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.goldContainer,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Row(children: [
+            Icon(Icons.lock_outline, size: 18, color: Color(0xFF78350F)),
+            SizedBox(width: 6),
+            Expanded(
+              child: Text('Kaza takibi Pro\'da',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
             ),
-            child: Column(children: [
-              const Text('📿', style: TextStyle(fontSize: 40)),
-              const SizedBox(height: 10),
-              const Text('Kaza takibi Pro\'da',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              const SizedBox(height: 6),
-              const Text('Kaza borcunu ekleme, eda ettiklerini sayma ve ilerleme takibi Pro sürümde açılır.',
-                  textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-              const SizedBox(height: 14),
-              FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu gir')),
-            ]),
+          ]),
+          const SizedBox(height: 4),
+          const Text(
+              'Kaza borcu ekleme, kıldıkça düşme, toplu ekleme ve ailenin kaza durumu Pro ile açılır.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu gir')),
           ),
-        ],
-      );
+        ]),
+      ),
+      for (final w in children)
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => showProRequired(context, feature: 'Kaza takibi'),
+          child: AbsorbPointer(child: Opacity(opacity: 0.5, child: w)),
+        ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (Pro.isDemo) return _demoEmpty();
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    final demo = Pro.isDemo;
+    if (_loading && !demo) return const Center(child: CircularProgressIndicator());
     var owed = 0, done = 0;
     for (final (t, _, _, _) in _types) {
       final (o, c) = _of(t);
@@ -211,7 +240,7 @@ class _KazaScreenState extends State<KazaScreen> {
       onRefresh: _load,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
+        children: _demoWrap([
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
@@ -222,9 +251,9 @@ class _KazaScreenState extends State<KazaScreen> {
                   style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
               const SizedBox(height: 14),
               Row(children: [
-                Expanded(child: _tile('Kalan Kaza Borcu', '$remaining', AppColors.goldContainer, const Color(0xFF78350F))),
+                Expanded(child: _tile('Kalan Kaza Borcu', _n(remaining), AppColors.goldContainer, const Color(0xFF78350F))),
                 const SizedBox(width: 10),
-                Expanded(child: _tile('Kılınan Kaza', '$done', AppColors.prayedMint, AppColors.emeraldDark)),
+                Expanded(child: _tile('Kılınan Kaza', _n(done), AppColors.prayedMint, AppColors.emeraldDark)),
               ]),
               const SizedBox(height: 12),
               ClipRRect(
@@ -237,7 +266,7 @@ class _KazaScreenState extends State<KazaScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(owed == 0 ? 'Kayıtlı kaza borcun yok.' : '%${(ratio * 100).round()} tamamlandı · Toplam $owed vakit',
+              Text(demo ? 'Pro ile kaza borcunu kaydet, kıldıkça düş.' : owed == 0 ? 'Kayıtlı kaza borcun yok.' : '%${(ratio * 100).round()} tamamlandı · Toplam $owed vakit',
                   style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
             ]),
           ),
@@ -265,7 +294,7 @@ class _KazaScreenState extends State<KazaScreen> {
                         final k = _familyKaza[m.userId];
                         final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);
                         return Text(
-                          left == 0 ? 'Borç yok ✓' : 'Kalan $left · Kılınan ${k![1]}',
+                          demo ? '–' : left == 0 ? 'Borç yok ✓' : 'Kalan $left · Kılınan ${k![1]}',
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -306,7 +335,7 @@ class _KazaScreenState extends State<KazaScreen> {
             icon: Icons.restart_alt,
             onTap: _reset,
           ),
-        ],
+        ]),
       ),
     );
   }
@@ -344,17 +373,17 @@ class _KazaScreenState extends State<KazaScreen> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              Text('$rekat | Kılınan: $done', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text('$rekat | Kılınan: ${_n(done)}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             ]),
           ),
           IconButton(
             tooltip: 'Borcu azalt',
             visualDensity: VisualDensity.compact,
-            onPressed: owed > done ? () => _set(type, owed - 1, done) : null,
+            onPressed: (Pro.isDemo || owed > done) ? () => _set(type, owed - 1, done) : null,
             icon: const Icon(Icons.remove_circle_outline, color: AppColors.emerald),
           ),
           Column(children: [
-            Text('$left', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            Text(_n(left), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const Text('Borç', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
           ]),
           IconButton(
