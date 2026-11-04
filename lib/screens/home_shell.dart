@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data.dart';
 import '../integrity.dart';
-import '../pro.dart';
 import '../kvkk.dart';
 import '../local_store.dart';
 import '../location.dart';
@@ -51,7 +50,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       }
       if (!isGuest) {
         unawaited(Kvkk.syncServer());
-        unawaited(Pro.init());
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
         // Ağ işlerini arka planda başlat (internet yavaş/yoksa ekranı bekletmez)
         unawaited(() async {

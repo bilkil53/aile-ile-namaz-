@@ -16,8 +16,6 @@ import '../push.dart';
 import '../settings.dart';
 import '../theme.dart';
 import '../update_checker.dart';
-import '../pro.dart';
-import '../widgets/pro_lock.dart';
 
 /// Ayarlar.
 class SettingsScreen extends StatefulWidget {
@@ -428,39 +426,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await supa.auth.signOut();
                 }, icon: Icons.logout),
               ),
-            if (!guest) ...[
-              _divider(),
-              ValueListenableBuilder<int>(
-                valueListenable: Pro.changed,
-                builder: (_, __, ___) {
-                  final demo = Pro.isDemo;
-                  final left = Pro.daysLeft;
-                  return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      Icon(demo ? Icons.lock_clock : Icons.workspace_premium,
-                          color: demo ? Colors.white70 : AppColors.gold, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          demo
-                              ? 'Demo sürüm · bazı özellikler kilitli'
-                              : (left > 0 ? 'Pro · $left gün kaldı (deneme)' : 'Pro'),
-                          style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ]),
-                    const SizedBox(height: 8),
-                    Wrap(spacing: 8, runSpacing: 6, children: [
-                      _outlineBtn('TEST: Demo süresini bitir', () async {
-                        await Pro.expireTest();
-                        setState(() {});
-                      }, icon: Icons.timer_off),
-                      _outlineBtn('Pro kodu gir', () => showProCodeDialog(context), icon: Icons.vpn_key),
-                    ]),
-                  ]);
-                },
-              ),
-            ],
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
