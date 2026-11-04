@@ -1,4 +1,4 @@
-Kararlı sürüm: APK imza kontrolü eklendi; Pro/Demo denemesi bu sürümden kaldırıldı (ayrı demo uygulamasında test ediliyor).
+Aile havuzu kuralı: 1 aile = 1 havuz, en fazla 10 kişi. Üye listesinde "👥 X/10 kişi" görünür; havuz dolunca davet kodu yerine "Havuz dolu" yazar.
 
 ## 🌟 Kullanıcı için
 
