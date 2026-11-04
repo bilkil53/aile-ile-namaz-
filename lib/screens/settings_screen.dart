@@ -16,6 +16,8 @@ import '../push.dart';
 import '../settings.dart';
 import '../theme.dart';
 import '../update_checker.dart';
+import '../pro.dart';
+import '../widgets/pro_lock.dart';
 
 /// Ayarlar.
 class SettingsScreen extends StatefulWidget {
