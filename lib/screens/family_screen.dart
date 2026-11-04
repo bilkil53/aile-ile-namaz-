@@ -12,9 +12,11 @@ import '../data.dart';
 import '../local_store.dart';
 import '../member_icon.dart';
 import '../models.dart';
+import '../pro.dart';
 import '../settings.dart';
 import '../theme.dart';
 import '../widgets/danger_box.dart';
+import '../widgets/pro_lock.dart';
 import '../widgets/prayer_icon.dart';
 
 /// Aile Havuzu • İbadet Halkası.
@@ -60,9 +62,22 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return kinLabel(viewer: me, target: m, reis: reis);
   }
 
+  /// Demo: havuz görünür ama durumlar "–", işlemler kilitli.
+  bool get _demo => Pro.isDemo;
+  bool _demoLock(String feature) {
+    if (!_demo) return false;
+    showProRequired(context, feature: feature);
+    return true;
+  }
+
+  void _proRebuild() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
+    Pro.changed.addListener(_proRebuild);
     if (isGuest) {
       _loadGuest();
       return;
@@ -73,6 +88,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   @override
   void dispose() {
+    Pro.changed.removeListener(_proRebuild);
     _debounce?.cancel();
     _ticker?.cancel();
     _offlineRetry?.cancel();
@@ -433,6 +449,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   // ======================= Eylemler =======================
 
   Future<void> _join(String input) async {
+    if (_demoLock('Aile havuzuna katılma')) return;
     final v = input.trim();
     if (v.isEmpty) return;
     if (isGuest) return _needLogin('Bir aile havuzuna katılmak');
@@ -461,6 +478,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Future<void> _approve(JoinRequest r) async {
+    if (_demoLock('Katılım onayı')) return;
     final who = r.name.isNotEmpty ? r.name : 'Bir aile ferdi';
     final me = _members.where((m) => m.userId == myId).firstOrNull;
     final res = await showDialog<_TitleResult>(
@@ -495,6 +513,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   String get _myRole => _members.where((m) => m.userId == myId).firstOrNull?.roleTitle ?? 'Aile Ferdi';
 
   Future<void> _sendDua({Member? to}) async {
+    if (_demoLock('Dua gönderme')) return;
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || text.trim().isEmpty || _pool == null) return;
     final msg = text.trim();
@@ -511,6 +530,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Future<void> _memberAction(Member m, String action) async {
+    if (_demoLock('Üye yönetimi')) return;
     final pool = _pool;
     if (pool == null) return;
     try {
@@ -606,6 +626,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 title: 'Havuzu Kapat & Sıfırla',
                 subtitle: 'Tüm üyeler havuzdan çıkarılır',
                 onTap: () async {
+                  if (_demoLock('Havuzu kapatma')) return;
                   if (!await _doubleConfirm(
                     title: 'Havuzu Kapat & Sıfırla',
                     text: 'Havuz kapatılırsa bütün aile fertleri havuzdan çıkarılır; ünvanlar, dua ve hareket kayıtları silinir. '
@@ -927,6 +948,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               OutlinedButton(
                 style: OutlinedButton.styleFrom(foregroundColor: AppColors.missed),
                 onPressed: () async {
+                  if (_demoLock('Katılım isteği')) return;
                   try {
                     await Repo.reject(r.id);
                     await _load();
@@ -977,6 +999,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               tooltip: 'Paylaş',
               onPressed: () async {
                 if (isGuest) return _needLogin('Davet kodu oluşturmak');
+                if (_demoLock('Davet kodu')) return;
                 await Share.share(
                   '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
                   'Davet kodu: ${pool.displayCode}\n'
@@ -991,6 +1014,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               tooltip: 'Kopyala',
               onPressed: () async {
                 if (isGuest) return _needLogin('Davet kodu oluşturmak');
+                if (_demoLock('Davet kodu')) return;
                 await Clipboard.setData(ClipboardData(text: pool.displayCode));
                 _toast('Kod kopyalandı: ${pool.displayCode}');
               },
@@ -1000,6 +1024,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               tooltip: 'Yeni kod',
               onPressed: () async {
                 if (isGuest) return _needLogin('Davet kodu oluşturmak');
+                if (_demoLock('Davet kodu')) return;
                 if (await _confirm('Eski kod geçersiz olacak. Yeni kod üretilsin mi?') != true) return;
                 try {
                   await Repo.regenerateCode(pool.id);
@@ -1108,14 +1133,33 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 const Text('🏆', style: TextStyle(fontSize: 15)),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('${_showYesterday ? 'Dün' : 'Bugün'} Aile Başarısı: $done / $total Vakit',
+                  child: Text(_demo
+                      ? '${_showYesterday ? 'Dün' : 'Bugün'} Aile Başarısı: – / – Vakit'
+                      : '${_showYesterday ? 'Dün' : 'Bugün'} Aile Başarısı: $done / $total Vakit',
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
-                Text('%$pct',
+                Text(_demo ? '%–' : '%$pct',
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.prayedMint)),
               ]),
             );
           }),
+          if (_demo)
+            GestureDetector(
+              onTap: () => showProRequired(context, feature: 'Aile namaz durumları'),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+                child: const Row(children: [
+                  Icon(Icons.lock_outline, size: 14, color: Colors.white70),
+                  SizedBox(width: 6),
+                  Expanded(
+                      child: Text('Demo: aile namaz durumları Pro ile görünür',
+                          style: TextStyle(fontSize: 11, color: Colors.white70))),
+                ]),
+              ),
+            ),
           Row(children: [
             Text('ORTAK MATRİS',
                 style: TextStyle(fontSize: 10, letterSpacing: 1, color: Colors.white.withValues(alpha: 0.7))),
@@ -1163,7 +1207,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
                         ]),
                       ),
                       for (final m in _members)
-                        SizedBox(width: colW, child: Center(child: _cell(data[m.userId]?[k] ?? PrayerStatus.none))),
+                        SizedBox(
+                            width: colW,
+                            child: Center(
+                                child: _cell(_demo ? PrayerStatus.none : (data[m.userId]?[k] ?? PrayerStatus.none)))),
                     ]),
                   ),
               ],
@@ -1251,7 +1298,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
               decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(8)),
-              child: Text('$prayed/5',
+              child: Text(_demo ? '–/5' : '$prayed/5',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.emerald)),
             ),
             if (_isOwner && !isMe)
@@ -1264,7 +1311,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 ],
               ),
           ]),
-          if (kazaLeft > 0) ...[
+          if (!_demo && kazaLeft > 0) ...[
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

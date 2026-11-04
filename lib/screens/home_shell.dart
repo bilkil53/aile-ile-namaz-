@@ -15,7 +15,6 @@ import '../notifications.dart';
 import '../push.dart';
 
 import '../theme.dart';
-import '../widgets/pro_lock.dart';
 import 'karne_screen.dart';
 import 'kaza_screen.dart';
 import 'login_screen.dart';
@@ -121,9 +120,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   /// Pro ↔ Demo değişince: kilitli sekmeden çık, bildirimleri aç/kapat.
   void _onProChanged() {
     if (!mounted) return;
-    setState(() {
-      if (Pro.isDemo && (_tab == 1 || _tab == 2)) _tab = 0;
-    });
+    setState(() {});
     unawaited(Push.register()); // demo'da kaydı siler, Pro'da yeniden kaydeder
     unawaited(Notifications.reschedule()); // demo'da hepsini iptal eder
   }
@@ -266,13 +263,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           ),
           child: BottomNavigationBar(
             currentIndex: _tab,
-            onTap: (i) {
-              if (Pro.isDemo && (i == 1 || i == 2)) {
-                showProRequired(context, feature: i == 1 ? 'Aile Havuzu' : 'Kaza Takibi');
-                return;
-              }
-              setState(() => _tab = i);
-            },
+            onTap: (i) => setState(() => _tab = i),
             type: BottomNavigationBarType.fixed,
             backgroundColor: AppColors.white,
             selectedItemColor: AppColors.emerald,
@@ -280,17 +271,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             selectedFontSize: 11,
             unselectedFontSize: 11,
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-            items: [
-              const BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Bugün'),
-              BottomNavigationBarItem(
-                  icon: Icon(Pro.isDemo ? Icons.lock_outline : Icons.diversity_1_outlined),
-                  activeIcon: const Icon(Icons.diversity_1),
-                  label: 'Aile Havuzu'),
-              BottomNavigationBarItem(
-                  icon: Icon(Pro.isDemo ? Icons.lock_outline : Icons.calendar_month_outlined),
-                  activeIcon: const Icon(Icons.calendar_month),
-                  label: 'Kaza'),
-              const BottomNavigationBarItem(icon: Icon(Icons.emoji_events_outlined), activeIcon: Icon(Icons.emoji_events), label: 'Karne'),
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Bugün'),
+              BottomNavigationBarItem(icon: Icon(Icons.diversity_1_outlined), activeIcon: Icon(Icons.diversity_1), label: 'Aile Havuzu'),
+              BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), activeIcon: Icon(Icons.calendar_month), label: 'Kaza'),
+              BottomNavigationBarItem(icon: Icon(Icons.emoji_events_outlined), activeIcon: Icon(Icons.emoji_events), label: 'Karne'),
             ],
           ),
         ),

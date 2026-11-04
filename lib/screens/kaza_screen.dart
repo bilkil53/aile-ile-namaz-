@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import '../data.dart';
 import '../member_icon.dart';
 import '../models.dart';
+import '../pro.dart';
 import '../theme.dart';
 import '../widgets/danger_box.dart';
+import '../widgets/pro_lock.dart';
 import '../widgets/prayer_icon.dart';
 
 /// Kaza namazı takibi.
@@ -38,6 +40,7 @@ class _KazaScreenState extends State<KazaScreen> {
   @override
   void initState() {
     super.initState();
+    Pro.changed.addListener(_proRebuild);
     _load();
   }
 
@@ -154,8 +157,46 @@ class _KazaScreenState extends State<KazaScreen> {
     _toast('Kaza kayıtların sıfırlandı.');
   }
 
+  void _proRebuild() {
+    if (mounted) setState(() {});
+    if (!Pro.isDemo) _load();
+  }
+
+  @override
+  void dispose() {
+    Pro.changed.removeListener(_proRebuild);
+    super.dispose();
+  }
+
+  /// Demo: sekme açılır ama içi boş.
+  Widget _demoEmpty() => ListView(
+        padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.cardBorder),
+            ),
+            child: Column(children: [
+              const Text('📿', style: TextStyle(fontSize: 40)),
+              const SizedBox(height: 10),
+              const Text('Kaza takibi Pro\'da',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              const SizedBox(height: 6),
+              const Text('Kaza borcunu ekleme, eda ettiklerini sayma ve ilerleme takibi Pro sürümde açılır.',
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              const SizedBox(height: 14),
+              FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu gir')),
+            ]),
+          ),
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
+    if (Pro.isDemo) return _demoEmpty();
     if (_loading) return const Center(child: CircularProgressIndicator());
     var owed = 0, done = 0;
     for (final (t, _, _, _) in _types) {

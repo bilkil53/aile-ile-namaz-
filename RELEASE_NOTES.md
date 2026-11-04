@@ -1,4 +1,4 @@
-Namaz Demo: bireysel kullanım — Bugün ve Karne tam açık; Aile Havuzu ve Kaza sekmeleri kilitli 🔒, tüm bildirimler kapalı. Pro kodu girince hepsi açılır.
+Namaz Demo: Aile Havuzu açık ama namaz durumları "–" (pasif) ve işlemler kilitli; Kaza sekmesi boş; Karne'de manevi rozetler yok; tüm bildirimler kapalı. Yeni havuz kuralı: 1 aile = 1 havuz, en fazla 10 kişi. Pro kodu girince hepsi açılır.
 
 ## 🌟 Kullanıcı için
 

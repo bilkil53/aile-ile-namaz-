@@ -195,7 +195,7 @@ class _KarneScreenState extends State<KarneScreen> {
       done += v.$2;
     }
     final kazaPct = owed == 0 ? 0.0 : (done / owed).clamp(0.0, 1.0).toDouble();
-    final badges = _badges().where((b) => !(demo && b.id.startsWith('kaza'))).toList();
+    final badges = _badges();
 
     return RefreshIndicator(
       onRefresh: _load,
@@ -338,7 +338,8 @@ class _KarneScreenState extends State<KarneScreen> {
           ])),
           const SizedBox(height: 14),
 
-          // ---------- Kişisel rozetler ----------
+          // ---------- Kişisel rozetler (demo'da gizli) ----------
+          if (!demo) ...[
           const Text('🏅 Manevi Rozetler',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 8),
@@ -352,6 +353,7 @@ class _KarneScreenState extends State<KarneScreen> {
           for (final b in badges.where((b) => b.earned && !b.seasonal && b.tiers == null)) _badgeTile(b),
           for (final b in badges.where((b) => !b.earned && !b.seasonal && b.tiers == null)) _badgeTile(b),
           for (final b in badges.where((b) => b.tiers != null)) _badgeTile(b),
+          ],
           const SizedBox(height: 10),
           Center(
             child: Text('Karne sadece senin kayıtlarından hazırlanır · Aile ile Namaz v$_version',
