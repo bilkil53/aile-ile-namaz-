@@ -11,7 +11,6 @@ import '../settings.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets/prayer_icon.dart';
-import '../widgets/pro_lock.dart';
 
 /// İbadet Karnesi: sadece kişinin KENDİ gelişimi (aile verisi yok), okul karnesi mantığıyla.
 /// Dönem seçimi → genel not → vakit vakit karne (en çok aksatılan vakit) → seri → aylık takvim
@@ -33,9 +32,20 @@ class _KarneScreenState extends State<KarneScreen> {
   bool _loading = true;
   _Period _period = _Period.week;
 
+  void _proRebuild() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    Pro.changed.removeListener(_proRebuild);
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
+    Pro.changed.addListener(_proRebuild);
     PackageInfo.fromPlatform().then((i) {
       if (mounted) setState(() => _version = i.version);
     });
@@ -161,8 +171,7 @@ class _KarneScreenState extends State<KarneScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    final demo = Pro.isDemo;
-    if (demo) _period = _Period.week;
+    final demo = Pro.isDemo; // demo: kaza kapalı olduğu için kaza bölümleri gizlenir
     final days = _days;
     final (p, t) = _score(days);
     final pct = t == 0 ? 0 : (p * 100 / t).round();
@@ -186,7 +195,7 @@ class _KarneScreenState extends State<KarneScreen> {
       done += v.$2;
     }
     final kazaPct = owed == 0 ? 0.0 : (done / owed).clamp(0.0, 1.0).toDouble();
-    final badges = _badges();
+    final badges = _badges().where((b) => !(demo && b.id.startsWith('kaza'))).toList();
 
     return RefreshIndicator(
       onRefresh: _load,
@@ -215,13 +224,7 @@ class _KarneScreenState extends State<KarneScreen> {
                   ButtonSegment(value: _Period.quarter, label: Text('3 ay')),
                 ],
                 selected: {_period},
-                onSelectionChanged: (s) {
-                  if (demo && s.first != _Period.week) {
-                    showProRequired(context, feature: '30 gün / 3 ay geçmişi');
-                    return;
-                  }
-                  setState(() => _period = s.first);
-                },
+                onSelectionChanged: (s) => setState(() => _period = s.first),
               ),
               const SizedBox(height: 14),
               Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -313,11 +316,11 @@ class _KarneScreenState extends State<KarneScreen> {
           const SizedBox(height: 14),
 
           // ---------- Aylık takvim ----------
-          demo ? _lockedCard('📅 Aylık Takvim', 'Ayın her günü renkli özet') : _card(_calendar()),
+          _card(_calendar()),
           const SizedBox(height: 14),
 
-          // ---------- Kaza ilerlemesi ----------
-          _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // ---------- Kaza ilerlemesi (demo'da gizli) ----------
+          if (!demo) _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('📿 Kaza İlerlemen', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (owed == 0)
@@ -339,7 +342,7 @@ class _KarneScreenState extends State<KarneScreen> {
           const Text('🏅 Manevi Rozetler',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 8),
-          if (!demo && badges.any((b) => b.seasonal)) ...[
+          if (badges.any((b) => b.seasonal)) ...[
             const Text('Mübarek günler', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
             const SizedBox(height: 6),
             for (final b in badges.where((b) => b.seasonal)) _badgeTile(b),
@@ -348,10 +351,7 @@ class _KarneScreenState extends State<KarneScreen> {
           // Temel rozetler (her zaman): seviyesiz ve mübarek gün olmayanlar
           for (final b in badges.where((b) => b.earned && !b.seasonal && b.tiers == null)) _badgeTile(b),
           for (final b in badges.where((b) => !b.earned && !b.seasonal && b.tiers == null)) _badgeTile(b),
-          if (demo)
-            _lockedCard('🏅 Seviyeli ve mübarek gün rozetleri', 'Bronz/Gümüş/Altın/Elmas ve kandil/bayram rozetleri')
-          else
-            for (final b in badges.where((b) => b.tiers != null)) _badgeTile(b),
+          for (final b in badges.where((b) => b.tiers != null)) _badgeTile(b),
           const SizedBox(height: 10),
           Center(
             child: Text('Karne sadece senin kayıtlarından hazırlanır · Aile ile Namaz v$_version',
@@ -362,36 +362,6 @@ class _KarneScreenState extends State<KarneScreen> {
     );
   }
 
-  /// Demo'da kilitli özellik kartı: dokununca Pro bilgisi açılır.
-  Widget _lockedCard(String title, String sub) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: Material(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(14),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: () => showProRequired(context, feature: title.replaceAll(RegExp(r'^\S+\s'), '')),
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.cardBorder),
-              ),
-              child: Row(children: [
-                const Icon(Icons.lock_outline, size: 20, color: AppColors.textMuted),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                    Text(sub, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                  ]),
-                ),
-                const ProBadge(),
-              ]),
-            ),
-          ),
-        ),
-      );
 
   static const _tierColors = [Color(0xFFB0703C), Color(0xFF8A94A0), Color(0xFFC8961E), Color(0xFF3B9BB3)];
 

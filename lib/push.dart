@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show PlatformException;
 
 import 'data.dart';
+import 'pro.dart';
 import 'settings.dart';
 
 /// Uygulama kapalıyken de aile bildirimleri (Firebase Cloud Messaging).
@@ -93,6 +94,10 @@ class Push {
     await init();
     if (!_ready) return;
     if (isGuest) return _set(false, 'Giriş yapılmadı');
+    if (Pro.isDemo) {
+      await unregister();
+      return _set(false, 'Demo sürümde kapalı');
+    }
     if (!AppSettings.familyAlerts) {
       await unregister();
       return _set(false, 'Aile bildirimleri kapalı');

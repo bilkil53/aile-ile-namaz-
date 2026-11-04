@@ -40,9 +40,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _lastSync = '';
   bool _exact = true;
 
+  void _proRebuild() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    Pro.changed.removeListener(_proRebuild);
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
+    Pro.changed.addListener(_proRebuild);
     Notifications.exactAllowed().then((v) {
       if (mounted) setState(() => _exact = v);
     });
@@ -576,7 +587,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
-          // 4) Bildirimler
+          // 4) Bildirimler (demo'da tamamen kapalı)
+          if (Pro.isDemo)
+            _bigCard([
+              _title('Bildirimler'),
+              _divider(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                child: Row(children: [
+                  const Icon(Icons.notifications_off_outlined, color: Colors.white70, size: 20),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                      child: Text('Demo sürümde bildirimler kapalı · Pro ile açılır',
+                          style: TextStyle(color: Colors.white70, fontSize: 13))),
+                  TextButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu')),
+                ]),
+              ),
+            ])
+          else
           _bigCard([
             _title('Bildirimler'),
             _divider(),

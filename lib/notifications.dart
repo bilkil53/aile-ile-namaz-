@@ -6,6 +6,7 @@ import 'content/approaching_quotes.dart';
 import 'content/daily_content.dart';
 import 'prayer_times.dart';
 import 'dini_gunler.dart';
+import 'pro.dart';
 import 'settings.dart';
 
 /// Vakit hatırlatmaları ve günlük ayet/hadis bildirimi (cihaz içinde zamanlanır,
@@ -39,6 +40,7 @@ class Notifications {
 
   /// Anında bildirim (aile olayları).
   static Future<void> showFamily(int id, String title, String body) async {
+    if (Pro.isDemo) return; // demo: bildirim yok
     try {
       await init();
       await _plugin.show(
@@ -132,6 +134,7 @@ class Notifications {
       final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       _exact = await android?.canScheduleExactNotifications() ?? false;
       await _plugin.cancelAll();
+      if (Pro.isDemo) return; // demo: vakit/günün ayeti/mübarek gün hatırlatmaları kurulmaz
       final now = DateTime.now();
       final lead = AppSettings.reminderMinutes;
       var id = 1;

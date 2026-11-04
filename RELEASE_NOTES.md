@@ -1,4 +1,4 @@
-Namaz Demo: Pro/Demo deneme uygulaması — 7 gün Pro deneme, Ayarlar'da "Demo süresini bitir" ve "Pro kodu gir" test düğmeleri.
+Namaz Demo: bireysel kullanım — Bugün ve Karne tam açık; Aile Havuzu ve Kaza sekmeleri kilitli 🔒, tüm bildirimler kapalı. Pro kodu girince hepsi açılır.
 
 ## 🌟 Kullanıcı için
 
