@@ -1,4 +1,4 @@
-Güvenlik: APK imza kontrolü — uygulama değiştirilmiş/yeniden imzalanmış kopyada uyarı verir (şimdilik yalnızca uyarı, engellemez).
+Pro / Demo: ilk 7 gün Pro deneme; sonra demo sürümde karne geçmişi ve gelişmiş rozetler kilitli. Pro kodu ile açılır.
 
 ## 🌟 Kullanıcı için
 
@@ -45,6 +45,12 @@ Güvenlik: APK imza kontrolü — uygulama değiştirilmiş/yeniden imzalanmış
 - Uygulama simgesi: yeşil zeminde altın minare, hilal ve E harfi.
 - Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; uygulama tek pencerede kalır.
 - Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
+
+**Pro / Demo sürüm (yeni)**
+- İlk 7 gün reklamsız Pro deneme; süre bitince Demo sürüme düşer.
+- Demo'da kilitli: karne geçmişi (30 gün / 3 ay / aylık takvim), seviyeli rozetler (Bronz/Gümüş/Altın/Elmas) ve mübarek gün rozetleri. Çekirdek ibadet (vakitler, kıldı/kılmadı, kaza, aile havuzu, bildirimler) her zaman ücretsiz.
+- Kilitli özelliğe dokununca "Pro özellik" bilgisi çıkar, Pro kodu ile açılır.
+- Ayarlar → Hesap: Pro/Demo durumu ve kalan gün. (Test için geçici: "Demo süresini bitir" ve "Pro kodu gir" düğmeleri.)
 
 **Güvenlik**
 - APK imza kontrolü: uygulama açılışta kendi imzasının parmak izini (SHA-256) doğrular; başkası APK'yı değiştirip yeniden imzalarsa "Güvenlik uyarısı" gösterilir. Şimdilik yalnızca uyarıdır, uygulamayı kapatmaz.

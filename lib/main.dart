@@ -8,6 +8,7 @@ import 'config.dart';
 import 'crash_report.dart';
 import 'local_store.dart';
 import 'notifications.dart';
+import 'pro.dart';
 import 'push.dart';
 import 'settings.dart';
 import 'screens/home_shell.dart';
@@ -32,6 +33,7 @@ Future<void> main() async {
   } catch (_) {
     // Çevrimdışı / zaman aşımı: istemci hazır, uygulama yerel verilerle açılır
   }
+  unawaited(Pro.init());
   unawaited(CrashReport.install());
   unawaited(Push.init());
   runApp(const App());
