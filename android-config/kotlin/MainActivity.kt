@@ -3,6 +3,7 @@ package com.bilkil53.aile_ile_namaz
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.FileProvider
@@ -11,6 +12,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
+import java.security.MessageDigest
 
 /// Android 11+ uygulamanın son kapanma sebebini (bellek, çökme, donma…) kaydeder;
 /// çökme kod satırlarını (App.kt'nin yazdığı dosya) okur.
@@ -18,9 +20,29 @@ import java.io.File
 class MainActivity : FlutterActivity() {
     private fun crashFile() = File(filesDir, "last_crash.txt")
 
+    /// Uygulamayı imzalayan sertifikanın SHA-256 parmak izi (küçük harf, iki nokta yok).
+    /// keytool'un verdiği SHA256 ile aynıdır. APK değiştirilip yeniden imzalanırsa değişir.
+    private fun signatureSha256(): String? {
+        return try {
+            val pm = packageManager
+            val certs = if (Build.VERSION.SDK_INT >= 28) {
+                val info = pm.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+                val s = info.signingInfo ?: return null
+                if (s.hasMultipleSigners()) s.apkContentsSigners else s.signingCertificateHistory
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES).signatures
+            } ?: return null
+            if (certs.isEmpty()) return null
+            val md = MessageDigest.getInstance("SHA-256").digest(certs[0].toByteArray())
+            md.joinToString("") { "%02x".format(it) }
+        } catch (t: Throwable) { null }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "aile/exit").setMethodCallHandler { call, result ->
+            if (call.method == "signatureSha256") { result.success(signatureSha256()); return@setMethodCallHandler }
             if (call.method == "installApk") {
                 // Güncelleme: kurulum ekranı ayrı görevde açılır, uygulamanın eski penceresi
                 // son kullanılanlardan kaldırılır. Böylece kurulum sonrası "Aç" denince tek kopya kalır.

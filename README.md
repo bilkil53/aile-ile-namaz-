@@ -129,6 +129,7 @@
 | Hesap silme | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
 | KVKK | Girişte aydınlatma metni + yurt dışına aktarım için açık rıza (onay kutusu); rıza tarihi `profiles.kvkk_consent_at`; mevcut kullanıcılara bir kez sorulur |
 | İmza anahtarı | GitHub Secrets'ta; repoda değil |
+| İmza kontrolü | Uygulama açılışta kendi sertifikasının SHA-256 parmak izini derlemede gömülen değerle (`--dart-define=EXPECTED_SIG`) karşılaştırır; uymazsa uyarı (şimdilik engellemez). Play imzası eklendiğinde iki değer olur |
 | Hata kayıtları | Anonim; uygulama okuyamaz, sadece yazabilir; 30 gün sonra silinir |
 
 📄 [Gizlilik Politikası](https://bilkil53.github.io/aile-ile-namaz-/privacy.html) · 🗑 [Hesap silme](https://bilkil53.github.io/aile-ile-namaz-/delete-account.html) · 🏪 [Play Store rehberi](docs/PLAY_STORE.md)

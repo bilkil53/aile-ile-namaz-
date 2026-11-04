@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data.dart';
+import '../integrity.dart';
 import '../kvkk.dart';
 import '../local_store.dart';
 import '../location.dart';
@@ -63,6 +64,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         // Bir kez sorulan sorular hemen (internet beklemeden)
         if (mounted) await _firstRunQuestions();
       }
+      if (mounted) await Integrity.check(context);
       // Konum otomatik (GPS) → vakitler → hatırlatmalar
       await LocationHelper.autoUpdate();
       await Notifications.requestPermission();

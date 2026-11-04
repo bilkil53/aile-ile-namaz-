@@ -1,4 +1,4 @@
-Bildirimlerde ad yalnızca çocuklarda (Kızın Ayşe); anne, baba ve eş adsız.
+Güvenlik: APK imza kontrolü — uygulama değiştirilmiş/yeniden imzalanmış kopyada uyarı verir (şimdilik yalnızca uyarı, engellemez).
 
 ## 🌟 Kullanıcı için
 
@@ -47,6 +47,7 @@ Bildirimlerde ad yalnızca çocuklarda (Kızın Ayşe); anne, baba ve eş adsız
 - Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
 
 **Güvenlik**
+- APK imza kontrolü: uygulama açılışta kendi imzasının parmak izini (SHA-256) doğrular; başkası APK'yı değiştirip yeniden imzalarsa "Güvenlik uyarısı" gösterilir. Şimdilik yalnızca uyarıdır, uygulamayı kapatmaz.
 - KVKK: Google ile girişte aydınlatma metni ve yurt dışına aktarım için açık rıza onayı; rıza tarihi hesapta saklanır. Daha önce giriş yapmış kullanıcılara bir kez sorulur.
 - Sadece Google ile giriş. Android otomatik yedeklemesi kapalı. Kişi başı bildirim sınırı. Aile hareketleri 1 hafta saklanır.
 

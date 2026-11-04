@@ -225,6 +225,15 @@ jobs:
           open(p, 'w', encoding='utf-8').write(s)
           print('release signing ->', p, 'signingConfigs' in s and 'release' in s)
           PY
+          # İmza sertifikasının SHA-256 parmak izi: uygulama kendini doğrular (değiştirilmiş kopya uyarı verir)
+          sig=$(keytool -list -v -keystore "$RUNNER_TEMP/upload.jks" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>/dev/null \
+            | grep -i 'SHA256:' | head -1 | sed 's/.*SHA256: *//; s/://g' | tr 'A-Z' 'a-z' | tr -d '[:space:]')
+          if [ -n "$sig" ]; then
+            echo "EXPECTED_SIG=$sig" >> "$GITHUB_ENV"
+            echo "İmza parmak izi (SHA-256) gömülecek: ${sig:0:16}…"
+          else
+            echo "::warning::İmza parmak izi okunamadı; imza kontrolü bu derlemede kapalı."
+          fi
 
       - run: flutter pub get
 
@@ -261,7 +270,7 @@ jobs:
       - name: APK derle
         run: |
           set +e
-          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} --obfuscate --split-debug-info=build/symbols > build.txt 2>&1
+          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols > build.txt 2>&1
           code=$?
           tail -n 80 build.txt
           {
@@ -290,7 +299,7 @@ jobs:
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
           flutter build apk --release --split-per-abi --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
-            --obfuscate --split-debug-info=build/symbols-abi
+            --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-abi
           for abi in arm64-v8a armeabi-v7a x86_64; do
             cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "aile-ile-namaz-$abi.apk"
           done
@@ -308,7 +317,7 @@ jobs:
           open(p, 'w', encoding='utf-8').write(s)
           PY
           flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
-            --dart-define=STORE=play --obfuscate --split-debug-info=build/symbols-play
+            --dart-define=STORE=play --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
           cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
           (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
 
