@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'cuma_reminder.dart';
 import 'local_store.dart';
 import 'settings.dart';
 import 'models.dart';
@@ -274,6 +275,7 @@ class Repo {
   }) async {
     final day = date ?? todayStr();
     await LocalStore.setPrayer(day, key, status);
+    CumaReminder.onMarked(day, key, status); // erkeklere peş peşe 3. Cuma uyarısı
     if (isGuest) {
       await LocalStore.setHasGuestData(true);
       return false;

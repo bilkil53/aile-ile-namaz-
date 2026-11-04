@@ -60,6 +60,29 @@ class Notifications {
     } catch (_) {}
   }
 
+  /// Kişiye özel hatırlatma (ör. Cuma uyarısı) — aile bildirimlerinden ayrı kanal.
+  static Future<void> showSpecial(int id, String title, String body) async {
+    try {
+      await init();
+      await _plugin.show(
+        id,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'ozel_hatirlatma',
+            'Özel hatırlatmalar',
+            channelDescription: 'Cuma namazı gibi kişiye özel hatırlatmalar',
+            importance: Importance.high,
+            priority: Priority.high,
+            styleInformation: BigTextStyleInformation(body),
+            visibility: AppSettings.lockScreen ? NotificationVisibility.public : NotificationVisibility.private,
+          ),
+        ),
+      );
+    } catch (_) {}
+  }
+
   static Future<void> init() => _initF ??= _init();
 
   static Future<void> _init() async {

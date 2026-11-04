@@ -1,4 +1,4 @@
-Aile havuzu kuralı: 1 aile = 1 havuz, en fazla 10 kişi. Üye listesinde "👥 X/10 kişi" görünür; havuz dolunca davet kodu yerine "Havuz dolu" yazar.
+Cuma uyarısı: erkekler peş peşe 3 Cuma, Cuma namazını "Kılmadı" işaretlerse kendisine özel hadisli hatırlatma gelir (aileye gitmez). Aile bildirimleri 1 saatte ulaşmazsa düşer, sonradan topluca gelmez.
 
 ## 🌟 Kullanıcı için
 
