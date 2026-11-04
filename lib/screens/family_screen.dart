@@ -18,6 +18,9 @@ import '../widgets/danger_box.dart';
 import '../widgets/prayer_icon.dart';
 
 /// Aile Havuzu • İbadet Halkası.
+/// Bir aile havuzunda en fazla kaç kişi olabilir (sunucuda da aynı sınır var).
+const int kPoolMax = 10;
+
 class FamilyScreen extends StatefulWidget {
   const FamilyScreen({super.key});
 
@@ -362,7 +365,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (s.contains('rate_limited')) return 'Çok sık gönderdin. Biraz bekleyip tekrar dene.';
     if (s.contains('pending_exists')) return 'Zaten bekleyen bir katılım isteğin var. 5 dakika içinde onaylanmazsa yenisini gönderebilirsin.';
     if (s.contains('invalid_owner_role')) return 'Kendi ünvanın Aile Reisi, Baba veya Anne olabilir.';
-    if (s.contains('pool_limit_reached')) return 'En fazla 3 havuz kurabilirsin.';
+    if (s.contains('pool_full')) return 'Bu aile havuzu dolu (en fazla $kPoolMax kişi).';
+    if (s.contains('already_in_family')) return 'Zaten bir aile havuzundasın. Önce mevcut havuzdan ayrılmalısın.';
     if (s.contains('owner_cannot_leave')) return 'Aile Reisi ayrılamaz; önce yöneticiliği devret.';
     return 'İşlem yapılamadı. İnternet bağlantını kontrol et.';
   }
@@ -938,6 +942,20 @@ class _FamilyScreenState extends State<FamilyScreen> {
       );
 
   Widget _codeCard(Pool pool) {
+    if (_members.length >= kPoolMax) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
+        child: Row(children: [
+          const Text('🏡', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('Havuz dolu ($kPoolMax/$kPoolMax). Yeni kişi eklemek için önce bir üyeyi çıkarmalısın.',
+                style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+          ),
+        ]),
+      );
+    }
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
@@ -1180,8 +1198,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Havuzdaki Bireyler ve Durumları',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        Row(children: [
+          const Expanded(
+            child: Text('Havuzdaki Bireyler ve Durumları',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          ),
+          Text('👥 ${_members.length}/$kPoolMax kişi',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+        ]),
         const SizedBox(height: 8),
         for (final m in _members) ...[
           _memberCard(m, pool),
