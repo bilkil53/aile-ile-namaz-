@@ -8,6 +8,9 @@ import android.os.Handler
 import android.os.Looper
 import androidx.core.content.FileProvider
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
+import android.net.Uri
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -43,6 +46,29 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "aile/exit").setMethodCallHandler { call, result ->
             if (call.method == "signatureSha256") { result.success(signatureSha256()); return@setMethodCallHandler }
+            // Pil tasarrufu muafiyeti: Android uygulamayı uyutmuyor mu?
+            if (call.method == "batteryIgnored") {
+                val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                result.success(pm.isIgnoringBatteryOptimizations(packageName)); return@setMethodCallHandler
+            }
+            // Pil optimizasyonu listesi (izin istemeden ayar sayfası; Play kuralına uygun)
+            if (call.method == "openBatterySettings") {
+                try {
+                    startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (_: Throwable) {
+                    try {
+                        startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    } catch (_: Throwable) {}
+                }
+                result.success(true); return@setMethodCallHandler
+            }
+            if (call.method == "openNotificationSettings") {
+                try {
+                    startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (_: Throwable) {}
+                result.success(true); return@setMethodCallHandler
+            }
             if (call.method == "installApk") {
                 // Güncelleme: kurulum ekranı ayrı görevde açılır, uygulamanın eski penceresi
                 // son kullanılanlardan kaldırılır. Böylece kurulum sonrası "Aç" denince tek kopya kalır.

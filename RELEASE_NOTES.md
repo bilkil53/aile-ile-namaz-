@@ -1,4 +1,4 @@
-Namaz Demo: 🧪 Test Paneli (Ayarlar) — denemeyi baştan başlat / bitir / Pro yap / Pro'yu kaldır; başlıkta her zaman durum etiketi (🧪 Deneme · Ücretsiz · Pro). Test Pro kodu: 1.
+Namaz Demo: "Bildirim izinleri" ekranı (bildirim izni, kesin alarm, pil tasarrufu, Samsung notu, test bildirimi); Ayarlar → Bildirimler'den erişilir. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
