@@ -131,7 +131,8 @@ class Pro {
       return lines.join('\n');
     }
     return switch (source) {
-      'trial' => '🕒 7 günlük deneme · $daysLeft gün kaldı${te == null ? '' : ' (${fmt(te)} biter)'}',
+      'trial' => '🕒 7 günlük deneme · $daysLeft gün kaldı${te == null ? '' : ' (${fmt(te)} biter)'}'
+          '\nSonra Demo\'ya geçer: Aile Havuzu ve Kaza pasif olur, bildirimler kapanır.',
       'family' => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}\n👨‍👩‍👧 Aile Reisinin aboneliğiyle',
       _ => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
     };

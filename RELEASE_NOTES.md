@@ -1,4 +1,4 @@
-Namaz Demo: Pro isteğinde isim görünür ("Kızın Ayşe Pro istedi"); deneme ve demo tarihleri netleşti ("7 günlük deneme: başladı · bitti", "Demo sürümdesin · N gündür"). Test Pro kodu: 1.
+Namaz Demo: deneme sürerken Ayarlar'da ve Pro pencerelerinde "Sonra Demo'ya geçer" açıklaması görünür. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
