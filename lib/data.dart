@@ -266,11 +266,14 @@ class Repo {
     return _poolIds ??= (await myPools()).map((p) => p.id).toList();
   }
 
-  /// Bir vakti kaydeder. İnternet yoksa telefonda bekletir, bağlantı gelince gönderir.
-  /// Dönüş: true = buluta gitti, false = telefonda bekliyor / misafir.
-  /// Bir vakti kaydeder. Önce telefona yazılır; buluta yazma ve aile bildirimi 5 saniye sonra,
+  /// Son buluta gönderim internet/sunucu yüzünden başarısız oldu mu (başarılı gönderimde sıfırlanır).
+  static bool offline = false;
+
+  /// Bir vakti kaydeder. Önce telefona yazılır; aile bildirimi 15 sn, buluta yazma 20 sn sonra
   /// son duruma göre yapılır (hızlı değiştirmelerde tek yazma, tek bildirim). İnternet yoksa kayıt
   /// telefonda bekler ve bağlantı gelince arka planda otomatik gönderilir.
+  /// Dönüş: true = çevrimiçi, kayıt birazdan buluta gidecek;
+  ///        false = misafir ya da şu an çevrimdışı (kayıt telefonda bekliyor; kullanıcıya bilgi verilir).
   static Future<bool> setPrayer({
     required String key,
     required PrayerStatus status,
@@ -299,7 +302,9 @@ class Repo {
       _writeTimers.remove(id);
       unawaited(syncNow());
     });
-    return true;
+    // Çevrimdışı: son gönderim başarısız olduysa ya da daha önceki kayıtlar hâlâ bekliyorsa
+    final stale = LocalStore.pendingCount > _writeTimers.length;
+    return !(offline || stale);
   }
 
   static final Map<String, Timer> _writeTimers = {};
@@ -400,8 +405,11 @@ class Repo {
         }
         q.removeAt(i);
         sent++;
+        offline = false;
         await LocalStore.saveQueue(q);
-      } catch (_) {
+      } catch (e) {
+        offline = true;
+        Log.warn('senkron', e);
         break;
       }
     }
@@ -423,14 +431,24 @@ class Repo {
     }
     if (LocalStore.guestKaza.isNotEmpty) {
       // Misafirken eklenenler hesabın mevcut kaza sayılarının üzerine eklenir (silinmez).
+      // Sunucuda tek işlem: ya hepsi eklenir ya hiçbiri. Aktarım kimliği sabit tutulur; bağlantı
+      // koparsa ve tekrar denenirse sunucu aynı aktarımı ikinci kez eklemez (mükerrer kaza olmaz).
       final guest = Map.of(LocalStore.guestKaza);
-      final cloud = await myKaza();
-      for (final e in guest.entries) {
-        final (o0, c0) = cloud[e.key] ?? (0, 0);
-        final owed = o0 + e.value.$1, done = c0 + e.value.$2;
-        await LocalStore.saveKaza(e.key, owed, done);
-        await _upsertKaza(e.key, owed, done);
+      var mergeId = AppSettings.prefs.getString('guestMergeId');
+      if (mergeId == null) {
+        mergeId = 'g-${DateTime.now().microsecondsSinceEpoch}';
+        await AppSettings.prefs.setString('guestMergeId', mergeId);
       }
+      await supa.rpc('merge_guest_kaza', params: {
+        'p_merge_id': mergeId,
+        'p_items': {for (final e in guest.entries) e.key: [e.value.$1, e.value.$2]},
+      });
+      // Telefondaki sayılar buluttaki birleşik sonuçla güncellenir
+      final cloud = await myKaza();
+      for (final e in cloud.entries) {
+        await LocalStore.saveKaza(e.key, e.value.$1, e.value.$2);
+      }
+      await AppSettings.prefs.remove('guestMergeId');
     }
     LocalStore.clearGuest();
   }

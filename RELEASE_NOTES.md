@@ -1,4 +1,4 @@
-Vakit hatırlatmaları artık 10 gün ileri kurulur (uygulama açılmasa da gelir); 30 günlük Diyanet vakti önbelleğe alınır, internet olmasa da doğru saat kullanılır; yaklaşık hesap kullanılırsa ekranda belirtilir.
+Güvenlik ve güvenilirlik: güncelleme dosyası doğrulanamazsa kurulmaz; misafir kaza sayıları hesaba bir kez ve eksiksiz aktarılır; internet yokken "Telefona kaydedildi, internet gelince gönderilecek" bilgisi artık gerçekten gösterilir; güncelleme penceresi hata sonrası takılı kalmaz.
 
 ## 🌟 Kullanıcı için
 
