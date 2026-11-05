@@ -27,6 +27,9 @@ Future<void> showProRequired(BuildContext context, {String? feature}) async {
         Text(Pro.statusText(), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         const SizedBox(height: 8),
         const Text('👨‍👩‍👧 Ailede bir kişinin (Aile Reisi) Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur.', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+
+        const SizedBox(height: 8),
+        const Text('ℹ️ İnternet gerektiren özellikler (aile havuzu, bildirimler, bulut yedekleme, Pro) sunucu altyapısı çalıştığı sürece kullanılabilir; bakım veya kesintide geçici olarak çalışmayabilir.', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
       ]),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kapat')),
@@ -56,6 +59,9 @@ Future<void> _showAskReisDialog(BuildContext context) async {
               'Senin ayrıca bir şey alman gerekmez.'),
           const SizedBox(height: 8),
           Text(Pro.statusText(), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+
+          const SizedBox(height: 8),
+          const Text('ℹ️ İnternet gerektiren özellikler (aile havuzu, bildirimler, bulut yedekleme, Pro) sunucu altyapısı çalıştığı sürece kullanılabilir; bakım veya kesintide geçici olarak çalışmayabilir.', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
         ]),
         actions: [
           TextButton(onPressed: busy ? null : () => Navigator.pop(ctx), child: const Text('Kapat')),
@@ -104,6 +110,9 @@ Future<void> showProCodeDialog(BuildContext context) async {
           ),
           const SizedBox(height: 10),
           const Text('👨‍👩‍👧 Ailede bir kişinin (Aile Reisi) Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+
+          const SizedBox(height: 8),
+          const Text('ℹ️ İnternet gerektiren özellikler (aile havuzu, bildirimler, bulut yedekleme, Pro) sunucu altyapısı çalıştığı sürece kullanılabilir; bakım veya kesintide geçici olarak çalışmayabilir.', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
         ]),
         actions: [
           TextButton(onPressed: busy ? null : () => Navigator.pop(ctx), child: const Text('Vazgeç')),
