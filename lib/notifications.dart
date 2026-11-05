@@ -110,6 +110,40 @@ class Notifications {
         ?.requestNotificationsPermission();
   }
 
+  /// Bildirim izni açık mı?
+  static Future<bool> enabled() async {
+    try {
+      await init();
+      return await _plugin
+              .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+              ?.areNotificationsEnabled() ??
+          true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// Bildirim izinleri ekranındaki "Test bildirimi gönder".
+  static Future<void> showTest() async {
+    try {
+      await init();
+      await _plugin.show(
+        9999,
+        '🔔 Test bildirimi',
+        'Bildirimler bu telefonda çalışıyor ✓',
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _familyChannel.channelId,
+            _familyChannel.channelName,
+            channelDescription: _familyChannel.channelDescription,
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+      );
+    } catch (_) {}
+  }
+
   /// Vakit hatırlatmalarının dakikası dakikasına gelmesi için "Alarm ve hatırlatıcılar" izni (Android 12+).
   static Future<bool> exactAllowed() async =>
       await _plugin

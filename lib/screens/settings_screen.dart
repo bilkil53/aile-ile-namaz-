@@ -16,6 +16,7 @@ import '../push.dart';
 import '../settings.dart';
 import '../theme.dart';
 import '../update_checker.dart';
+import 'notify_health_screen.dart';
 
 /// Ayarlar.
 class SettingsScreen extends StatefulWidget {
@@ -545,6 +546,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _bigCard([
             _title('Bildirimler'),
             _divider(),
+            _tapRow('Bildirim izinlerini kontrol et', Icons.health_and_safety_outlined,
+                () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotifyHealthScreen())),
+                sub: 'İzin, kesin alarm, pil tasarrufu · test bildirimi',
+                trailing: const Icon(Icons.chevron_right, color: Colors.white)),
             if (AppSettings.prayerReminders && !_exact)
               InkWell(
                 onTap: () async {

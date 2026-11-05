@@ -1,4 +1,4 @@
-Aile havuzu artık en fazla 5 kişi ("👥 X/5 kişi"). Cuma uyarısı ve 1 aile = 1 havuz kuralı devam ediyor.
+Yeni: "Bildirim izinleri" ekranı — bildirim izni, kesin alarm ve pil tasarrufu durumu tek yerde, eksikse tek dokunuşla açılır; Samsung uyku modu notu ve test bildirimi. Ayarlar → Bildirimler'den her zaman erişilir.
 
 ## 🌟 Kullanıcı için
 
