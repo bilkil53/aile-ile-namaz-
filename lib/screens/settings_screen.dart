@@ -445,7 +445,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 valueListenable: Pro.changed,
                 builder: (_, __, ___) {
                   final demo = Pro.isDemo;
-                  final left = Pro.daysLeft;
                   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
                       Icon(demo ? Icons.lock_clock : Icons.workspace_premium,
@@ -453,9 +452,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          demo
-                              ? 'Demo sürüm · bazı özellikler kilitli'
-                              : (left > 0 ? 'Pro · $left gün kaldı (deneme)' : 'Pro'),
+                          Pro.statusText(),
                           style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600),
                         ),
                       ),

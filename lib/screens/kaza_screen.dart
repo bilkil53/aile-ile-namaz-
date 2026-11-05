@@ -207,6 +207,8 @@ class _KazaScreenState extends State<KazaScreen> {
           const Text(
               'Kaza borcu ekleme, kıldıkça düşme, toplu ekleme ve ailenin kaza durumu Pro ile açılır.',
               style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+          const SizedBox(height: 4),
+          Text(Pro.statusText(), style: const TextStyle(fontSize: 11, color: Color(0xFF78350F))),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,

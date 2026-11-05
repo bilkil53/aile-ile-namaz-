@@ -82,6 +82,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       unawaited(LocationHelper.autoUpdate(maxAge: const Duration(hours: 1)));
       unawaited(Repo.syncNow()); // telefonda bekleyen işaretleri gönder
+      unawaited(Pro.refresh()); // reis Pro aldıysa aile de hemen Pro olsun
     }
   }
 

@@ -1,4 +1,4 @@
-Namaz Demo: tüm sekmeler açık. Aile Havuzu ve Kaza soluk ve pasif görünür (sayılar "–", üstte Pro bilgi kartı); Karne'de manevi rozetler yok; tüm bildirimler kapalı. Test Pro kodu: 1.
+Namaz Demo: Aile Pro'su — Aile Reisi Pro alınca havuzdaki herkes Pro olur (deneme kişiye özel). Havuz en fazla 5 kişi. Ayarlar'da demo/Pro tarihi görünür. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

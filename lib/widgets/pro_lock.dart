@@ -21,10 +21,13 @@ Future<void> showProRequired(BuildContext context, {String? feature}) async {
     builder: (ctx) => AlertDialog(
       icon: const Icon(Icons.workspace_premium, color: AppColors.gold, size: 32),
       title: const Text('Pro özellik'),
-      content: Text(
-        '${feature == null ? 'Bu özellik' : '"$feature"'} Pro sürümde kullanılabilir. '
-        'Deneme sürenin bitmesinin ardından Pro koduyla tekrar açabilirsin.',
-      ),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${feature == null ? 'Bu özellik' : '"$feature"'} Pro sürümde kullanılabilir.'),
+        const SizedBox(height: 8),
+        Text(Pro.statusText(), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        const SizedBox(height: 8),
+        const Text('👨‍👩‍👧 Ailede bir kişinin (Aile Reisi) Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur.', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      ]),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kapat')),
         FilledButton(
@@ -57,6 +60,8 @@ Future<void> showProCodeDialog(BuildContext context) async {
             decoration: InputDecoration(hintText: 'Kodu yaz', errorText: err),
             onChanged: (_) => setLocal(() => err = null),
           ),
+          const SizedBox(height: 10),
+          const Text('👨‍👩‍👧 Ailede bir kişinin (Aile Reisi) Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         ]),
         actions: [
           TextButton(onPressed: busy ? null : () => Navigator.pop(ctx), child: const Text('Vazgeç')),

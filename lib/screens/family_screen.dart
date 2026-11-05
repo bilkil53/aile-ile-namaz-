@@ -21,7 +21,7 @@ import '../widgets/prayer_icon.dart';
 
 /// Aile Havuzu • İbadet Halkası.
 /// Bir aile havuzunda en fazla kaç kişi olabilir (sunucuda da aynı sınır var).
-const int kPoolMax = 10;
+const int kPoolMax = 5;
 
 class FamilyScreen extends StatefulWidget {
   const FamilyScreen({super.key});
@@ -91,6 +91,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const Text(
               'Ailenin namaz durumlarını görme, dua gönderme, davet ve üye yönetimi Pro ile açılır.',
               style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+          const SizedBox(height: 4),
+          Text(Pro.statusText(), style: const TextStyle(fontSize: 11, color: Color(0xFF78350F))),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
