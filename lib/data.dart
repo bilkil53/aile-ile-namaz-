@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cuma_reminder.dart';
 import 'local_store.dart';
+import 'log.dart';
 import 'settings.dart';
 import 'models.dart';
 
@@ -140,7 +141,9 @@ class Repo {
           .firstOrNull;
       return me == null || canBeExcused(me.roleTitle, me.icon, me.gender);
     } catch (_) {
-      return true;
+      // Çevrimdışı: reisin belirlediği son bilinen cinsiyet (Cuma uyarısı için saklanır).
+      // Bilinmiyorsa izin verme: kontrol tamamlanana kadar "Muaf" gizli kalır.
+      return AppSettings.prefs.getString('cuma.myGender') == 'f';
     }
   }
 
@@ -345,17 +348,29 @@ class Repo {
       _ => null,
     };
     if (type == null || _announced[id] == type) return true;
-    try {
+    Future<void> send() async {
       final pools = await myPoolIds();
-      if (pools.isEmpty) return true;
+      if (pools.isEmpty) return;
       await supa.from('pool_events').insert([
         for (final p in pools)
           {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
       ]);
+    }
+
+    try {
+      try {
+        await send();
+      } catch (e) {
+        if (e.toString().contains('rate_limited')) rethrow;
+        // Havuz değişmiş olabilir (başka havuza katıldı / çıkarıldı): önbelleği yenile, bir kez daha dene
+        invalidatePools();
+        await send();
+      }
       _announced[id] = type;
       return true;
     } catch (e) {
       if (e.toString().contains('rate_limited')) return true;
+      Log.warn('aile', e);
       _ensureRetry();
       return false;
     }
@@ -491,14 +506,26 @@ class Repo {
       return;
     }
     if (!announce) return;
-    try {
+    // Hangi vaktin kaza edildiği paylaşılmaz; sadece "kaza kıldı" olayı.
+    Future<void> send() async {
       final pools = await myPoolIds();
       if (pools.isEmpty) return;
-      // Hangi vaktin kaza edildiği paylaşılmaz; sadece "kaza kıldı" olayı.
       await supa.from('pool_events').insert([
         for (final p in pools) {'pool_id': p, 'sender_id': myId, 'event_type': 'KAZA'},
       ]);
-    } catch (_) {}
+    }
+
+    try {
+      await send();
+    } catch (e) {
+      if (e.toString().contains('rate_limited')) return;
+      invalidatePools(); // havuz değişmiş olabilir
+      try {
+        await send();
+      } catch (e2) {
+        Log.warn('aile', e2);
+      }
+    }
   }
 
   /// Hesabımı ve bütün verilerimi kalıcı olarak siler.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../log.dart';
 import '../notifications.dart';
 import '../settings.dart';
 import '../theme.dart';
@@ -143,6 +144,24 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
               style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
             ),
           ),
+          if (Log.last('bildirim') != null || Log.last('aile') != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.cardBorder),
+              ),
+              child: Text(
+                [
+                  if (Log.last('bildirim') != null) 'Son bildirim hatası: ${Log.last('bildirim')}',
+                  if (Log.last('aile') != null) 'Son aile gönderim hatası: ${Log.last('aile')}',
+                ].join('\n'),
+                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () async {

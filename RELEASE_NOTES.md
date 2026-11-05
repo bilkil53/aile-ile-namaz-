@@ -1,4 +1,4 @@
-Yeni: "Bildirim izinleri" ekranı — bildirim izni, kesin alarm ve pil tasarrufu durumu tek yerde, eksikse tek dokunuşla açılır; Samsung uyku modu notu ve test bildirimi. Ayarlar → Bildirimler'den her zaman erişilir.
+Güvenilirlik: aile bildirimleri gönderilemezse otomatik tekrar denenir; havuz değişince bildirimler kaybolmaz; açılışta oturum yüklenene kadar beklenir; indirilen güncelleme SHA-256 ile doğrulanır; Bildirim izinleri ekranında son hata görünür.
 
 ## 🌟 Kullanıcı için
 

@@ -118,6 +118,7 @@
 | Kişiye özel dua | Sunucu kuralıyla yalnızca gönderen ve alan görür; bildirim sadece alana gider |
 | Havuz kuralı | 1 aile = 1 havuz: her kişi yalnızca bir havuzda bulunur, reisin tek havuzu olur; havuz en fazla **5 kişi** (sunucuda benzersiz indeks + katılma/onay kontrolü) |
 | Davet kodu | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre (sunucu her dakika süresi dolanı düşürür), reis onayı |
+| Bildirim teslimi | Kuyruk: bekliyor → gönderiliyor → gönderildi / hata. Google'a ulaşılamazsa her dakika çalışan görev 10 dk içinde en fazla 3 kez tekrar dener; aynı bildirim iki kez gitmez (atomik sahiplenme). Ulaşamayan bildirim 1 saat sonra düşer |
 | Bildirim taşması | Kişi başı sınır: dua dakikada 1 / saatte 3 / günde 10; aynı vakit günde 2 |
 | Kod | Release derlemesi karıştırılmış (obfuscate) |
 | E-posta | `profiles.email` sütununa istemci erişimi kapalı; hiçbir kullanıcı diğerinin e-postasını göremez |
@@ -191,7 +192,7 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 
 Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function `supabase/functions/push-family` → FCM HTTP v1. Gizli ayar `FCM_SERVICE_ACCOUNT` (Supabase Edge Function secret, Firebase hizmet hesabı JSON'u); repoda yoktur.
 
-Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua` → `20_kvkk_consent` → `21_pro_subscription` → `22_one_pool_max_10`.
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua` → `20_kvkk_consent` → `21_pro_subscription` → `22_one_pool_max_10` (havuz sınırı o gün 10; 23'te 5'e indi) → `23_family_pro_pool_max_5` → `24_pro_only_reis_requests` → `25_pro_trial_started_at` → `26_expire_test_now` → `27_pro_request_decline` → `28_test_pro_controls` (yalnızca test) → `29_push_queue_excuse_rule_grants`.
 
 ### Derleme ve dallar
 * `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).

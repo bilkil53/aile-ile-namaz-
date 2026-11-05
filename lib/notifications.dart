@@ -6,6 +6,7 @@ import 'content/approaching_quotes.dart';
 import 'content/daily_content.dart';
 import 'prayer_times.dart';
 import 'dini_gunler.dart';
+import 'log.dart';
 import 'settings.dart';
 
 /// Vakit hatırlatmaları ve günlük ayet/hadis bildirimi (cihaz içinde zamanlanır,
@@ -57,7 +58,9 @@ class Notifications {
           ),
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('bildirim', e);
+    }
   }
 
   /// Kişiye özel hatırlatma (ör. Cuma uyarısı) — aile bildirimlerinden ayrı kanal.
@@ -80,7 +83,9 @@ class Notifications {
           ),
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('bildirim', e);
+    }
   }
 
   static Future<void> init() => _initF ??= _init();
@@ -141,7 +146,9 @@ class Notifications {
           ),
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('bildirim', e);
+    }
   }
 
   /// Vakit hatırlatmalarının dakikası dakikasına gelmesi için "Alarm ve hatırlatıcılar" izni (Android 12+).
