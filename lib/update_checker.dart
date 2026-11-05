@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ffi' show Abi;
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_update/in_app_update.dart';
@@ -91,6 +92,35 @@ class UpdateChecker {
     final n = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
     return (n, notes);
+  }
+
+  /// İndirme adresinden GitHub API'deki dosyanın SHA-256 değeri ("digest": "sha256:…"). Yoksa null.
+  static Future<String?> _expectedSha256(String url) async {
+    final m = RegExp(r'github\.com/([^/]+/[^/]+)/releases/(?:latest/download|download/([^/]+))/([^/?#]+)').firstMatch(url);
+    if (m == null) return null;
+    final api = m.group(2) == null
+        ? 'https://api.github.com/repos/${m.group(1)}/releases/latest'
+        : 'https://api.github.com/repos/${m.group(1)}/releases/tags/${m.group(2)}';
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+    try {
+      final req = await client.getUrl(Uri.parse(api));
+      req.headers.set('Accept', 'application/vnd.github+json');
+      req.headers.set('User-Agent', 'aile-ile-namaz-app');
+      final res = await req.close();
+      if (res.statusCode != 200) return null;
+      final body = jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
+      for (final a in (body['assets'] as List? ?? const [])) {
+        if ((a as Map)['name'] == m.group(3)) {
+          final d = a['digest'] as String?;
+          return d != null && d.startsWith('sha256:') ? d.substring(7).toLowerCase() : null;
+        }
+      }
+      return null;
+    } catch (_) {
+      return null; // kontrol yapılamadı: Android yine de imzayı doğrular
+    } finally {
+      client.close();
+    }
   }
 
   /// Yüklü derleme numarası. İşlemci türüne göre APK'larda Android sürüm kodu
@@ -242,6 +272,16 @@ class UpdateChecker {
       if (cancelled) {
         if (await file.exists()) await file.delete();
         return;
+      }
+
+      // Bütünlük: GitHub'ın yayınladığı SHA-256 ile karşılaştır (bozuk/değiştirilmiş dosya kurulmaz)
+      final expected = await _expectedSha256(_abiUrl() ?? downloadUrl);
+      if (expected != null) {
+        final actual = (await sha256.bind(file.openRead()).first).toString();
+        if (actual != expected) {
+          if (await file.exists()) await file.delete();
+          throw Exception('SHA-256 uyuşmadı');
+        }
       }
 
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();

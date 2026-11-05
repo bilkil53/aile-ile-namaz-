@@ -1,6 +1,7 @@
 name: aile_ile_namaz
 description: Aile ile Namaz - aile havuzu ile namaz takibi
 publish_to: 'none'
+# Sürüm adı/numarası CI'da --build-name / --build-number ile verilir (README: Sürümleme); bu değer kullanılmaz.
 version: 1.0.0+1
 
 environment:
@@ -24,7 +25,8 @@ dependencies:
   geocoding: ^4.0.0
   sensors_plus: ^6.1.0
   flutter_local_notifications: ^18.0.1
-  timezone: any
+  timezone: ^0.10.0
+  crypto: ^3.0.6
   intl: ^0.19.0
 
 dev_dependencies:

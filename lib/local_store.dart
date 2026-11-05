@@ -15,7 +15,13 @@ class LocalStore {
   static String _pk(String date) => 'lp_$date';
 
   /// Giriş yoksa kalıcı kayıt yapılmaz.
-  static bool get _mem => Supabase.instance.client.auth.currentUser == null;
+  static bool get _mem {
+    try {
+      return Supabase.instance.client.auth.currentUser == null;
+    } catch (_) {
+      return true; // istemci hazır değil: kalıcı yazma yapma (misafir gibi davran)
+    }
+  }
 
   // ---- Misafir (gezinti) modu: bellekte, her açılışta Hoş Geldiniz penceresi gelir ----
   static bool _guestMode = false;

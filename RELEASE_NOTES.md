@@ -1,4 +1,4 @@
-Namaz Demo: "Bildirim izinleri" ekranı (bildirim izni, kesin alarm, pil tasarrufu, Samsung notu, test bildirimi); Ayarlar → Bildirimler'den erişilir. Test Pro kodu: 1.
+Namaz Demo: aile bildirimleri gönderilemezse otomatik tekrar denenir; havuz değişince bildirimler kaybolmaz; açılışta oturum yüklenene kadar beklenir; güncelleme SHA-256 ile doğrulanır. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

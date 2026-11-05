@@ -72,9 +72,16 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
+  /// Açılışta oturum telefondan yüklenene kadar beklenir (en fazla 5 sn); yoksa ilk saniyelerde
+  /// giriş yapmış kullanıcı kısa bir an "misafir" sanılır ve o arada işaretlenen kayıt kaybolabilir.
+  bool _waited = false;
+
   @override
   void initState() {
     super.initState();
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _waited = true);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) UpdateChecker.check(context);
       CrashReport.checkLastExit();
@@ -90,6 +97,9 @@ class _AuthGateState extends State<AuthGate> {
         stream: auth.onAuthStateChange,
         builder: (context, snapshot) {
           final session = auth.currentSession;
+          if (session == null && !snapshot.hasData && !_waited) {
+            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          }
           if (session != null) {
             return HomeShell(key: ValueKey(session.user.id));
           }
