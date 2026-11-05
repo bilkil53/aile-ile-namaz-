@@ -338,7 +338,8 @@ class _TodayScreenState extends State<TodayScreen> {
           Text(
             t.fromDiyanet
                 ? 'Diyanet İşleri Başkanlığı hesaplama yöntemiyle, bulunduğun konuma göre vakitler.'
-                : 'İnternet yok: vakitler cihazda yaklaşık hesaplandı.',
+                : '≈ Yaklaşık vakit: internet olmadığı için cihazda hesaplandı, birkaç dakika sapabilir. '
+                    'İnternet gelince Diyanet vaktiyle düzeltilir.',
             style: TextStyle(fontSize: 11, color: white85, height: 1.35),
           ),
         ],

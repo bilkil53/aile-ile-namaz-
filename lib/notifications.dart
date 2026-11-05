@@ -198,12 +198,19 @@ class Notifications {
       await init();
       final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       _exact = await android?.canScheduleExactNotifications() ?? false;
+      // Önce 30 günlük Diyanet vaktini önbelleğe al (internet yoksa hızlıca geçer)
+      try {
+        await PrayerTimesService.prefetch30().timeout(const Duration(seconds: 20));
+      } catch (e) {
+        Log.warn('vakit', e);
+      }
       await _plugin.cancelAll();
       if (Pro.isDemo) return; // demo: vakit/günün ayeti/mübarek gün hatırlatmaları kurulmaz
       final now = DateTime.now();
       final lead = AppSettings.reminderMinutes;
       var id = 1;
-      for (var d = 0; d < 3; d++) {
+      // 10 gün ileri: uygulama 10 gün açılmasa da hatırlatmalar sürer (≈70 alarm; Android sınırı 500)
+      for (var d = 0; d < 10; d++) {
         final day = DateTime(now.year, now.month, now.day).add(Duration(days: d));
         if (AppSettings.prayerReminders) {
           final t = await PrayerTimesService.forDate(day);

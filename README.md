@@ -81,7 +81,7 @@
 * Seviyeli rozetlerde **Bronz / Gümüş / Altın / Elmas** etiketi; kazanılmayanlar soluk, altında ilerleme çubuğu. Yeni rozet kazanınca tebrik bildirimi. Rozetler son 400 günün kişisel kayıtlarından hesaplanır (`lib/karne_badges.dart`).
 
 ### 5. 🔔 Bildirimler
-* Her vakitten **11 dakika önce** hatırlatma; vakte özel hadis / ayet / dua ile.
+* Her vakitten **11 dakika önce** hatırlatma; vakte özel hadis / ayet / dua ile. Hatırlatmalar **10 gün ileri** kurulur (uygulama 10 gün açılmasa da gelir); internet gerektirmez.
 * **Cuma:** "Cuma Namazı 🕌" kartı ve "Hayırlı Cumalar!" hatırlatması.
 * **Cuma uyarısı (erkeklere özel):** Peş peşe 3 Cuma, Cuma (Öğle) namazı "Kılmadı" işaretlenirse kişinin kendisine hadisli bir hatırlatma gelir; zincir sürdükçe her Cuma tekrar eder, metin sırayla değişir (Ebû Dâvûd/Tirmizî, Müslim). Aileye gitmez; boş, muaf ya da kılındı işaretli bir Cuma zinciri bozar (`lib/cuma_reminder.dart`).
 * Her gün **12:00**'de günün ayeti / hadisi.
@@ -160,9 +160,9 @@
 | Uygulama | Flutter (Dart 3), Material 3 · görünen sürüm `1.N`, `versionCode` = derleme no · tek pencere (`launchMode=singleTask`) · yazı ölçeği en fazla 1.0 |
 | Arka uç | Supabase — PostgreSQL, Row Level Security, Auth, Realtime, Edge Functions, pg_cron, pg_net (Frankfurt / eu-central-1) |
 | Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
-| Vakitler | aladhan.com, method 13 (Diyanet) → önbellek → çevrimdışı yerel hesap; 81 il koordinatı |
+| Vakitler | aladhan.com, method 13 (Diyanet): her açılışta **30 gün ileri** aylık takvimle önbelleğe alınır → önbellek → (hiç yoksa) çevrimdışı yaklaşık hesap, ekranda "≈ Yaklaşık vakit" notuyla; 81 il koordinatı |
 | Konum | geolocator (son bilinen → anlık konum), geocoding (İlçe, İl); her açılışta otomatik, hata olursa 10 sn arayla 3 deneme; arka plandan dönüşte 1 saatten eskiyse yenilenir |
-| Bildirim | flutter_local_notifications (zamanlanmış, 3 gün ileri, kesin alarm; mübarek günler 60 gün ileri) · aile olayları: ön planda Realtime, arka planda **FCM** (`push-family` Edge Function) |
+| Bildirim | flutter_local_notifications (zamanlanmış, 10 gün ileri, kesin alarm; mübarek günler 60 gün ileri) · aile olayları: ön planda Realtime, arka planda **FCM** (`push-family` Edge Function) |
 | Dini günler | aladhan `calendarMethod=DIYANET` (hToG / gToH): bu hicri yıl + sonraki yıl önbellekte, ayda bir kontrol, 120 günden az kalınca yenilenir |
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → işlemci türüne uygun APK (arm64-v8a / armeabi-v7a / x86_64) uygulama içinde indirilir → kendi FileProvider'ı ile ayrı görevde kurulum, eski pencere `finishAndRemoveTask` ile kapanır · Play sürümünde Google Play uygulama içi güncelleme |

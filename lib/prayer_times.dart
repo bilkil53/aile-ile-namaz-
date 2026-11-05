@@ -160,6 +160,63 @@ class PrayerTimesService {
     }
   }
 
+  /// Önümüzdeki 30 günün Diyanet vakitlerini tek seferde önbelleğe alır (bu ay + gelecek ay,
+  /// aladhan aylık takvim). Böylece internet uzun süre olmasa da hatırlatmalar Diyanet saatiyle kurulur.
+  /// Eksik gün yoksa ağa çıkmaz. Dönüş: önbelleğe yeni yazılan gün sayısı.
+  static Future<int> prefetch30() async {
+    final lat = AppSettings.lat, lng = AppSettings.lng;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final missing = [
+      for (var i = 0; i < 30; i++)
+        if (AppSettings.prefs.getString(_key(today.add(Duration(days: i)), lat, lng)) == null)
+          today.add(Duration(days: i)),
+    ];
+    if (missing.isEmpty) return 0;
+    final months = {for (final d in missing) (d.year, d.month)};
+    var saved = 0;
+    for (final (y, m) in months) {
+      final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
+      try {
+        final req = await client.getUrl(Uri.parse(
+            'https://api.aladhan.com/v1/calendar/$y/$m?latitude=$lat&longitude=$lng&method=13'));
+        final res = await req.close().timeout(const Duration(seconds: 10));
+        if (res.statusCode != 200) continue;
+        final body = jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
+        for (final e in (body['data'] as List)) {
+          final t = (e as Map)['timings'] as Map;
+          final g = ((e['date'] as Map)['gregorian'] as Map)['date'] as String; // dd-MM-yyyy
+          final day = DateFormat('dd-MM-yyyy').parse(g);
+          if (day.isBefore(today)) continue;
+          String c(String k) => (t[k] as String).trim().substring(0, 5);
+          final dt = DayTimes(
+            date: day,
+            imsak: c('Fajr'),
+            gunes: c('Sunrise'),
+            ogle: c('Dhuhr'),
+            ikindi: c('Asr'),
+            aksam: c('Maghrib'),
+            yatsi: c('Isha'),
+            fromDiyanet: true,
+          );
+          await AppSettings.prefs.setString(_key(day, lat, lng), jsonEncode(dt.toJson()));
+          saved++;
+        }
+      } catch (_) {
+        // internet yok: bir sonraki açılışta tekrar denenir
+      } finally {
+        client.close();
+      }
+    }
+    // Eski günlerin önbelleğini temizle (7 günden eski)
+    final old = DateFormat('yyyy-MM-dd').format(today.subtract(const Duration(days: 7)));
+    for (final k in AppSettings.prefs.getKeys().where((k) => k.startsWith('pt_')).toList()) {
+      final d = k.length >= 13 ? k.substring(3, 13) : '';
+      if (d.compareTo(old) < 0) await AppSettings.prefs.remove(k);
+    }
+    return saved;
+  }
+
   static Future<DayTimes> _fetch(DateTime day, double lat, double lng) async {
     final ds = DateFormat('dd-MM-yyyy').format(day);
     final uri = Uri.parse(

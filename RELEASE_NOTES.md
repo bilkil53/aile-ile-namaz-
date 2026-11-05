@@ -1,4 +1,4 @@
-Namaz Demo: aile bildirimleri gönderilemezse otomatik tekrar denenir; havuz değişince bildirimler kaybolmaz; açılışta oturum yüklenene kadar beklenir; güncelleme SHA-256 ile doğrulanır. Test Pro kodu: 1.
+Namaz Demo: vakit hatırlatmaları 10 gün ileri kurulur; 30 günlük Diyanet vakti önbelleğe alınır; yaklaşık hesap kullanılırsa ekranda belirtilir. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
