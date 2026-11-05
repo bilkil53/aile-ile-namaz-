@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'models.dart';
 import 'settings.dart';
 
 /// Pro / Demo durumu.
@@ -23,7 +24,9 @@ class Pro {
   /// Demo ne zamandan beri: Pro/deneme süresinin bittiği an.
   static DateTime? get demoSince => isDemo ? _until : null;
 
-  static DateTime? get trialStart => trialUntil?.subtract(const Duration(days: 7));
+  /// Denemenin başladığı an (sunucuda ayrıca tutulur; TEST düğmesi bozmaz).
+  static DateTime? trialStart;
+  static const _kTrialStart = 'pro.trialStart';
 
   /// UI bu değişince yenilenir.
   static final changed = ValueNotifier<int>(0);
@@ -85,6 +88,22 @@ class Pro {
         final id = r['sender_id'] as String;
         m.putIfAbsent(id, () => DateTime.parse(r['created_at'] as String).toLocal());
       }
+      if (m.isNotEmpty) {
+        try {
+          final pools = await Repo.myPools();
+          if (pools.isNotEmpty) {
+            final ms = await Repo.members(pools.first.id);
+            final me = ms.where((x) => x.userId == myId).firstOrNull;
+            final reis = ms.where((x) => x.userId == pools.first.ownerId).firstOrNull;
+            requestNames = {
+              for (final x in ms)
+                x.userId: withFirstName(
+                    me == null ? x.labelFor(viewerIsReis: true) : kinLabel(viewer: me, target: x, reis: reis),
+                    x.firstName),
+            };
+          }
+        } catch (_) {}
+      }
       requests.value = m;
     } catch (_) {}
   }
@@ -92,22 +111,34 @@ class Pro {
   static String fmt(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
 
-  /// Ayarlar ve Pro kartları için kısa durum yazısı.
+  /// Ayarlar ve Pro kartları için durum yazısı (iki satır, net tarihler).
   static String statusText() {
     final u = _until;
+    final ts = trialStart, te = trialUntil;
+    final now = DateTime.now();
     if (isDemo) {
-      final t = trialStart;
-      final since = u == null ? '' : ' · ${fmt(u)} tarihinden beri';
-      final trial = (t != null && trialUntil != null) ? ' (7 günlük deneme ${fmt(t)}–${fmt(trialUntil!)})' : '';
-      return 'Demo sürüm$since$trial';
+      final lines = <String>[];
+      if (ts != null && te != null) {
+        lines.add('🕒 7 günlük deneme: ${fmt(ts)} başladı · ${fmt(te)} bitti');
+      }
+      final since = u ?? te;
+      if (since != null) {
+        final d = now.difference(since).inDays;
+        lines.add('🔒 Demo sürümdesin · ${d < 1 ? 'bugün başladı' : '$d gündür'}');
+      } else {
+        lines.add('🔒 Demo sürümdesin');
+      }
+      return lines.join('\n');
     }
-    final until = u == null ? '' : ' · ${fmt(u)} tarihine kadar';
     return switch (source) {
-      'family' => 'Pro$until · Aile Reisinin aboneliğiyle 👨‍👩‍👧',
-      'trial' => 'Pro deneme · $daysLeft gün kaldı${trialUntil == null ? '' : ' (${fmt(trialUntil!)} bitiyor)'}',
-      _ => 'Pro$until',
+      'trial' => '🕒 7 günlük deneme · $daysLeft gün kaldı${te == null ? '' : ' (${fmt(te)} biter)'}',
+      'family' => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}\n👨‍👩‍👧 Aile Reisinin aboneliğiyle',
+      _ => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
     };
   }
+
+  /// Pro isteği gönderenlerin adları (ör. "Kızın Ayşe").
+  static Map<String, String> requestNames = {};
 
   /// Kalan gün (0 veya negatifse demo). Deneme/pro arası ayrımı için.
   static int get daysLeft {
@@ -124,6 +155,8 @@ class Pro {
     source = src.isEmpty ? null : src;
     final t = AppSettings.prefs.getInt(_kTrial) ?? 0;
     trialUntil = t > 0 ? DateTime.fromMillisecondsSinceEpoch(t) : null;
+    final ts = AppSettings.prefs.getInt(_kTrialStart) ?? 0;
+    trialStart = ts > 0 ? DateTime.fromMillisecondsSinceEpoch(ts) : null;
   }
 
   static DateTime? _dt(Object? v) => v == null ? null : DateTime.tryParse(v.toString())?.toLocal();
@@ -137,6 +170,8 @@ class Pro {
       final oldSource = source;
       source = r['source'] as String?;
       trialUntil = _dt(r['trial_until']);
+      trialStart = _dt(r['trial_started']);
+      await AppSettings.prefs.setInt(_kTrialStart, trialStart?.millisecondsSinceEpoch ?? 0);
       await AppSettings.prefs.setString(_kSource, source ?? '');
       await AppSettings.prefs.setInt(_kTrial, trialUntil?.millisecondsSinceEpoch ?? 0);
       await _save(_dt(r['until']), force: oldSource != source);

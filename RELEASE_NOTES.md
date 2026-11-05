@@ -1,4 +1,4 @@
-Namaz Demo: Pro'yu yalnızca Aile Reisi alır; reis alınca havuzdaki herkes (en fazla 5 kişi) Pro olur. Diğerleri "📩 Aile Reisine ilet" ile istek gönderir. Pro pencerelerine hizmet notu eklendi. Test Pro kodu: 1.
+Namaz Demo: Pro isteğinde isim görünür ("Kızın Ayşe Pro istedi"); deneme ve demo tarihleri netleşti ("7 günlük deneme: başladı · bitti", "Demo sürümdesin · N gündür"). Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

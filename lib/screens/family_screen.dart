@@ -130,7 +130,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               for (final (m, at) in list)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('📩 ${_label(m!)} Pro istedi · ${Pro.fmt(at)}',
+                  child: Text('📩 ${withFirstName(_label(m!), m.firstName)} Pro istedi · ${Pro.fmt(at)}',
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 ),
               const Text('Pro alırsan havuzdaki herkes (en fazla 5 kişi) Pro olur.',

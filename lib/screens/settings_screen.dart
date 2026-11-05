@@ -463,7 +463,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? const SizedBox.shrink()
                           : Padding(
                               padding: const EdgeInsets.only(top: 6),
-                              child: Text('📩 Aileden ${reqs.length} kişi Pro istedi',
+                              child: Text('📩 Pro istedi: ${reqs.keys.map((id) => Pro.requestNames[id] ?? 'Aile ferdin').join(', ')}',
                                   style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.bold)),
                             ),
                     ),
