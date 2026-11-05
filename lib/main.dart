@@ -28,7 +28,7 @@ Future<void> main() async {
   try {
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
-      anonKey: AppConfig.supabaseKey,
+      publishableKey: AppConfig.supabaseKey,
     ).timeout(const Duration(seconds: 3));
   } catch (_) {
     // Çevrimdışı / zaman aşımı: istemci hazır, uygulama yerel verilerle açılır

@@ -119,7 +119,7 @@
 ### 9. 📲 Güncelleme ve görünüm
 * **Uygulama simgesi:** yeşil zeminde altın minare, hilal ve E harfi (Android uyarlanabilir simge: `android-config/res`).
 * Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; kurulum ekranı ayrı açılır ve uygulama tek pencerede kalır.
-* İndirilen APK, GitHub'ın yayınladığı **SHA-256** değeriyle karşılaştırılır; uymazsa kurulmaz. Android de güncellemeyi yalnızca aynı imza anahtarıyla imzalanmışsa kurar.
+* İndirilen APK, GitHub'ın yayınladığı **SHA-256** değeriyle karşılaştırılır. Değer okunamazsa veya uymazsa dosya silinir ve **kurulmaz** (tarayıcıdan indirmeye de geçilmez). Android de güncellemeyi yalnızca aynı imza anahtarıyla imzalanmışsa kurar.
 * Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
 
 ---
@@ -166,7 +166,7 @@
 | Dini günler | aladhan `calendarMethod=DIYANET` (hToG / gToH): bu hicri yıl + sonraki yıl önbellekte, ayda bir kontrol, 120 günden az kalınca yenilenir |
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → işlemci türüne uygun APK (arm64-v8a / armeabi-v7a / x86_64) uygulama içinde indirilir → kendi FileProvider'ı ile ayrı görevde kurulum, eski pencere `finishAndRemoveTask` ile kapanır · Play sürümünde Google Play uygulama içi güncelleme |
-| Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → R8 koruma kuralları (`android-config/proguard-rules.pro`, APK içinde otomatik doğrulanır) → imzalı, karıştırılmış APK'lar + AAB → GitHub Releases |
+| Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → R8 koruma kuralları (`android-config/proguard-rules.pro`, APK içinde otomatik doğrulanır) → imzalı, karıştırılmış APK'lar + AAB → GitHub Releases · **Kapılar:** `flutter analyze` hata veya uyarı bulursa derleme durur; `main` ve `demo` dallarında kalıcı imza anahtarı (veya parmak izi) yoksa yayın çıkmaz (`dev` geçici anahtarla devam eder) |
 | Hata takibi | Dart: `FlutterError.onError` + `PlatformDispatcher.onError` · Android: `ApplicationExitInfo` (kapanma sebebi) + `App.kt` çökme izi · anonim `crash_reports` tablosu (30 gün) · kullanıcıya sebep penceresi + mail |
 | Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; **`aile-push-retry`** her dakika gönderilemeyen aile bildirimlerini tekrar dener; her gece 7 günden eski aile hareketlerini ve 30 günden eski hata kayıtlarını temizler |
 | Bildirim kuyruğu | `pool_events.push_status`: bekliyor → gönderiliyor → gönderildi / hata · `claim_push_event` ile atomik sahiplenme (aynı bildirim iki kez gitmez) · 10 dk içinde en fazla 3 deneme · geçici hatada (429/5xx) o cihaza hemen bir tekrar · ulaşamayan bildirim 1 saat sonra düşer (TTL) |
@@ -213,7 +213,9 @@ Realtime yayını: `pool_events`, `daily_prayers`, `join_requests`, `pool_member
 
 Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function `supabase/functions/push-family` → FCM HTTP v1. Gizli ayar `FCM_SERVICE_ACCOUNT` (Supabase Edge Function secret, Firebase hizmet hesabı JSON'u); repoda yoktur.
 
-Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua` → `20_kvkk_consent` → `21_pro_subscription` → `22_one_pool_max_10` (havuz sınırı o gün 10; 23'te 5'e indi) → `23_family_pro_pool_max_5` → `24_pro_only_reis_requests` → `25_pro_trial_started_at` → `26_expire_test_now` → `27_pro_request_decline` → `28_test_pro_controls` (yalnızca test) → `29_push_queue_excuse_rule_grants`.
+Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua` → `20_kvkk_consent` → `21_pro_subscription` → `22_one_pool_max_10` (havuz sınırı o gün 10; 23'te 5'e indi) → `23_family_pro_pool_max_5` → `24_pro_only_reis_requests` → `25_pro_trial_started_at` → `26_expire_test_now` → `27_pro_request_decline` → `28_test_pro_controls` (yalnızca test) → `29_push_queue_excuse_rule_grants` → `30_merge_guest_kaza` (misafir kaza sayıları tek işlemde, tekrar korumalı aktarılır).
+
+Tüm migration SQL dosyaları `supabase/migrations/` klasöründedir (sunucudaki kayıtla birebir). Tablo yetkileri, RLS politikaları, RPC'ler ve zamanlanmış işlerin özeti: [`docs/guvenlik-ozeti.md`](docs/guvenlik-ozeti.md).
 
 ### Derleme ve dallar
 * `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1) · `demo` → **Namaz Demo** ön sürümü (*v1.N-demo*, `aile-ile-namaz-demo*.apk`, `--dart-define=CHANNEL=demo`; stabil "son sürüm"ü etkilemez, demo uygulaması yalnızca demo ön sürümlerinden güncellenir).

@@ -12,6 +12,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'log.dart';
+
 /// Güncelleme iki kanaldan yapılır (derlemede `--dart-define=STORE=` ile seçilir):
 /// - `github` (varsayılan): GitHub Releases'taki son APK uygulama içinde indirilir, Android kurulum ekranı açılır.
 /// - `play`: Google Play'in uygulama içi güncelleme sistemi kullanılır (Play kuralları APK indirmeyi yasaklar).
@@ -212,6 +214,14 @@ class UpdateChecker {
   static Future<void> _downloadAndInstall(BuildContext context, int version) async {
     final progress = ValueNotifier<double?>(null);
     var cancelled = false;
+    // İlerleme penceresi geri tuşuyla kapanmaz (PopScope); her yolda yalnızca bir kez, bu fonksiyonla kapatılır.
+    // (maybePop bu pencereyi kapatamaz; hata durumunda pencere ekranda asılı kalıyordu.)
+    var dialogOpen = true;
+    void closeDialog() {
+      if (!dialogOpen) return;
+      dialogOpen = false;
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    }
 
     // İlerleme penceresi
     unawaited(showDialog<void>(
@@ -237,6 +247,7 @@ class UpdateChecker {
             TextButton(
               onPressed: () {
                 cancelled = true;
+                dialogOpen = false;
                 Navigator.pop(ctx);
               },
               child: const Text('Vazgeç'),
@@ -247,6 +258,7 @@ class UpdateChecker {
     ));
 
     final client = HttpClient();
+    var verified = false; // SHA-256 doğrulandı mı (tarayıcı yedeği yalnızca doğrulanmış dosyada)
     try {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/aile-ile-namaz-$version.apk');
@@ -274,17 +286,26 @@ class UpdateChecker {
         return;
       }
 
-      // Bütünlük: GitHub'ın yayınladığı SHA-256 ile karşılaştır (bozuk/değiştirilmiş dosya kurulmaz)
+      // Bütünlük (fail-closed): GitHub'ın yayınladığı SHA-256 alınamazsa ya da uyuşmazsa kurulum yapılmaz,
+      // tarayıcıdan indirmeye de düşülmez (doğrulanmamış dosya hiçbir yoldan kurulmasın).
       final expected = await _expectedSha256(_abiUrl() ?? downloadUrl);
-      if (expected != null) {
-        final actual = (await sha256.bind(file.openRead()).first).toString();
-        if (actual != expected) {
-          if (await file.exists()) await file.delete();
-          throw Exception('SHA-256 uyuşmadı');
+      final actual = expected == null ? null : (await sha256.bind(file.openRead()).first).toString();
+      if (expected == null || actual != expected) {
+        if (await file.exists()) await file.delete();
+        closeDialog();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            duration: const Duration(seconds: 6),
+            content: Text(expected == null
+                ? 'Güncelleme doğrulanamadı (bağlantı). Biraz sonra tekrar dene.'
+                : 'İndirilen dosya doğrulanamadı (bozuk ya da değiştirilmiş). Kurulmadı; tekrar dene.'),
+          ));
         }
+        return;
       }
+      verified = true;
 
-      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+      closeDialog();
 
       // Android'in "Bu uygulamayı güncellemek istiyor musunuz?" ekranı.
       // Önce kendi yöntemimiz: kurulum ayrı görevde açılır, eski pencere kapanır (çift kopya olmaz).
@@ -299,12 +320,19 @@ class UpdateChecker {
       if (result.type != ResultType.done) {
         throw Exception(result.message);
       }
-    } catch (_) {
+    } catch (e) {
       client.close(force: true);
+      Log.warn('guncelleme', e);
+      closeDialog();
       if (context.mounted && !cancelled) {
-        Navigator.of(context, rootNavigator: true).maybePop();
-        // Son çare: tarayıcıdan indir.
-        await launchUrl(Uri.parse(_abiUrl() ?? downloadUrl), mode: LaunchMode.externalApplication);
+        if (verified) {
+          // Dosya doğrulandı ama kurulum ekranı açılamadı: son çare tarayıcıdan indir.
+          await launchUrl(Uri.parse(_abiUrl() ?? downloadUrl), mode: LaunchMode.externalApplication);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Güncelleme indirilemedi. İnternet bağlantını kontrol edip tekrar dene.'),
+          ));
+        }
       }
     } finally {
       progress.dispose();

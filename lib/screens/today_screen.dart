@@ -415,7 +415,7 @@ class _TodayScreenState extends State<TodayScreen> {
         ]),
         const SizedBox(height: 6),
         Text(_canExcuse ? 'Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.' : 'Vakite dokundukça Kıldı → Kılmadı → Bekliyor sırasıyla ilerler.',
-            style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
       ],
     );
   }

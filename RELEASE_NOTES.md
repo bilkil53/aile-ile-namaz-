@@ -1,4 +1,4 @@
-Namaz Demo: vakit hatırlatmaları 10 gün ileri kurulur; 30 günlük Diyanet vakti önbelleğe alınır; yaklaşık hesap kullanılırsa ekranda belirtilir. Test Pro kodu: 1.
+Namaz Demo — güvenlik ve güvenilirlik: güncelleme dosyası doğrulanamazsa kurulmaz; misafir kaza sayıları hesaba bir kez ve eksiksiz aktarılır; internet yokken "Telefona kaydedildi, internet gelince gönderilecek" bilgisi artık gerçekten gösterilir; güncelleme penceresi hata sonrası takılı kalmaz. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

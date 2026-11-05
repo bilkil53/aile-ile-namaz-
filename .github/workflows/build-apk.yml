@@ -185,7 +185,12 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ -z "$KEYSTORE_B64" ]; then
-            echo "::warning::ANDROID_KEYSTORE_BASE64 secret yok; APK geçici anahtarla imzalanacak ve telefondan Google hesap seçimi çalışmayacak."
+            # Yayın dallarında (main/demo) imza anahtarı zorunlu: geçici anahtarla yayın çıkmaz.
+            if [ "$GITHUB_REF_NAME" = "main" ] || [ "$GITHUB_REF_NAME" = "demo" ]; then
+              echo "::error::ANDROID_KEYSTORE_BASE64 secret yok; $GITHUB_REF_NAME dalında yayın durduruldu (geçici anahtarla imzalanmış APK yayınlanmaz)."
+              exit 1
+            fi
+            echo "::warning::ANDROID_KEYSTORE_BASE64 secret yok; dev derlemesi geçici anahtarla imzalanacak (yayınlanmaz, Google girişi çalışmaz)."
             exit 0
           fi
           # Takma ad gizli değil; secret yoksa "upload" kullan. Anahtar şifresi = depo şifresi.
@@ -242,16 +247,20 @@ jobs:
           if [ -n "$sig" ]; then
             echo "EXPECTED_SIG=$sig" >> "$GITHUB_ENV"
             echo "İmza parmak izi (SHA-256) gömülecek: ${sig:0:16}…"
+          elif [ "$GITHUB_REF_NAME" = "main" ] || [ "$GITHUB_REF_NAME" = "demo" ]; then
+            echo "::error::İmza parmak izi okunamadı (anahtar şifresi/takma adı yanlış olabilir); yayın durduruldu."
+            exit 1
           else
             echo "::warning::İmza parmak izi okunamadı; imza kontrolü bu derlemede kapalı."
           fi
 
       - run: flutter pub get
 
-      - name: Kod analizi (hatalar özet sayfasına yazılır)
+      - name: Kod analizi (hata veya uyarı varsa derleme durur)
         run: |
           set +e
-          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1
+          flutter analyze --no-fatal-infos > analyze.txt 2>&1
+          rc=$?
           cat analyze.txt
           {
             echo '## flutter analyze'
@@ -259,8 +268,11 @@ jobs:
             head -c 6000 analyze.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-          grep -E '^\s*error •' analyze.txt | head -20 | while IFS= read -r l; do echo "::error::${l}"; done
-          exit 0
+          grep -E '^\s*(error|warning) •' analyze.txt | head -30 | while IFS= read -r l; do echo "::error::${l}"; done
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::flutter analyze hata/uyarı buldu (çıkış kodu $rc); derleme durduruldu."
+            exit "$rc"
+          fi
 
       - name: Derleme numarası (r1, r2, r3 … yalnızca resmi yayınlara göre artar)
         env:

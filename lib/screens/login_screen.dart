@@ -223,9 +223,9 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
                           height: 1.35,
                           color: _consentWarn ? AppColors.missed : AppColors.textSecondary)),
                 ),
-                InkWell(
+                const InkWell(
                   onTap: Kvkk.openText,
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Text('Aydınlatma metnini oku',
                         style: TextStyle(

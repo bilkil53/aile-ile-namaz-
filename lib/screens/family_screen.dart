@@ -720,7 +720,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     first: 'Tüm üyelerin havuzdan çıkarılacağını anladım',
                     second: 'Havuzu kapatmak istiyorum',
                     yes: 'Havuzu Kapat',
-                  )) return;
+                  )) {
+                    return;
+                  }
                   try {
                     await Repo.deletePool(pool.id);
                     _sel = 0;
@@ -1054,12 +1056,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
-        child: Row(children: [
-          const Text('🏡', style: TextStyle(fontSize: 22)),
-          const SizedBox(width: 10),
+        child: const Row(children: [
+          Text('🏡', style: TextStyle(fontSize: 22)),
+          SizedBox(width: 10),
           Expanded(
             child: Text('Havuz dolu ($kPoolMax/$kPoolMax). Yeni kişi eklemek için önce bir üyeyi çıkarmalısın.',
-                style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
           ),
         ]),
       );
@@ -1156,7 +1158,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 first: 'Ailemin durumunu artık göremeyeceğimi anladım',
                 second: 'Havuzdan ayrılmak istiyorum',
                 yes: 'Evet, Ayrıl',
-              )) return;
+              )) {
+                return;
+              }
               try {
                 await Repo.leavePool(pool.id);
                 _sel = 0;
@@ -1610,8 +1614,8 @@ class _DuaDialogState extends State<_DuaDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(10)),
-                child: Text('Bir şey yazmazsan şu dua gönderilir:\n"$_defaultDua"',
-                    style: const TextStyle(fontSize: 12, color: AppColors.emerald)),
+                child: const Text('Bir şey yazmazsan şu dua gönderilir:\n"$_defaultDua"',
+                    style: TextStyle(fontSize: 12, color: AppColors.emerald)),
               ),
           ],
         ),

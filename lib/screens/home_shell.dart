@@ -10,6 +10,7 @@ import '../pro.dart';
 import '../kvkk.dart';
 import '../local_store.dart';
 import '../location.dart';
+import '../log.dart';
 import '../models.dart';
 import '../settings.dart';
 import '../notifications.dart';
@@ -60,7 +61,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         unawaited(() async {
           try {
             await Repo.migrateGuestData().timeout(const Duration(seconds: 20));
-          } catch (_) {}
+          } catch (e) {
+            Log.warn('misafir', e); // bir sonraki açılışta aynı aktarım kimliğiyle tekrar denenir
+          }
           await Repo.syncNow();
           await _listenFamily();
           // Uygulama kapalıyken de aile bildirimleri için cihazı kaydet (FCM)
@@ -173,7 +176,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             if (type == 'PRO_REQUEST') unawaited(Pro.loadRequests()); // reisin ekranındaki kart
             if ((type == 'PRAYED' && !AppSettings.notifyPrayer) ||
                 (type == 'KAZA' && !AppSettings.notifyKaza) ||
-                (type == 'DUA' && !AppSettings.notifyDua)) return;
+                (type == 'DUA' && !AppSettings.notifyDua)) {
+              return;
+            }
             final who = _names[r['sender_id']] ?? 'Aile ferdin';
             final prayer = prayerLabels[(r['prayer'] as String?)?.toLowerCase()] ?? '';
             final (title, body) = switch (r['event_type']) {
