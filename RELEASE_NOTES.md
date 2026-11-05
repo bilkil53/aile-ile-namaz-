@@ -1,4 +1,4 @@
-Namaz Demo: deneme sürerken Ayarlar'da ve Pro pencerelerinde "Sonra Demo'ya geçer" açıklaması görünür. Test Pro kodu: 1.
+Namaz Demo: ilk 7 gün "7 günlük Pro sürüm", 8. gün "Demo sürüm" olarak adlandırıldı. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
