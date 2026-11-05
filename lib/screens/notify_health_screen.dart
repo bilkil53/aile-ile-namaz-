@@ -77,7 +77,12 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
 
   Future<void> _refresh() async {
     final (n, e, b) = await NotifyHealth.check();
-    if (mounted) setState(() => (_notif, _exact, _battery) = (n, e, b));
+    if (!mounted) return;
+    setState(() {
+      _notif = n;
+      _exact = e;
+      _battery = b;
+    });
   }
 
   Widget _row(String title, String sub, bool? ok, Future<void> Function() fix) => Container(
