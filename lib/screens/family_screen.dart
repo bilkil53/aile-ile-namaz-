@@ -19,7 +19,7 @@ import '../widgets/prayer_icon.dart';
 
 /// Aile Havuzu • İbadet Halkası.
 /// Bir aile havuzunda en fazla kaç kişi olabilir (sunucuda da aynı sınır var).
-const int kPoolMax = 10;
+const int kPoolMax = 5;
 
 class FamilyScreen extends StatefulWidget {
   const FamilyScreen({super.key});

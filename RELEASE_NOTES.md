@@ -1,4 +1,4 @@
-Cuma uyarısı: erkekler peş peşe 3 Cuma, Cuma namazını "Kılmadı" işaretlerse kendisine özel hadisli hatırlatma gelir (aileye gitmez). Aile bildirimleri 1 saatte ulaşmazsa düşer, sonradan topluca gelmez.
+Aile havuzu artık en fazla 5 kişi ("👥 X/5 kişi"). Cuma uyarısı ve 1 aile = 1 havuz kuralı devam ediyor.
 
 ## 🌟 Kullanıcı için
 

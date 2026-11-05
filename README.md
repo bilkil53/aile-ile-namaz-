@@ -116,7 +116,7 @@
 |---|---|
 | Aile verisi | Supabase + satır düzeyi güvenlik (RLS): sadece havuz üyeleri görür |
 | Kişiye özel dua | Sunucu kuralıyla yalnızca gönderen ve alan görür; bildirim sadece alana gider |
-| Havuz kuralı | 1 aile = 1 havuz: her kişi yalnızca bir havuzda bulunur, reisin tek havuzu olur; havuz en fazla **10 kişi** (sunucuda benzersiz indeks + katılma/onay kontrolü) |
+| Havuz kuralı | 1 aile = 1 havuz: her kişi yalnızca bir havuzda bulunur, reisin tek havuzu olur; havuz en fazla **5 kişi** (sunucuda benzersiz indeks + katılma/onay kontrolü) |
 | Davet kodu | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre (sunucu her dakika süresi dolanı düşürür), reis onayı |
 | Bildirim taşması | Kişi başı sınır: dua dakikada 1 / saatte 3 / günde 10; aynı vakit günde 2 |
 | Kod | Release derlemesi karıştırılmış (obfuscate) |
