@@ -1,4 +1,4 @@
-Güvenilirlik: aile bildirimleri gönderilemezse otomatik tekrar denenir; havuz değişince bildirimler kaybolmaz; açılışta oturum yüklenene kadar beklenir; indirilen güncelleme SHA-256 ile doğrulanır; Bildirim izinleri ekranında son hata görünür.
+Vakit hatırlatmaları artık 10 gün ileri kurulur (uygulama açılmasa da gelir); 30 günlük Diyanet vakti önbelleğe alınır, internet olmasa da doğru saat kullanılır; yaklaşık hesap kullanılırsa ekranda belirtilir.
 
 ## 🌟 Kullanıcı için
 
