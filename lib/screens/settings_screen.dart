@@ -469,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Wrap(spacing: 8, runSpacing: 6, children: [
-                      _outlineBtn('TEST: 7 günlük Pro denemeyi bitir', () async {
+                      _outlineBtn('TEST: 7 günlük denemeyi bitir', () async {
                         await Pro.expireTest();
                         setState(() {});
                       }, icon: Icons.timer_off),

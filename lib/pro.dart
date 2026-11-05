@@ -163,7 +163,7 @@ class Pro {
     if (isDemo) {
       final lines = <String>[];
       if (ts != null && te != null) {
-        lines.add('🕒 7 günlük Pro deneme: ${fmt(ts)} başladı · ${fmt(te)} bitti');
+        lines.add('🕒 7 günlük deneme: ${fmt(ts)} – ${fmt(te)} (bitti)');
       }
       final since = u ?? te;
       if (since != null) {
@@ -175,7 +175,7 @@ class Pro {
       return lines.join('\n');
     }
     return switch (source) {
-      'trial' => '🕒 7 günlük Pro deneme · $daysLeft gün kaldı${te == null ? '' : ' (${fmt(te)} biter)'}'
+      'trial' => '🕒 7 günlük deneme${ts != null && te != null ? ': ${fmt(ts)} – ${fmt(te)}' : ''} · $daysLeft gün kaldı'
           '\n8. gün Ücretsiz sürüme geçer: Aile Havuzu ve Kaza pasif olur, bildirimler kapanır.',
       'family' => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}\n👨‍👩‍👧 Aile Reisinin aboneliğiyle',
       _ => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
