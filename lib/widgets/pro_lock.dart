@@ -48,6 +48,8 @@ Future<void> showProRequired(BuildContext context, {String? feature}) async {
 /// Reis olmayan üye: Pro'yu Aile Reisi alır; reise iletme penceresi.
 Future<void> _showAskReisDialog(BuildContext context) async {
   var busy = false;
+  final declinedAt = await Pro.myDeclinedAt();
+  if (!context.mounted) return;
   await showDialog<void>(
     context: context,
     builder: (ctx) => StatefulBuilder(
@@ -57,6 +59,11 @@ Future<void> _showAskReisDialog(BuildContext context) async {
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('👨‍👩‍👧 Aile Reisin Pro alınca aile havuzundaki herkes (en fazla 5 kişi) Pro olur. '
               'Senin ayrıca bir şey alman gerekmez.'),
+          if (declinedAt != null) ...[
+            const SizedBox(height: 8),
+            Text('🙏 Aile Reisin ${Pro.fmt(declinedAt)} tarihinde şimdilik Pro almadı. Yarın tekrar iletebilirsin.',
+                style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.w600)),
+          ],
           const SizedBox(height: 8),
           Text(Pro.statusText(), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
 

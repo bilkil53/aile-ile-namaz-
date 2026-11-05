@@ -1,4 +1,4 @@
-Namaz Demo: ilk 7 gün "7 günlük Pro sürüm", 8. gün "Demo sürüm" olarak adlandırıldı. Test Pro kodu: 1.
+Namaz Demo: isimler netleşti — ilk 7 gün "Pro deneme", 8. gün "Ücretsiz sürüm", reis alınca "Pro". Reis Pro isteğini reddedebilir, isteyene bilgi gider. TEST düğmesi: "7 günlük Pro denemeyi bitir". Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

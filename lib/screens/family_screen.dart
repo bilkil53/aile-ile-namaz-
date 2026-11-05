@@ -136,10 +136,19 @@ class _FamilyScreenState extends State<FamilyScreen> {
               const Text('Pro alırsan havuzdaki herkes (en fazla 5 kişi) Pro olur.',
                   style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
-              ),
+              Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                TextButton(
+                  onPressed: () async {
+                    for (final (m, _) in list) {
+                      await Pro.declineRequest(m!.userId);
+                    }
+                    _toast('İstek reddedildi; isteyene bilgi gitti.');
+                  },
+                  child: const Text('Reddet'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
+              ]),
             ]),
           );
         },

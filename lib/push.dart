@@ -96,7 +96,7 @@ class Push {
     if (isGuest) return _set(false, 'Giriş yapılmadı');
     if (Pro.isDemo) {
       await unregister();
-      return _set(false, 'Demo sürümde kapalı');
+      return _set(false, 'Ücretsiz sürümde kapalı');
     }
     if (!AppSettings.familyAlerts) {
       await unregister();

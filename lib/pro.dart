@@ -69,12 +69,54 @@ class Pro {
     }
   }
 
+  /// Reis: isteği reddeder (kart kaybolur, isteyene bilgi gider).
+  static Future<void> declineRequest(String memberId) async {
+    try {
+      await supa.rpc('decline_pro_request', params: {'p_member': memberId}).timeout(const Duration(seconds: 8));
+      requests.value = Map.of(requests.value)..remove(memberId);
+    } catch (_) {}
+  }
+
+  /// İsteyen: reis son isteğimi reddettiyse zamanı (yoksa null).
+  static Future<DateTime?> myDeclinedAt() async {
+    if (isGuest) return null;
+    try {
+      final rows = await supa
+          .from('pool_events')
+          .select('sender_id, event_type, created_at')
+          .inFilter('event_type', ['PRO_REQUEST', 'PRO_DECLINED'])
+          .or('sender_id.eq.$myId,target_id.eq.$myId')
+          .gte('created_at', DateTime.now().subtract(const Duration(days: 7)).toUtc().toIso8601String())
+          .order('created_at', ascending: false)
+          .limit(1)
+          .timeout(const Duration(seconds: 8));
+      if (rows.isEmpty || rows.first['event_type'] != 'PRO_DECLINED') return null;
+      return DateTime.parse(rows.first['created_at'] as String).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Reise gelen Pro istekleri (son 7 gün): gönderen kimliği → en son istek zamanı.
   static final requests = ValueNotifier<Map<String, DateTime>>({});
 
   static Future<void> loadRequests() async {
     if (isGuest) return;
     try {
+      // Reddettiklerim: o kişiden sonraki istek gelene kadar kart görünmez
+      final declined = <String, DateTime>{};
+      final drows = await supa
+          .from('pool_events')
+          .select('target_id, created_at')
+          .eq('event_type', 'PRO_DECLINED')
+          .eq('sender_id', myId)
+          .gte('created_at', DateTime.now().subtract(const Duration(days: 7)).toUtc().toIso8601String())
+          .timeout(const Duration(seconds: 8));
+      for (final r in drows) {
+        final id = r['target_id'] as String?;
+        final at = DateTime.parse(r['created_at'] as String);
+        if (id != null && (declined[id] == null || at.isAfter(declined[id]!))) declined[id] = at;
+      }
       final rows = await supa
           .from('pool_events')
           .select('sender_id, created_at')
@@ -86,7 +128,9 @@ class Pro {
       final m = <String, DateTime>{};
       for (final r in rows) {
         final id = r['sender_id'] as String;
-        m.putIfAbsent(id, () => DateTime.parse(r['created_at'] as String).toLocal());
+        final at = DateTime.parse(r['created_at'] as String);
+        if (declined[id] != null && !at.isAfter(declined[id]!)) continue;
+        m.putIfAbsent(id, () => at.toLocal());
       }
       if (m.isNotEmpty) {
         try {
@@ -119,20 +163,20 @@ class Pro {
     if (isDemo) {
       final lines = <String>[];
       if (ts != null && te != null) {
-        lines.add('🕒 7 günlük Pro sürüm: ${fmt(ts)} başladı · ${fmt(te)} bitti');
+        lines.add('🕒 7 günlük Pro deneme: ${fmt(ts)} başladı · ${fmt(te)} bitti');
       }
       final since = u ?? te;
       if (since != null) {
         final d = now.difference(since).inDays;
-        lines.add('🔒 Demo sürümdesin · ${d < 1 ? 'bugün başladı' : '$d gündür'}');
+        lines.add('🔒 Ücretsiz sürümdesin · ${d < 1 ? 'bugün başladı' : '$d gündür'}');
       } else {
-        lines.add('🔒 Demo sürümdesin');
+        lines.add('🔒 Ücretsiz sürümdesin');
       }
       return lines.join('\n');
     }
     return switch (source) {
-      'trial' => '🕒 7 günlük Pro sürüm · $daysLeft gün kaldı${te == null ? '' : ' (${fmt(te)} biter)'}'
-          '\n8. gün Demo sürüme geçer: Aile Havuzu ve Kaza pasif olur, bildirimler kapanır.',
+      'trial' => '🕒 7 günlük Pro deneme · $daysLeft gün kaldı${te == null ? '' : ' (${fmt(te)} biter)'}'
+          '\n8. gün Ücretsiz sürüme geçer: Aile Havuzu ve Kaza pasif olur, bildirimler kapanır.',
       'family' => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}\n👨‍👩‍👧 Aile Reisinin aboneliğiyle',
       _ => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
     };

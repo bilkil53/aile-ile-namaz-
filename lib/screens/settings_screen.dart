@@ -469,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Wrap(spacing: 8, runSpacing: 6, children: [
-                      _outlineBtn('TEST: Demo süresini bitir', () async {
+                      _outlineBtn('TEST: 7 günlük Pro denemeyi bitir', () async {
                         await Pro.expireTest();
                         setState(() {});
                       }, icon: Icons.timer_off),
@@ -605,7 +605,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const Icon(Icons.notifications_off_outlined, color: Colors.white70, size: 20),
                   const SizedBox(width: 10),
                   const Expanded(
-                      child: Text('Demo sürümde bildirimler kapalı · Pro ile açılır',
+                      child: Text('Ücretsiz sürümde bildirimler kapalı · Pro ile açılır',
                           style: TextStyle(color: Colors.white70, fontSize: 13))),
                   TextButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu')),
                 ]),
