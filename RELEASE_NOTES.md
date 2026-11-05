@@ -1,4 +1,4 @@
-Namaz Demo: "Ücretsiz sürümdesin" gün hesabı takvime göre (bugün / dün / N gündür); Ayarlar'daki fazla simge kaldırıldı. Test Pro kodu: 1.
+Namaz Demo: 🧪 Test Paneli (Ayarlar) — denemeyi baştan başlat / bitir / Pro yap / Pro'yu kaldır; başlıkta her zaman durum etiketi (🧪 Deneme · Ücretsiz · Pro). Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

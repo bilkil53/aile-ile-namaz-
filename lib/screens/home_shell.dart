@@ -220,10 +220,26 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Aile ile Namaz',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
+                  Row(children: [
+                    const Text(
+                      'Aile ile Namaz',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    if (kTestChannel && !isGuest)
+                      ValueListenableBuilder<int>(
+                        valueListenable: Pro.changed,
+                        builder: (_, __, ___) => Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(Pro.testLabel(),
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
+                        ),
+                      ),
+                  ]),
                   Text(
                     _subtitles[_tab],
                     style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.88)),

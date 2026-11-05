@@ -252,6 +252,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
       );
 
+  /// 🧪 Test Paneli (yalnızca Namaz Demo): durumlar arasında hızlı geçiş, gerçek akıştan ayrı.
+  Widget _testPanel() => Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFF59E0B), width: 2),
+        ),
+        child: ValueListenableBuilder<int>(
+          valueListenable: Pro.changed,
+          builder: (_, __, ___) => FutureBuilder<bool>(
+            future: Pro.isReis(),
+            builder: (context, snap) {
+              final reis = snap.data ?? true;
+              const brown = Color(0xFF78350F);
+              Widget btn(String label, IconData icon, Future<void> Function()? onTap) => OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: brown,
+                      side: const BorderSide(color: Color(0xFFF59E0B)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: onTap == null
+                        ? null
+                        : () async {
+                            await onTap();
+                            if (mounted) setState(() {});
+                          },
+                    icon: Icon(icon, size: 18),
+                    label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  );
+              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('🧪 Test Paneli',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: brown)),
+                const SizedBox(height: 4),
+                Text('Şu an: ${Pro.testLabel().replaceFirst('🧪 ', '')}',
+                    style: const TextStyle(fontSize: 13, color: brown)),
+                const SizedBox(height: 10),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  btn('Denemeyi baştan başlat (7 gün)', Icons.play_arrow, Pro.testRestartTrial),
+                  btn('Denemeyi bitir → Ücretsiz', Icons.stop, Pro.expireTest),
+                  btn(reis ? 'Pro yap (test)' : 'Pro yap: Pro\'yu reis alır', Icons.workspace_premium,
+                      reis ? () async => await Pro.redeem('1') : null),
+                  btn('Pro\'yu kaldır', Icons.close, Pro.testRemovePro),
+                ]),
+                const SizedBox(height: 6),
+                const Text('Bu panel yalnızca test sürümünde görünür; gerçek kullanıcılar görmez.',
+                    style: TextStyle(fontSize: 11, color: brown)),
+              ]);
+            },
+          ),
+        ),
+      );
+
   Widget _divider() => Divider(color: Colors.white.withValues(alpha: 0.18), height: 18);
 
   Widget _whiteBtn(String label, VoidCallback? onTap, {IconData? icon}) => FilledButton.icon(
@@ -461,19 +514,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                     ),
                     const SizedBox(height: 8),
-                    Wrap(spacing: 8, runSpacing: 6, children: [
-                      _outlineBtn('TEST: 7 günlük denemeyi bitir', () async {
-                        await Pro.expireTest();
-                        setState(() {});
-                      }, icon: Icons.timer_off),
-                      _outlineBtn('Pro\'ya geç', () => showProCodeDialog(context), icon: Icons.workspace_premium),
-                    ]),
+                    _outlineBtn('Pro\'ya geç', () => showProCodeDialog(context), icon: Icons.workspace_premium),
                   ]);
                 },
               ),
             ],
             const SizedBox(height: 6),
           ]),
+          if (kTestChannel && !guest) ...[const SizedBox(height: 14), _testPanel()],
           const SizedBox(height: 14),
           // 2) Uygulama
           _bigCard([

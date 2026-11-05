@@ -10,6 +10,9 @@ import 'settings.dart';
 /// - Pro kodu girilince (redeem_pro_code) tekrar Pro.
 /// - Aile Pro'su: reis (havuz sahibi) Pro alınca havuzdaki herkes Pro olur; deneme kişiye özeldir.
 /// Durum hesaba bağlıdır (sunucu my_pro_status) ve telefonda önbelleğe alınır (çevrimdışı çalışır).
+/// Namaz Demo (test kanalı) mı: test paneli ve 🧪 etiketleri yalnızca burada.
+const kTestChannel = String.fromEnvironment('CHANNEL') == 'demo';
+
 class Pro {
   static const _kUntil = 'pro.until'; // ms since epoch, 0 = yok
   static const _kSource = 'pro.source'; // paid | family | trial | ''
@@ -181,8 +184,34 @@ class Pro {
       'trial' => '🕒 7 günlük deneme${ts != null && te != null ? ': ${fmt(ts)} – ${fmt(te)}' : ''} · $daysLeft gün kaldı'
           '\n8. gün Ücretsiz sürüme geçer: Aile Havuzu ve Kaza pasif olur, bildirimler kapanır.',
       'family' => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}\n👨‍👩‍👧 Aile Reisinin aboneliğiyle',
-      _ => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
+      _ => '⭐ Pro${kTestChannel ? ' (test)' : ''}${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
     };
+  }
+
+  /// Üst başlıktaki kısa test etiketi: hangi durumdayım?
+  static String testLabel() {
+    if (isDemo) return '🧪 Ücretsiz';
+    return switch (source) {
+      'trial' => '🧪 Deneme · $daysLeft gün',
+      'family' => '🧪 Pro (aile)',
+      _ => '🧪 Pro (test)',
+    };
+  }
+
+  /// TEST: denemeyi baştan başlat (7 gün, Pro kaldırılır).
+  static Future<void> testRestartTrial() async {
+    try {
+      await supa.rpc('test_restart_trial').timeout(const Duration(seconds: 8));
+    } catch (_) {}
+    await refresh();
+  }
+
+  /// TEST: kendi aldığın Pro'yu kaldır (deneme durumu kalır).
+  static Future<void> testRemovePro() async {
+    try {
+      await supa.rpc('test_remove_pro').timeout(const Duration(seconds: 8));
+    } catch (_) {}
+    await refresh();
   }
 
   /// Pro isteği gönderenlerin adları (ör. "Kızın Ayşe").
