@@ -444,19 +444,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ValueListenableBuilder<int>(
                 valueListenable: Pro.changed,
                 builder: (_, __, ___) {
-                  final demo = Pro.isDemo;
                   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      Icon(demo ? Icons.lock_clock : Icons.workspace_premium,
-                          color: demo ? Colors.white70 : AppColors.gold, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          Pro.statusText(),
-                          style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ]),
+                    // Satırların kendi simgesi var (🕒 / 🔒 / ⭐); ayrıca simge gösterilmez
+                    Text(
+                      Pro.statusText(),
+                      style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
                     ValueListenableBuilder<Map<String, DateTime>>(
                       valueListenable: Pro.requests,
                       builder: (_, reqs, __) => reqs.isEmpty || Pro.source == 'paid'

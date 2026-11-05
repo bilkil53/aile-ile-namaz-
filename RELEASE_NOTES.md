@@ -1,4 +1,4 @@
-Namaz Demo: "7 günlük deneme: başlangıç – bitiş" tarihleriyle görünür; TEST düğmesi "7 günlük denemeyi bitir". Test Pro kodu: 1.
+Namaz Demo: "Ücretsiz sürümdesin" gün hesabı takvime göre (bugün / dün / N gündür); Ayarlar'daki fazla simge kaldırıldı. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

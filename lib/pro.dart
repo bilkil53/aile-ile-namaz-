@@ -167,8 +167,11 @@ class Pro {
       }
       final since = u ?? te;
       if (since != null) {
-        final d = now.difference(since).inDays;
-        lines.add('🔒 Ücretsiz sürümdesin · ${d < 1 ? 'bugün başladı' : '$d gündür'}');
+        // Takvim günü farkı (saat değil): dün gece başladıysa "dün başladı"
+        final d = DateTime(now.year, now.month, now.day)
+            .difference(DateTime(since.year, since.month, since.day))
+            .inDays;
+        lines.add('🔒 Ücretsiz sürümdesin · ${d <= 0 ? 'bugün başladı' : d == 1 ? 'dün başladı' : '$d gündür'}');
       } else {
         lines.add('🔒 Ücretsiz sürümdesin');
       }
