@@ -2,9 +2,10 @@
 // telefonlarına Firebase Cloud Messaging (HTTP v1) ile bildirim gönderir.
 //
 // Tetikleme: pool_events tablosuna eklenen her satır için veritabanı tetikleyicisi bu fonksiyonu
-// {event_id} ile çağırır. Fonksiyon olayı veritabanından kendisi okur ve "pushed_at" alanını
-// atomik olarak işaretler: yalnızca son 2 dakikadaki, henüz gönderilmemiş gerçek olaylar işlenir.
-// Bu yüzden dışarıdan çağrılması zararsızdır (aynı olay ikinci kez gönderilmez).
+// {event_id} ile çağırır; ayrıca her dakika çalışan görev (aile-push-retry) bekleyen veya başarısız
+// olayları yeniden çağırır. Kuyruk: pending → processing → sent / failed (en fazla 3 deneme, 10 dk).
+// Olay claim_push_event ile atomik sahiplenilir: aynı olay aynı anda iki kez işlenmez. Google'a
+// bağlanılamazsa (OAuth) ya da hiçbir cihaza geçici hata yüzünden gidemezse "failed" olur, tekrar denenir.
 //
 // Gizli ayar: FCM_SERVICE_ACCOUNT (Firebase hizmet hesabı JSON'u, Supabase Edge Function secret).
 // SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY Supabase tarafından otomatik sağlanır.
@@ -135,16 +136,14 @@ Deno.serve(async (req) => {
 
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Olayı tek seferlik sahiplen (yalnızca son 2 dk, henüz gönderilmemiş)
-    const since = new Date(Date.now() - 120_000).toISOString();
-    const { data: ev } = await db.from("pool_events")
-      .update({ pushed_at: new Date().toISOString() })
-      .eq("id", event_id).is("pushed_at", null).gte("created_at", since)
-      .select("id, pool_id, sender_id, event_type, prayer, message, target_id").maybeSingle();
+    // Olayı atomik sahiplen (pending/failed, 3 denemeden az, son 10 dk)
+    const { data: claimed } = await db.rpc("claim_push_event", { p_id: event_id });
+    const ev = (claimed ?? [])[0];
     if (!ev) return Response.json({ skipped: true });
+    const finish = (ok: boolean) => db.rpc("finish_push_event", { p_id: ev.id, p_ok: ok });
 
     const saRaw = Deno.env.get("FCM_SERVICE_ACCOUNT");
-    if (!saRaw) return Response.json({ skipped: "FCM_SERVICE_ACCOUNT yok" });
+    if (!saRaw) { await finish(false); return Response.json({ skipped: "FCM_SERVICE_ACCOUNT yok" }); }
     const sa = JSON.parse(saRaw);
 
     const [{ data: pool }, { data: members }] = await Promise.all([
@@ -172,7 +171,10 @@ Deno.serve(async (req) => {
     const recipients = ev.target_id
       ? [ev.target_id].filter((id) => id !== ev.sender_id && (members ?? []).some((m) => m.user_id === id))
       : (members ?? []).map((m) => m.user_id).filter((id) => id !== ev.sender_id);
-    if (!recipients.length) return Response.json({ sent: 0 });
+    if (!recipients.length || !text(ev.event_type, "", ev.prayer, "", false)) {
+      await finish(true); // gönderilecek kimse / bildirimi olmayan olay türü
+      return Response.json({ sent: 0 });
+    }
 
     // Kişinin bildirim tercihi: namaz / kaza / dua (katılım bildirimi herkese)
     const prefCol = ev.event_type === "PRAYED" ? "notify_prayer"
@@ -181,19 +183,25 @@ Deno.serve(async (req) => {
     let q = db.from("devices").select("user_id, fcm_token, lock_screen").in("user_id", recipients);
     if (prefCol) q = q.eq(prefCol, true);
     const { data: devices } = await q;
-    if (!devices?.length) return Response.json({ sent: 0, reason: "cihaz yok" });
+    if (!devices?.length) { await finish(true); return Response.json({ sent: 0, reason: "cihaz yok" }); }
 
-    const token = await accessToken(sa);
+    let token: string;
+    try {
+      token = await accessToken(sa);
+    } catch (e) {
+      await finish(false); // Google bağlantısı yok: bir dakika içinde tekrar denenecek
+      return Response.json({ error: String(e), retry: true }, { status: 502 });
+    }
     const icon = sender?.icon ? `${sender.icon} ` : "";
     const reis = (members ?? []).find((m) => m.user_id === pool?.owner_id) as M | undefined;
-    let sent = 0;
+    let sent = 0, transient = 0;
     await Promise.all(devices.map(async (d) => {
       // Alıcıya göre akrabalık hitabı: reis "Kızın", kızı "Baban (Aile Reisi)" / "Annen" …
       const viewer = (members ?? []).find((m) => m.user_id === d.user_id) as M | undefined;
       const who = icon + withName(sender && viewer ? kinLabel(viewer, sender as M, reis) : (sender?.role_title || "Aile ferdin"));
       const t = text(ev.event_type, who, ev.prayer, ev.message ?? "", !!ev.target_id);
       if (!t) return;
-      const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
+      const send = () => fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -216,6 +224,16 @@ Deno.serve(async (req) => {
           },
         }),
       });
+      let res = await send().catch(() => null);
+      // Geçici hata (ağ, 429, 5xx): o cihaza bir kez daha dene
+      if (!res || res.status === 429 || res.status >= 500) {
+        await new Promise((r) => setTimeout(r, 800));
+        res = await send().catch(() => null);
+      }
+      if (!res || res.status === 429 || res.status >= 500) {
+        transient++;
+        return;
+      }
       if (res.ok) {
         sent++;
       } else if (res.status === 404 || res.status === 400) {
@@ -226,7 +244,9 @@ Deno.serve(async (req) => {
         }
       }
     }));
-    return Response.json({ sent });
+    // Hiçbir cihaza gidemediyse ve sebep geçiciyse olay tekrar denenecek
+    await finish(!(sent === 0 && transient > 0));
+    return Response.json({ sent, transient });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
   }
