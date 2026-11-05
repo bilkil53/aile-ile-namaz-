@@ -40,7 +40,7 @@
 ### 1. 🕌 Bugün — Vakitler ve Günlük İbadet
 * **Selamün aleyküm** karşılaması ve tarih. Konum her açılışta **otomatik** alınır (alınamazsa 10 sn arayla en fazla 3 deneme); konum bilgisi ve yenileme **Ayarlar**'da.
 * **SIRADAKİ VAKİT** kartı: geri sayım ve günün 6 vakti (İmsak, Güneş, Öğle/Cuma, İkindi, Akşam, Yatsı).
-* **5 vakit kartı** (ince çizgili simgeler): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor**. Muaf yalnızca kadın ve kız simgeli kişilerde görünür. Aileye bildirim 15 sn, buluta kayıt 20 sn sonra gider; internet yoksa telefonda bekler, bağlantı gelince kendiliğinden gönderilir. Vakti girmemiş namaz ve vakitler yüklenmeden kartlar 🔒 kilitlidir.
+* **5 vakit kartı** (ince çizgili simgeler): dokundukça **Kıldı → Kılmadı → Muaf → Bekliyor**. Muaf yalnızca kadın ve kız simgeli kişilerde görünür; sunucu da reisin erkek olarak belirlediği kişinin Muaf kaydını kabul etmez (boş olarak yazılır). İnternet yokken telefonda saklı son bilinen cinsiyete bakılır, bilinmiyorsa Muaf gizlenir. Aileye bildirim 15 sn, buluta kayıt 20 sn sonra gider; internet yoksa telefonda bekler, bağlantı gelince kendiliğinden gönderilir. Vakti girmemiş namaz ve vakitler yüklenmeden kartlar 🔒 kilitlidir.
 * **← Dün / Bugün** geçişi: unutulan dünkü vakitler işaretlenebilir.
 * **Günün Ayeti / Hadisi** (Arapça metin + Diyanet meali).
 * **🎉 Bayram kartı:** Ramazan ve Kurban bayramı günlerinde ekranın en üstünde: "Bayramınız mübarek olsun", bayramın kaçıncı günü olduğu, bayramın anlamı, **Bayramlaş** (paylaşım penceresi) ve **Aileye gönder**.
@@ -54,6 +54,7 @@
 * **Reis onayı:** Reis kendi ünvanını (🏡 Aile Reisi / 🧔 Baba / 🧕 Anne) ve katılanın ünvanını + simgesini seçer (Eşi, Oğlu, Kızı, Annesi, Babası, Kardeşi, Torunu, Gelini, Damadı, Dedesi, Ninesi).
 * **Simgeler:** Kadın / Anne / Eş · Erkek / Baba / Eş · Erkek / Kız / Çocuk · Diğer. Kız çocuğu simgeleri anneden ayrılsın diye küçük çizilir ve fiyonk taşır (başörtülü 🧕🎀, başörtüsüz 👧🎀). Kadın veya kız simgesi seçilince **Muaf** kendiliğinden açılır; ayrıca cinsiyet sorulmaz.
 * **Herkese göre hitap:** Ünvanlar reise göre saklanır, her kullanıcı diğerlerini kendine göre görür: Reis "Kızın, Oğlun, Eşin"; eşi "Eşin (Aile Reisi), Kızın"; kızı "Baban (Aile Reisi), Annen, Kardeşin". Çocuklarda (Oğlu, Kızı, Torunu) ve aynı ünvanlı birden fazla kişide bildirime ilk ad eklenir ("Kızın Ayşe namazını kıldı"); anne, baba ve eş adsız kalır.
+* **1 aile = 1 havuz, en fazla 5 kişi:** Herkes yalnızca bir havuzda bulunur, reisin tek havuzu olur (sunucu kuralı). Listede "👥 X/5 kişi" yazar; havuz dolunca davet kodu yerine "Havuz dolu" görünür.
 * **Liste sırası:** Önce kişinin kendisi, sonra Aile Reisi, sonra diğer fertler.
 * **Bağlantıyı Teyit Et 🔄**, **BEKLEMEDE / AKTİF** rozeti, Bireysel / Aile Modu profil kartı.
 * **Ortak Matris:** Ailenin 5 vakit durumu (vakit × kişi), **"Bugün Aile Başarısı: x / y Vakit (%)"**, **◄ Dünü Gör**. Yalnızca gerçekten işaretlenen vakitler görünür; boş vakitler "—".
@@ -82,9 +83,11 @@
 ### 5. 🔔 Bildirimler
 * Her vakitten **11 dakika önce** hatırlatma; vakte özel hadis / ayet / dua ile.
 * **Cuma:** "Cuma Namazı 🕌" kartı ve "Hayırlı Cumalar!" hatırlatması.
+* **Cuma uyarısı (erkeklere özel):** Peş peşe 3 Cuma, Cuma (Öğle) namazı "Kılmadı" işaretlenirse kişinin kendisine hadisli bir hatırlatma gelir; zincir sürdükçe her Cuma tekrar eder, metin sırayla değişir (Ebû Dâvûd/Tirmizî, Müslim). Aileye gitmez; boş, muaf ya da kılındı işaretli bir Cuma zinciri bozar (`lib/cuma_reminder.dart`).
 * Her gün **12:00**'de günün ayeti / hadisi.
 * **Mübarek günler:** Regaib, Miraç, Berat ve Mevlid kandilleri, Kadir Gecesi, Üç Ayların ve Ramazan'ın başlangıcı, arefeler, Ramazan ve Kurban bayramları, Hicri Yılbaşı ve Aşure için **1 gün kala akşam 19:00**'da, o günün anlamını anlatan açıklamalı bildirim. Tarihler **Diyanet hicri takviminden** alınır ve her yıl kendiliğinden ilerler.
 * **Tam zamanında:** "Alarm ve hatırlatıcılar" izniyle dakikası dakikasına (izin yoksa Ayarlar'da uyarı ve İzin ver düğmesi).
+* **Bildirim izinleri ekranı** (Ayarlar → Bildirimler → "Bildirim izinlerini kontrol et"; girişten sonra eksik varsa bir kez kendiliğinden açılır): bildirim izni, kesin alarm ve **pil tasarrufu muafiyeti** ✅/❌ ve tek dokunuşla ilgili Android ayarı; Samsung "Uyku moduna alınan uygulamalar" notu; **Test bildirimi gönder**; son bildirim / aile gönderim hatası.
 * Vakit hatırlatması ve 12:00 bildirimi her zaman açıktır. Aile bildirimleri (namaz / kaza / dua / kilit ekranı) Ayarlar'dan ayrı ayrı açılıp kapatılır.
 
 ### 6. ⚙️ Ayarlar
@@ -93,6 +96,10 @@
 * **Diğer:** Uygulamayı paylaş, Öneri yaz (mail uygulaması), GitHub, Gizlilik politikası.
 * **Bildirimler:** Aile bildirimleri ve alt seçenekleri; anlık bildirimde sorun varsa ayrıntı + tekrar dene.
 * En altta çerçeveli **Hesabımı ve verilerimi sil** (iki aşamalı onay).
+
+### Pro (test aşamasında · Namaz Demo)
+* Pro şu an yalnızca **Namaz Demo** test sürümünde deneniyor; bu stabil sürümde yoktur.
+* Planlanan model: ilk girişte **7 günlük deneme** (her şey açık) → 8. gün **Ücretsiz sürüm** (Bugün ve Karne açık; Aile Havuzu ve Kaza pasif, bildirimler kapalı) → **Aile Reisi Pro alınca havuzdaki herkes Pro** (en fazla 5 kişi). Diğer üyeler "Aile Reisine ilet" ile istek gönderir; reis kabul eder ya da reddeder. Ayrıntılar `demo` dalının README'sinde.
 
 ### 7. 🛟 Hata bildirimi
 * Uygulama kullanılırken beklenmedik bir hata olursa sebebiyle (kod hatası / bellek) bir pencere çıkar; **Mail gönder** ile ayrıntılar hazır mail olarak açılır. İnternet kesintisinde pencere çıkmaz.
@@ -106,6 +113,7 @@
 ### 9. 📲 Güncelleme ve görünüm
 * **Uygulama simgesi:** yeşil zeminde altın minare, hilal ve E harfi (Android uyarlanabilir simge: `android-config/res`).
 * Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; kurulum ekranı ayrı açılır ve uygulama tek pencerede kalır.
+* İndirilen APK, GitHub'ın yayınladığı **SHA-256** değeriyle karşılaştırılır; uymazsa kurulmaz. Android de güncellemeyi yalnızca aynı imza anahtarıyla imzalanmışsa kurar.
 * Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
 
 ---
@@ -120,6 +128,7 @@
 | Davet kodu | `EMB-` + 6 rastgele rakam, deneme sınırı, tek bekleyen istek, 5 dk süre (sunucu her dakika süresi dolanı düşürür), reis onayı |
 | Bildirim teslimi | Kuyruk: bekliyor → gönderiliyor → gönderildi / hata. Google'a ulaşılamazsa her dakika çalışan görev 10 dk içinde en fazla 3 kez tekrar dener; aynı bildirim iki kez gitmez (atomik sahiplenme). Ulaşamayan bildirim 1 saat sonra düşer |
 | Bildirim taşması | Kişi başı sınır: dua dakikada 1 / saatte 3 / günde 10; aynı vakit günde 2 |
+| Hizmet sürekliliği | İnternet gerektiren özellikler (aile havuzu, bildirimler, bulut, Pro) sunucu altyapısı çalıştığı sürece kullanılabilir; namaz vakitleri ve işaretler internetsiz de çalışır (gizlilik sayfası + Play açıklaması) |
 | Kod | Release derlemesi karıştırılmış (obfuscate) |
 | E-posta | `profiles.email` sütununa istemci erişimi kapalı; hiçbir kullanıcı diğerinin e-postasını göremez |
 | Kaza detayı | Veritabanı kuralıyla sadece sahibine açık; aile `kaza_summary` toplamını görür |
@@ -153,10 +162,12 @@
 | Güncelleme | GitHub Releases API → işlemci türüne uygun APK (arm64-v8a / armeabi-v7a / x86_64) uygulama içinde indirilir → kendi FileProvider'ı ile ayrı görevde kurulum, eski pencere `finishAndRemoveTask` ile kapanır · Play sürümünde Google Play uygulama içi güncelleme |
 | Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → R8 koruma kuralları (`android-config/proguard-rules.pro`, APK içinde otomatik doğrulanır) → imzalı, karıştırılmış APK'lar + AAB → GitHub Releases |
 | Hata takibi | Dart: `FlutterError.onError` + `PlatformDispatcher.onError` · Android: `ApplicationExitInfo` (kapanma sebebi) + `App.kt` çökme izi · anonim `crash_reports` tablosu (30 gün) · kullanıcıya sebep penceresi + mail |
-| Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; her gece 7 günden eski aile hareketlerini ve 30 günden eski hata kayıtlarını temizler |
+| Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; **`aile-push-retry`** her dakika gönderilemeyen aile bildirimlerini tekrar dener; her gece 7 günden eski aile hareketlerini ve 30 günden eski hata kayıtlarını temizler |
+| Bildirim kuyruğu | `pool_events.push_status`: bekliyor → gönderiliyor → gönderildi / hata · `claim_push_event` ile atomik sahiplenme (aynı bildirim iki kez gitmez) · 10 dk içinde en fazla 3 deneme · geçici hatada (429/5xx) o cihaza hemen bir tekrar · ulaşamayan bildirim 1 saat sonra düşer (TTL) |
+| Hata kaydı | `lib/log.dart`: sessiz hatalar konsola ve telefona (konu başına son hata) yazılır; Bildirim izinleri ekranında görünür |
 
 ### Paketler
-`supabase_flutter ^2.8` · `firebase_core ^3.6` · `firebase_messaging ^15.1` · `in_app_update ^4.2` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
+`supabase_flutter ^2.8` · `firebase_core ^3.6` · `firebase_messaging ^15.1` · `in_app_update ^4.2` · `google_sign_in ^6.2` · `geolocator ^13` · `geocoding ^4` · `sensors_plus ^6.1` · `flutter_local_notifications ^18` · `timezone ^0.10` · `crypto ^3.0` · `shared_preferences ^2.3` · `package_info_plus ^8` · `url_launcher ^6.3` · `share_plus ^10.1` · `open_filex ^4.6` · `path_provider ^2.1` · `intl ^0.19`
 
 ### Kod yapısı
 ```
@@ -173,11 +184,15 @@ lib/
   crash_report.dart    Hata yakalama, sebep penceresi, mail, anonim rapor, Android kapanma sebebi
   member_icon.dart     Üye simgesi (kız çocuğu simgelerinde fiyonk rozeti)
   push.dart            Firebase anlık bildirim: cihaz kaydı (devices)
-  update_checker.dart  GitHub Releases'tan uygulama içi güncelleme
-  screens/             today, family, kaza, karne, settings, login (Hoş Geldiniz), home_shell
+  update_checker.dart  GitHub Releases'tan uygulama içi güncelleme (SHA-256 doğrulamalı)
+  cuma_reminder.dart   Erkeklere peş peşe 3 Cuma uyarısı
+  log.dart             Sessiz hataların kaydı (son hata)
+  integrity.dart       APK imza kontrolü (uyarı)
+  kvkk.dart            KVKK aydınlatma ve açık rıza
+  screens/             today, family, kaza, karne, settings, login (Hoş Geldiniz), home_shell, notify_health (Bildirim izinleri)
   widgets/             prayer_icon, qibla_card (pusula), dini_gun_card (bayram / kandil kartı)
 android-config/
-  kotlin/MainActivity.kt  Kapanma sebebi okuma, güncelleme kurulumu (tek pencere)
+  kotlin/MainActivity.kt  Kapanma sebebi okuma, güncelleme kurulumu (tek pencere), imza parmak izi, pil tasarrufu durumu ve ayar sayfaları
   kotlin/App.kt           Uygulama genelinde çökme kaydedici
   proguard-rules.pro      Zamanlanmış bildirim alıcısı için R8 koruma kuralları
   content/             günlük ayet, hadis, dua, özlü söz, tebrikler
@@ -195,7 +210,8 @@ Anlık bildirim: `pool_events` ekleme tetikleyicisi (`pg_net`) → Edge Function
 Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers_realtime` → `04_family_flow_v118` → `05_drop_join_by_email` → `06_hide_profile_emails` → `07_titles_relative_to_reis` → `08_auto_pool` → `09_emb_codes_5min_titles_delete` → `10_reis_icon_house` → `11_fcm_push_trigger` → `12_rate_limit_cleanup_retention` → `13_cleanup_fix` → `14_device_notification_prefs` → `15_member_gender_by_reis` → `16_crash_reports` → `17–19_targeted_dua` → `20_kvkk_consent` → `21_pro_subscription` → `22_one_pool_max_10` (havuz sınırı o gün 10; 23'te 5'e indi) → `23_family_pro_pool_max_5` → `24_pro_only_reis_requests` → `25_pro_trial_started_at` → `26_expire_test_now` → `27_pro_request_decline` → `28_test_pro_controls` (yalnızca test) → `29_push_queue_excuse_rule_grants`.
 
 ### Derleme ve dallar
-* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1).
+* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1) · `demo` → **Namaz Demo** ön sürümü (*v1.N-demo*, `aile-ile-namaz-demo*.apk`, `--dart-define=CHANNEL=demo`; stabil "son sürüm"ü etkilemez, demo uygulaması yalnızca demo ön sürümlerinden güncellenir).
+* Derlemeler sırayla çalışır (aynı sürüm numarası iki kez verilmez); yayınlar/etiketler silinse bile derleme no 52'nin altına düşmez. Yalnızca belge (`docs/`, `*.md`) değişince sürüm çıkmaz.
 * Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
 * İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
 
