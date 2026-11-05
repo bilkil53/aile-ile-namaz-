@@ -3,6 +3,8 @@ name: Android APK
 on:
   push:
     branches: [main, dev]
+    # Yalnızca belge/web sayfası değişince yeni sürüm çıkmasın
+    paths-ignore: ['docs/**', '**.md']
   workflow_dispatch:
 
 permissions:
