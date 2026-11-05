@@ -41,6 +41,54 @@ class Pro {
 
   static bool get isDemo => !active;
 
+  /// Pro'yu yalnızca Aile Reisi (havuz sahibi) alabilir. Havuzda tek olan kendi havuzunun reisidir.
+  static Future<bool> isReis() async {
+    if (isGuest) return true;
+    try {
+      final pools = await Repo.myPools().timeout(const Duration(seconds: 6));
+      return pools.isEmpty || pools.first.ownerId == myId;
+    } catch (_) {
+      return true; // bağlantı yoksa sunucu zaten kontrol eder
+    }
+  }
+
+  /// Reis olmayan üye: Aile Reisine "Pro istiyorum" iletir.
+  /// Dönüş: null = iletildi, aksi halde kullanıcıya gösterilecek hata.
+  static Future<String?> requestFromReis() async {
+    try {
+      await supa.rpc('request_pro_from_reis').timeout(const Duration(seconds: 8));
+      return null;
+    } catch (e) {
+      final s = e.toString();
+      if (s.contains('already_requested')) return 'Bugün zaten ilettin. Aile Reisin bildirimi gördü 🌙';
+      if (s.contains('is_reis')) return 'Aile Reisi sensin; Pro\'yu sen alabilirsin.';
+      return 'İletilemedi. İnternet bağlantını kontrol et.';
+    }
+  }
+
+  /// Reise gelen Pro istekleri (son 7 gün): gönderen kimliği → en son istek zamanı.
+  static final requests = ValueNotifier<Map<String, DateTime>>({});
+
+  static Future<void> loadRequests() async {
+    if (isGuest) return;
+    try {
+      final rows = await supa
+          .from('pool_events')
+          .select('sender_id, created_at')
+          .eq('event_type', 'PRO_REQUEST')
+          .eq('target_id', myId)
+          .gte('created_at', DateTime.now().subtract(const Duration(days: 7)).toUtc().toIso8601String())
+          .order('created_at', ascending: false)
+          .timeout(const Duration(seconds: 8));
+      final m = <String, DateTime>{};
+      for (final r in rows) {
+        final id = r['sender_id'] as String;
+        m.putIfAbsent(id, () => DateTime.parse(r['created_at'] as String).toLocal());
+      }
+      requests.value = m;
+    } catch (_) {}
+  }
+
   static String fmt(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
 
@@ -115,14 +163,18 @@ class Pro {
     }
   }
 
+  static String? lastError;
+
   /// Pro kodu dener. Doğruysa Pro'ya geçer; yanlışsa false.
   static Future<bool> redeem(String code) async {
     try {
       final r = await supa.rpc('redeem_pro_code', params: {'p_code': code}).timeout(const Duration(seconds: 8));
       await _save(r == null ? null : DateTime.tryParse(r as String)?.toLocal());
       await refresh();
+      lastError = null;
       return active;
-    } catch (_) {
+    } catch (e) {
+      lastError = e.toString().contains('only_reis') ? 'Pro\'yu yalnızca Aile Reisi alabilir.' : null;
       return false;
     }
   }

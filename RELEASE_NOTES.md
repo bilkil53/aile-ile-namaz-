@@ -1,4 +1,4 @@
-Namaz Demo: Aile Pro'su — Aile Reisi Pro alınca havuzdaki herkes Pro olur (deneme kişiye özel). Havuz en fazla 5 kişi. Ayarlar'da demo/Pro tarihi görünür. Test Pro kodu: 1.
+Namaz Demo: Pro'yu yalnızca Aile Reisi alır; reis alınca havuzdaki herkes (en fazla 5 kişi) Pro olur. Diğerleri "📩 Aile Reisine ilet" ile istek gönderir, reis bildirim ve uygulama içi kart görür. Ayarlar'da demo/Pro tarihi görünür. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

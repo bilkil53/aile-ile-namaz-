@@ -53,7 +53,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       }
       if (!isGuest) {
         unawaited(Kvkk.syncServer());
-        unawaited(Pro.init());
+        unawaited(Pro.init().then((_) => Pro.loadRequests()));
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
         // Ağ işlerini arka planda başlat (internet yavaş/yoksa ekranı bekletmez)
         unawaited(() async {
@@ -83,6 +83,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       unawaited(LocationHelper.autoUpdate(maxAge: const Duration(hours: 1)));
       unawaited(Repo.syncNow()); // telefonda bekleyen işaretleri gönder
       unawaited(Pro.refresh()); // reis Pro aldıysa aile de hemen Pro olsun
+      unawaited(Pro.loadRequests()); // reise gelen Pro istekleri
     }
   }
 
@@ -165,6 +166,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             // Arka plandayken bildirimi FCM gösterir; çift bildirim olmasın
             if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
             final type = r['event_type'] as String?;
+            if (type == 'PRO_REQUEST') unawaited(Pro.loadRequests()); // reisin ekranındaki kart
             if ((type == 'PRAYED' && !AppSettings.notifyPrayer) ||
                 (type == 'KAZA' && !AppSettings.notifyKaza) ||
                 (type == 'DUA' && !AppSettings.notifyDua)) return;
@@ -176,6 +178,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               'DUA' => (r['target_id'] == myId ? '$who sana dua gönderdi 🤲' : '$who aileye dua gönderdi 🤲',
                   (r['message'] as String?) ?? ''),
               'MEMBER_JOINED' => ('Aile havuzuna katılım 🤝', '${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.'),
+              'PRO_REQUEST' => ('$who Pro istiyor 🌟', 'Aile Pro\'sunu alırsan havuzdaki herkes Pro olur.'),
               _ => ('', ''),
             };
             if (title.isEmpty) return;

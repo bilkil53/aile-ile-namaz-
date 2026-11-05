@@ -457,13 +457,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ]),
+                    ValueListenableBuilder<Map<String, DateTime>>(
+                      valueListenable: Pro.requests,
+                      builder: (_, reqs, __) => reqs.isEmpty || Pro.source == 'paid'
+                          ? const SizedBox.shrink()
+                          : Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text('📩 Aileden ${reqs.length} kişi Pro istedi',
+                                  style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.bold)),
+                            ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(spacing: 8, runSpacing: 6, children: [
                       _outlineBtn('TEST: Demo süresini bitir', () async {
                         await Pro.expireTest();
                         setState(() {});
                       }, icon: Icons.timer_off),
-                      _outlineBtn('Pro kodu gir', () => showProCodeDialog(context), icon: Icons.vpn_key),
+                      _outlineBtn('Pro\'ya geç', () => showProCodeDialog(context), icon: Icons.workspace_premium),
                     ]),
                   ]);
                 },

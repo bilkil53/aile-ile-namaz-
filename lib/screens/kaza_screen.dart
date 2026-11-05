@@ -212,7 +212,7 @@ class _KazaScreenState extends State<KazaScreen> {
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu gir')),
+            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
           ),
         ]),
       ),

@@ -109,6 +109,7 @@ function text(type: string, who: string, prayer: string | null, message: string,
     case "KAZA": return [`${who} kaza namazı kıldı 📿`, "Bir kaza namazı eda etti. Allah kabul etsin."];
     case "DUA": return [toMe ? `${who} sana dua gönderdi 🤲` : `${who} aileye dua gönderdi 🤲`, message || "Allah ibadetlerimizi kabul etsin."];
     case "MEMBER_JOINED": return ["Aile havuzuna katılım 🤝", `${message || who} aile havuzuna katıldı.`];
+    case "PRO_REQUEST": return [`${who} Pro istiyor 🌟`, "Aile Pro'sunu alırsan havuzdaki herkes Pro olur."];
     default: return null;
   }
 }

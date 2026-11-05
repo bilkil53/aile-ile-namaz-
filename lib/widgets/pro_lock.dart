@@ -35,15 +35,57 @@ Future<void> showProRequired(BuildContext context, {String? feature}) async {
             Navigator.pop(ctx);
             showProCodeDialog(context);
           },
-          child: const Text('Pro kodu gir'),
+          child: const Text('Pro\'ya geç'),
         ),
       ],
     ),
   );
 }
 
-/// Pro kodu girme penceresi.
+/// Reis olmayan üye: Pro'yu Aile Reisi alır; reise iletme penceresi.
+Future<void> _showAskReisDialog(BuildContext context) async {
+  var busy = false;
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setLocal) => AlertDialog(
+        icon: const Icon(Icons.workspace_premium, color: AppColors.gold, size: 32),
+        title: const Text('Pro\'yu Aile Reisi alır'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('👨‍👩‍👧 Aile Reisin Pro alınca aile havuzundaki herkes (en fazla 5 kişi) Pro olur. '
+              'Senin ayrıca bir şey alman gerekmez.'),
+          const SizedBox(height: 8),
+          Text(Pro.statusText(), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        ]),
+        actions: [
+          TextButton(onPressed: busy ? null : () => Navigator.pop(ctx), child: const Text('Kapat')),
+          FilledButton.icon(
+            onPressed: busy
+                ? null
+                : () async {
+                    setLocal(() => busy = true);
+                    final err = await Pro.requestFromReis();
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(err ?? '📩 Aile Reisine iletildi. Pro alınca sende de açılır.')));
+                  },
+            icon: const Text('📩'),
+            label: Text(busy ? '...' : 'Aile Reisine ilet'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Pro kodu girme penceresi (yalnızca Aile Reisi). Reis değilse "Aile Reisine ilet" açılır.
 Future<void> showProCodeDialog(BuildContext context) async {
+  if (!await Pro.isReis()) {
+    if (context.mounted) await _showAskReisDialog(context);
+    return;
+  }
+  if (!context.mounted) return;
   final ctrl = TextEditingController();
   var busy = false;
   String? err;
@@ -79,7 +121,7 @@ Future<void> showProCodeDialog(BuildContext context) async {
                     } else {
                       setLocal(() {
                         busy = false;
-                        err = 'Kod geçersiz';
+                        err = Pro.lastError ?? 'Kod geçersiz';
                       });
                     }
                   },

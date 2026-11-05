@@ -96,7 +96,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu gir')),
+            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
           ),
         ]),
       ),
@@ -108,6 +108,42 @@ class _FamilyScreenState extends State<FamilyScreen> {
         ),
     ];
   }
+
+  /// Reise: aileden gelen "Pro istiyorum" iletileri (Pro alınmadıysa).
+  Widget _proRequestsCard() => ValueListenableBuilder<Map<String, DateTime>>(
+        valueListenable: Pro.requests,
+        builder: (_, reqs, __) {
+          final list = reqs.entries
+              .map((e) => (_members.where((m) => m.userId == e.key).firstOrNull, e.value))
+              .where((x) => x.$1 != null)
+              .toList();
+          if (list.isEmpty || Pro.source == 'paid') return const SizedBox.shrink();
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.gold, width: 1.5),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              for (final (m, at) in list)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('📩 ${_label(m!)} Pro istedi · ${Pro.fmt(at)}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                ),
+              const Text('Pro alırsan havuzdaki herkes (en fazla 5 kişi) Pro olur.',
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
+              ),
+            ]),
+          );
+        },
+      );
 
   void _proRebuild() {
     if (mounted) setState(() {});
@@ -194,6 +230,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Future<void> _load() async {
     if (isGuest) return _loadGuest();
+    unawaited(Pro.loadRequests());
     try {
       Repo.invalidatePools();
       var pools = await Repo.myPools().timeout(const Duration(seconds: 8));
@@ -631,6 +668,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           if (!isGuest) ...[_profileCard(), const SizedBox(height: 12)],
           _hero(),
           const SizedBox(height: 12),
+          if (pool != null && _isOwner) _proRequestsCard(),
           if (pool != null) ..._demoDim([
             if (_members.length <= 1) ...[
               _codeCard(pool),
