@@ -13,16 +13,22 @@ enum SyncFailure {
 /// Kalıcı ret sayılan PostgreSQL hata sınıfları: 22 (geçersiz veri), 23 (kısıt ihlali),
 /// 42 (tanımsız sütun vb.), P0 (tetikleyicinin bilerek verdiği hata, ör. kural ihlali).
 /// Diğer her şey (bağlantı, zaman aşımı, 08/53/57 sınıfları, PGRST kodları) geçici sayılır.
-final _rejectedCodes = RegExp(r'^(22|23|42|P0)');
+/// Yalnızca 5 karakterli SQLSTATE kabul edilir: cevap JSON değilse kütüphane `code` alanına HTTP
+/// durumunu yazar ("429" hız sınırı, "422", "500"); bunlar kalıcı ret sayılmamalı.
+final _rejectedCodes = RegExp(r'^(22|23|42|P0)[0-9A-Z]{3}$');
 
-/// 42501 (yetki/RLS) kalıcı sayılmaz: kendi kaydına yazarken bu hata ancak oturum düştüğünde
-/// (istek yetkisiz gittiğinde) olur. Kayıt silinmez, oturum düzelince tekrar gönderilir.
-const _authCode = '42501';
+/// 42501 (yetki/RLS) hemen kalıcı sayılmaz: kendi kaydına yazarken bu hata çoğunlukla oturum
+/// düştüğünde (istek yetkisiz gittiğinde) olur. Kayıt silinmez; aynı kayıt [maxAuthRetries] kez
+/// üst üste bu hatayı alırsa kalıcı ret sayılır (sonsuz deneme ve arkadaki kayıtların beklemesi olmasın).
+const authErrorCode = '42501';
+const maxAuthRetries = 5;
+
+bool isAuthError(Object e) => e is PostgrestException && e.code == authErrorCode;
 
 SyncFailure classifySyncError(Object e) {
   if (e is PostgrestException) {
     final c = e.code ?? '';
-    if (c != _authCode && _rejectedCodes.hasMatch(c)) return SyncFailure.rejected;
+    if (c != authErrorCode && _rejectedCodes.hasMatch(c)) return SyncFailure.rejected;
   }
   return SyncFailure.temporary;
 }

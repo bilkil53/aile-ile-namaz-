@@ -1,7 +1,7 @@
 Güvenilirlik: sunucunun kabul etmediği bir kayıt artık "internet gelince gönderilecek" denip sonsuza dek beklemez, "kabul edilmedi" bilgisi verilir ve ekran düzelir; açılışta kendiliğinden "telefona kaydedildi" yazısı çıkmaz; yarım kalan misafir kaza aktarımı otomatik tamamlanır. Her derlemede otomatik testler çalışır.
 
 ## 🌟 Kullanıcı için
-Güvenilirlik: sunucunun kabul etmediği bir kayıt artık "internet gelince gönderilecek" denip sonsuza dek beklemez, "kabul edilmedi" bilgisi verilir ve ekran düzelir; açılışta kendiliğinden "telefona kaydedildi" yazısı çıkmaz; yarım kalan misafir kaza aktarımı otomatik tamamlanır. Her derlemede otomatik testler çalışır.
+
 **Giriş ve gezinti**
 - Açılışta **Hoş Geldiniz** penceresi: **Google ile Hızlı Giriş Yap** veya **Giriş Yapmadan Devam Et**.
 - Gezinti modunda bütün ekranlar denenebilir; yapılanlar sadece bellekte tutulur, uygulama kapanınca silinir. Giriş yapılırsa o oturumdakiler buluta kaydedilir.
