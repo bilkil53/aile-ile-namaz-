@@ -36,6 +36,10 @@ class LocalStore {
   static final Map<String, (int, int)> _gKaza = {};
   static bool _gData = false;
 
+  /// Bu misafir oturumunun kaza aktarım kimliği. Misafir verisiyle birlikte yalnızca bellekte
+  /// tutulur: veri silinince kimlik de silinir (eski kimlik yeni oturumun aktarımını engellemesin).
+  static String? guestMergeId;
+
   /// Bu oturumda misafirken işaretlenmiş, henüz buluta gönderilmemiş veri var mı?
   static bool get hasGuestData => _gData;
   static Future<void> setHasGuestData(bool v) async => _gData = v;
@@ -47,6 +51,7 @@ class LocalStore {
     _gDays.clear();
     _gKaza.clear();
     _gData = false;
+    guestMergeId = null;
   }
 
   /// Eski sürümlerin kalıcı misafir bayraklarını ve test dönemi önbelleğini bir kez temizle.
@@ -55,6 +60,7 @@ class LocalStore {
     final p = AppSettings.prefs;
     await p.remove('guestMode');
     await p.remove('guestData');
+    await p.remove('guestMergeId'); // önceki sürüm kimliği telefona yazıyordu
     if ((p.getInt('dataReset') ?? 0) < 1) {
       for (final k in p.getKeys().where((k) => k.startsWith('lp_')).toList()) {
         await p.remove(k);

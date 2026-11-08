@@ -38,6 +38,7 @@ class _TodayScreenState extends State<TodayScreen> {
   void initState() {
     super.initState();
     LocationHelper.version.addListener(_onLocation);
+    Repo.offlineNotice.addListener(_onOffline);
     _load();
     // Geri sayım için dakikada bir yenile (saniyelik yenileme pil harcar).
     _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -54,6 +55,7 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void dispose() {
     LocationHelper.version.removeListener(_onLocation);
+    Repo.offlineNotice.removeListener(_onOffline);
     _ticker?.cancel();
     super.dispose();
   }
@@ -105,6 +107,16 @@ class _TodayScreenState extends State<TodayScreen> {
 
   Map<String, PrayerStatus> get _current => _showYesterday ? _yesterday : _today;
 
+  void _onOffline() => _showOfflineNote();
+
+  void _showOfflineNote() {
+    if (!mounted || isGuest) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('📱 Telefona kaydedildi. İnternet gelince otomatik buluta gönderilecek.'),
+      duration: Duration(seconds: 2),
+    ));
+  }
+
   Future<void> _toggle(String key) async {
     final map = _current;
     final next = _next(map[key] ?? PrayerStatus.none);
@@ -123,12 +135,7 @@ class _TodayScreenState extends State<TodayScreen> {
         status: next,
         date: _showYesterday ? _yesterdayStr() : null,
       );
-      if (!synced && !isGuest && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('📱 Telefona kaydedildi. İnternet gelince otomatik buluta gönderilecek.'),
-          duration: Duration(seconds: 2),
-        ));
-      }
+      if (!synced && !isGuest) _showOfflineNote();
     } catch (_) {
       if (!mounted) return;
       setState(() {

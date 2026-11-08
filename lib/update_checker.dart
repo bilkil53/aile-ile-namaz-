@@ -79,9 +79,10 @@ class UpdateChecker {
       final req = await client.getUrl(Uri.parse(api));
       req.headers.set('Accept', 'application/vnd.github+json');
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
-      if (res.statusCode != 200) return null;
-      final body = jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
+      final res = await req.close().timeout(const Duration(seconds: 10));
+      if (res.statusCode != 200) return null; // 403 (istek sınırı), 404 vb.: doğrulanamaz
+      final body = jsonDecode(await res.transform(utf8.decoder).join().timeout(const Duration(seconds: 10)))
+          as Map<String, dynamic>;
       for (final a in (body['assets'] as List? ?? const [])) {
         if ((a as Map)['name'] == m.group(3)) {
           final d = a['digest'] as String?;
@@ -90,7 +91,7 @@ class UpdateChecker {
       }
       return null;
     } catch (_) {
-      return null; // kontrol yapılamadı: Android yine de imzayı doğrular
+      return null; // kontrol yapılamadı: kurulum yapılmaz (fail-closed)
     } finally {
       client.close();
     }
@@ -240,10 +241,12 @@ class UpdateChecker {
     ));
 
     final client = HttpClient();
-    var verified = false; // SHA-256 doğrulandı mı (tarayıcı yedeği yalnızca doğrulanmış dosyada)
+    var verified = false; // SHA-256 doğrulandı mı
+    File? apk; // hata olursa doğrulanmamış (yarım) dosya silinir
     try {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/aile-ile-namaz-$version.apk');
+      apk = file;
 
       // Telefonun işlemci türüne uygun küçük APK (yaklaşık 20 MB); yoksa hepsini içeren APK
       // (Küçük APK'dan büyük APK'ya geçilemez: Android bunu eski sürüm sayar. Bu yüzden yedek yok.)
@@ -255,13 +258,16 @@ class UpdateChecker {
       final total = res.contentLength;
       var received = 0;
       final sink = file.openWrite();
-      await for (final chunk in res) {
-        if (cancelled) break;
-        sink.add(chunk);
-        received += chunk.length;
-        if (total > 0) progress.value = received / total;
+      try {
+        await for (final chunk in res) {
+          if (cancelled) break;
+          sink.add(chunk);
+          received += chunk.length;
+          if (total > 0) progress.value = received / total;
+        }
+      } finally {
+        await sink.close();
       }
-      await sink.close();
       client.close();
       if (cancelled) {
         if (await file.exists()) await file.delete();
@@ -285,6 +291,11 @@ class UpdateChecker {
         }
         return;
       }
+      if (cancelled) {
+        // Doğrulama sürerken "Vazgeç"e basıldı: kurulum açılmaz
+        if (await file.exists()) await file.delete();
+        return;
+      }
       verified = true;
 
       closeDialog();
@@ -306,15 +317,19 @@ class UpdateChecker {
       client.close(force: true);
       Log.warn('guncelleme', e);
       closeDialog();
+      if (!verified) {
+        try {
+          if (apk != null && await apk.exists()) await apk.delete();
+        } catch (_) {}
+      }
       if (context.mounted && !cancelled) {
-        if (verified) {
-          // Dosya doğrulandı ama kurulum ekranı açılamadı: son çare tarayıcıdan indir.
-          await launchUrl(Uri.parse(_abiUrl() ?? downloadUrl), mode: LaunchMode.externalApplication);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Güncelleme indirilemedi. İnternet bağlantını kontrol edip tekrar dene.'),
-          ));
-        }
+        // Tarayıcıdan indirmeye düşülmez: tarayıcının indireceği dosya burada doğrulanmış dosya olmaz.
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          duration: const Duration(seconds: 6),
+          content: Text(verified
+              ? 'Kurulum ekranı açılamadı. "Bilinmeyen uygulamaları yükle" iznini verip tekrar dene.'
+              : 'Güncelleme indirilemedi. İnternet bağlantını kontrol edip tekrar dene.'),
+        ));
       }
     } finally {
       progress.dispose();
