@@ -563,7 +563,32 @@ class Repo {
   /// Hesabımı ve bütün verilerimi kalıcı olarak siler.
   static Future<void> deleteMyAccount() async {
     await supa.rpc('delete_my_account');
+    await signOut();
+  }
+
+  /// Oturumu kapatır ve bu hesabın telefondaki kişisel verilerini siler (aynı telefonda başka hesap
+  /// açılınca önceki hesabın kaydı ona yazılmasın / görünmesin).
+  static Future<void> signOut() async {
+    resetUserCache();
+    LocalStore.wipeUserData();
     await supa.auth.signOut();
+  }
+
+  /// Bellekteki hesaba bağlı önbellek ve zamanlayıcıları sıfırlar (hesap değişince / çıkışta).
+  static void resetUserCache() {
+    _myName = null;
+    _poolIds = null;
+    for (final t in [..._writeTimers.values, ..._announceTimers.values]) {
+      t.cancel();
+    }
+    _writeTimers.clear();
+    _announceTimers.clear();
+    _pendingAnnounce.clear();
+    _announced.clear();
+    _retry?.cancel();
+    _retry = null;
+    offline = false;
+    _userMarked = false;
   }
 
   // ---- Olaylar ----

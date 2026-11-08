@@ -228,6 +228,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  /// Çıkış: önce bekleyen kayıtlar gönderilmeye çalışılır; hâlâ gönderilmemiş kayıt varsa uyarılır
+  /// (çıkışta bu hesabın telefondaki verisi silinir, başka hesaba geçmez).
+  Future<void> _signOut() async {
+    try {
+      await Repo.syncNow().timeout(const Duration(seconds: 10));
+    } catch (_) {}
+    final left = LocalStore.pendingCount;
+    if (left > 0 && mounted) {
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Gönderilmemiş kayıt var'),
+          content: Text('$left kayıt henüz buluta gönderilemedi (internet yok olabilir). '
+              'Çıkış yaparsan bu kayıtlar telefondan silinir.\n\nİnternet gelince otomatik gönderilmesi için '
+              'şimdilik çıkış yapmaman önerilir.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Yine de çıkış yap'),
+            ),
+          ],
+        ),
+      );
+      if (go != true) return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    await Push.unregister();
+    await Repo.signOut();
+  }
+
   // ---------- Arayüz parçaları ----------
 
   Widget _bigCard(List<Widget> children) => Container(
@@ -421,11 +454,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             else
               Align(
                 alignment: Alignment.centerLeft,
-                child: _outlineBtn('Çıkış Yap', () async {
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                  await Push.unregister();
-                  await supa.auth.signOut();
-                }, icon: Icons.logout),
+                child: _outlineBtn('Çıkış Yap', _signOut, icon: Icons.logout),
               ),
             const SizedBox(height: 6),
           ]),
