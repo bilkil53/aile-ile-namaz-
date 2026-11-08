@@ -1,4 +1,4 @@
-Güvenilirlik: sunucunun kabul etmediği bir kayıt artık "internet gelince gönderilecek" denip sonsuza dek beklemez, "kabul edilmedi" bilgisi verilir ve ekran düzelir; açılışta kendiliğinden "telefona kaydedildi" yazısı çıkmaz; yarım kalan misafir kaza aktarımı otomatik tamamlanır. Her derlemede otomatik testler çalışır.
+Güvenilirlik: kaza sayıları da önce telefona kaydedilir, sonra buluta gönderilir; gönderim sırasında internet kesilse ya da uygulama kapansa bile değişiklik kaybolmaz, internet gelince otomatik gider. Art arda hızlı değişikliklerde buluta her zaman en son sayı yazılır.
 
 ## 🌟 Kullanıcı için
 
