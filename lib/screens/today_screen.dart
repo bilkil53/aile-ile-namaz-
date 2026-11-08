@@ -10,6 +10,7 @@ import '../models.dart';
 import '../prayer_times.dart';
 import '../theme.dart';
 import '../widgets/dini_gun_card.dart';
+import '../widgets/login_required.dart';
 import '../widgets/prayer_icon.dart';
 import '../widgets/qibla_card.dart';
 
@@ -129,6 +130,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Future<void> _toggle(String key) async {
+    if (isGuest) return showLoginRequired(context, 'Vakit işaretlemek');
     final map = _current;
     final next = _next(map[key] ?? PrayerStatus.none);
     final before = Map<String, PrayerStatus>.from(map);

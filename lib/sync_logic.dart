@@ -54,10 +54,3 @@ Map<String, dynamic>? latestKazaOp(List<Map<String, dynamic>> queue, String type
   }
   return null;
 }
-
-/// Misafir kaza sayılarını sunucudaki merge_guest_kaza(p_items) biçimine çevirir:
-/// {tür: [borç, kılınan]}. Negatif sayılar gönderilmez (sunucu da reddeder).
-Map<String, List<int>> guestMergePayload(Map<String, (int, int)> kaza) => {
-      for (final e in kaza.entries)
-        if (e.value.$1 >= 0 && e.value.$2 >= 0) e.key: [e.value.$1, e.value.$2],
-    };

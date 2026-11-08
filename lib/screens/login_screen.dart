@@ -118,9 +118,9 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
         title: const Text('Giriş Yapmadan Devam Et', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
         content: const Column(mainAxisSize: MainAxisSize.min, children: [
           _Bullet('👀', 'Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.'),
-          _Bullet('⏳', 'İşaretlediklerin sadece bu oturumda tutulur; uygulama kapanınca silinir.'),
+          _Bullet('🔒', 'Gezinti yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz.'),
           _Bullet('👨‍👩‍👧', 'Aile Havuzunda gerçek bağlantı ve aile bildirimleri için giriş gerekir.'),
-          _Bullet('☁️', 'Giriş yaparsan bu oturumda yaptıkların buluta kaydedilir.'),
+          _Bullet('☁️', 'Kayıt tutmak için Google ile giriş yap; kayıtların hesabında güvende kalır.'),
         ]),
         actionsAlignment: MainAxisAlignment.center,
         actions: [

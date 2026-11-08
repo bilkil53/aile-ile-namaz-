@@ -8,7 +8,7 @@ import 'sync_logic.dart';
 import 'settings.dart';
 
 /// Kayıtlar:
-/// - Giriş yapmadan gezinenler (misafir): SADECE bellekte tutulur, uygulama kapanınca silinir.
+/// - Giriş yapmadan gezinenler (misafir): kayıt yapılmaz (gezinti yalnızca bakmak içindir).
 ///   Giriş yapılırsa o oturumda işaretlenenler buluta gönderilir.
 /// - Giriş yapanlar için son bilinen durum (çevrimdışı gösterim) telefonda.
 /// - İnternet yokken yapılan işlemlerin bekleme kuyruğu telefonda.
@@ -24,35 +24,24 @@ class LocalStore {
     }
   }
 
-  // ---- Misafir (gezinti) modu: bellekte, her açılışta Hoş Geldiniz penceresi gelir ----
+  // ---- Misafir (gezinti) modu: yalnızca bakmak için; her açılışta Hoş Geldiniz penceresi gelir ----
   static bool _guestMode = false;
   static bool get guestMode => _guestMode;
   static final guestChanged = ValueNotifier<int>(0);
   static Future<void> setGuestMode(bool v) async {
     _guestMode = v;
+    clearGuest();
     guestChanged.value++;
   }
 
+  // Gezinti modu yalnızca bakmak içindir: kayıt yapılmaz, giriş sonrası hiçbir şey hesaba aktarılmaz.
+  // Bu bellek alanları yalnızca giriş yokken okumaların boş dönmesi içindir.
   static final Map<String, Map<String, PrayerStatus>> _gDays = {};
   static final Map<String, (int, int)> _gKaza = {};
-  static bool _gData = false;
 
-  /// Gönderilmiş ama sonucu bilinmeyen kaza aktarımı: (aktarım kimliği, hesap, gönderilen sayılar).
-  /// Bellekte tutulur. Misafir oturumunun sayılarından ayrıdır: sonraki misafir oturumunun yeni
-  /// sayıları bu kimliğe karışmaz. Aynı kimlikle tekrar gönderilir; sunucu ikinci kez eklemez.
-  static ({String id, String user, Map<String, (int, int)> items})? pendingMerge;
-
-  /// Bu oturumda misafirken işaretlenmiş, henüz buluta gönderilmemiş veri var mı?
-  static bool get hasGuestData => _gData;
-  static Future<void> setHasGuestData(bool v) async => _gData = v;
-
-  /// Misafir oturumunun verisi (giriş yapılınca buluta taşımak için), sonra temizlenir.
-  static Map<String, Map<String, PrayerStatus>> get guestDays => _gDays;
-  static Map<String, (int, int)> get guestKaza => _gKaza;
   static void clearGuest() {
     _gDays.clear();
     _gKaza.clear();
-    _gData = false;
   }
 
   /// Eski sürümlerin kalıcı misafir bayraklarını ve test dönemi önbelleğini bir kez temizle.

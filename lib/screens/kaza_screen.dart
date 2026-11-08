@@ -6,6 +6,7 @@ import '../member_icon.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets/danger_box.dart';
+import '../widgets/login_required.dart';
 import '../widgets/prayer_icon.dart';
 
 /// Kaza namazı takibi.
@@ -78,6 +79,7 @@ class _KazaScreenState extends State<KazaScreen> {
   (int, int) _of(String t) => _data[t] ?? (0, 0);
 
   Future<void> _set(String type, int owed, int completed, {bool announce = false}) async {
+    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
     final before = _of(type);
     setState(() => _data = {..._data, type: (owed, completed)});
     try {
@@ -89,6 +91,7 @@ class _KazaScreenState extends State<KazaScreen> {
   }
 
   Future<void> _bulkAdd() async {
+    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
     final days = await showDialog<int>(context: context, builder: (_) => const _BulkDialog());
     if (days == null || days <= 0 || days > 36500) return;
     for (final (t, _, _, _) in _types) {
@@ -100,6 +103,7 @@ class _KazaScreenState extends State<KazaScreen> {
 
   /// Kaza kayıtlarını sıfırla: yanlışlıkla olmasın diye iki kez onay ister.
   Future<void> _reset() async {
+    if (isGuest) return showLoginRequired(context, 'Kaza kayıtlarını sıfırlamak');
     final first = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
