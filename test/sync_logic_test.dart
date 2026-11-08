@@ -37,6 +37,29 @@ void main() {
     });
   });
 
+  group('Kuyruk kaydı eşleştirme', () {
+    test('Aynı vakit ve aynı durum aynı işlemdir; deneme sayacı fark etmez', () {
+      final a = <String, dynamic>{'t': 'prayer', 'date': '2026-11-08', 'key': 'fajr', 'status': 'PRAYED'};
+      expect(sameQueueOp(a, {...a}), isTrue);
+      expect(sameQueueOp(a, {...a, 'a': 3}), isTrue);
+    });
+
+    test('Gönderim sürerken yeniden işaretlenen vakit eski işlemle karışmaz', () {
+      final eski = <String, dynamic>{'t': 'prayer', 'date': '2026-11-08', 'key': 'fajr', 'status': 'PRAYED'};
+      expect(sameQueueOp(eski, {...eski, 'status': 'MISSED'}), isFalse);
+      expect(sameQueueOp(eski, {...eski, 'key': 'isha'}), isFalse);
+      expect(sameQueueOp(eski, {...eski, 'date': '2026-11-07'}), isFalse);
+    });
+
+    test('Kaza kayıtları tür ve sayılarla eşleşir', () {
+      final k = <String, dynamic>{'t': 'kaza', 'type': 'FAJR', 'o': 3, 'c': 1};
+      expect(sameQueueOp(k, {...k}), isTrue);
+      expect(sameQueueOp(k, {...k, 'c': 2}), isFalse);
+      expect(sameQueueOp(k, {'t': 'prayer', 'type': 'FAJR', 'o': 3, 'c': 1}), isFalse);
+      expect(sameQueueOp({'t': 'x'}, {'t': 'x'}), isFalse);
+    });
+  });
+
   group('Misafir kaza aktarımı', () {
     test('Sayılar sunucu biçimine çevrilir', () {
       expect(guestMergePayload({'FAJR': (3, 1), 'ISHA': (0, 0)}), {

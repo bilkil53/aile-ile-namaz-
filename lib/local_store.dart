@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models.dart';
+import 'sync_logic.dart';
 import 'settings.dart';
 
 /// Kayıtlar:
@@ -145,4 +146,24 @@ class LocalStore {
   }
 
   static int get pendingCount => queue().length;
+
+  /// Kuyruğu telefondan yeniden okuyup yalnızca bu işlemi siler. (Elde tutulan eski bir kopyayı
+  /// geri yazmak, gönderim sürerken eklenen yeni işaretleri silerdi.)
+  static Future<void> removeOp(Map<String, dynamic> op) async {
+    final q = queue();
+    final i = q.indexWhere((o) => sameQueueOp(o, op));
+    if (i < 0) return;
+    q.removeAt(i);
+    await saveQueue(q);
+  }
+
+  /// Kuyruktaki bu işlemin bir alanını günceller (yeniden okuyarak). Dönüş: işlem hâlâ kuyrukta mı.
+  static Future<bool> updateOp(Map<String, dynamic> op, String field, Object value) async {
+    final q = queue();
+    final i = q.indexWhere((o) => sameQueueOp(o, op));
+    if (i < 0) return false;
+    q[i][field] = value;
+    await saveQueue(q);
+    return true;
+  }
 }
