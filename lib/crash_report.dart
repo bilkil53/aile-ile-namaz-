@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'config.dart';
+import 'privacy.dart';
 
 /// Hata bildirimi:
 /// 1) Uygulama içinde beklenmedik hata olursa kullanıcıya sebebiyle birlikte popup çıkar,
@@ -17,7 +18,8 @@ import 'config.dart';
 /// 2) Uygulama tamamen kapanırsa (bellek doldu, çöktü, dondu) Android 11+ sebebi kaydeder;
 ///    bir sonraki açılışta popup ile gösterilir.
 /// 3) Her iki durumda da anonim kayıt Supabase `crash_reports` tablosuna gider.
-/// Kişisel veri (ad, e-posta, namaz kaydı) gönderilmez.
+/// Kişisel veri (ad, e-posta, namaz kaydı) gönderilmez: hata metni ve yığın izi gönderilmeden önce
+/// e-posta, oturum anahtarı, kimlik, telefon, gizli parametre ve dosya adlarından temizlenir (privacy.dart).
 class CrashReport {
   static final navigatorKey = GlobalKey<NavigatorState>();
   static const _ch = MethodChannel('aile/exit');
@@ -185,7 +187,7 @@ class CrashReport {
   static Future<void> _mail(String title, String reason, String detail) async {
     final os = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
     var body = 'Merhaba,\n\nUygulamada sorun yaşadım. (Ne yaparken olduğunu buraya yazabilirsin)\n\n\n'
-        '---\n$title\nSebep: $reason\nSürüm: v$_version (iç derleme $_build)\nCihaz: $os\n\n$detail';
+        '---\n$title\nSebep: $reason\nSürüm: v$_version (iç derleme $_build)\nCihaz: $os\n\n${scrubSensitive(detail)}';
     if (body.length > 1800) body = body.substring(0, 1800);
     final q = {
       'subject': 'Aile ile Namaz – Hata bildirimi (v$_version)',
@@ -201,8 +203,9 @@ class CrashReport {
     try {
       if (_sentThisRun >= 5) return;
       _sentThisRun++;
-      var st = rawStack ?? stack?.toString() ?? '';
+      var st = scrubSensitive(rawStack ?? stack?.toString() ?? '');
       if (st.length > 7500) st = st.substring(0, 7500);
+      final err = scrubSensitive(text);
       var os = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
       if (os.length > 190) os = os.substring(0, 190);
       await Supabase.instance.client.from('crash_reports').insert({
@@ -211,7 +214,7 @@ class CrashReport {
         'os': os,
         'ram_mb': ramMb ?? (ProcessInfo.currentRss / (1024 * 1024)).round(),
         'fatal': fatal,
-        'error': text.length > 1900 ? text.substring(0, 1900) : text,
+        'error': err.length > 1900 ? err.substring(0, 1900) : err,
         'stack': st,
       }).timeout(const Duration(seconds: 8));
     } catch (_) {
