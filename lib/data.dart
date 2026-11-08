@@ -359,7 +359,9 @@ class Repo {
     if (LocalStore.pendingMerge == null && !LocalStore.hasGuestData) return true;
     try {
       await migrateGuestData().timeout(const Duration(seconds: 20));
-      return true;
+      // Başka bir aktarım hâlâ sürüyorsa (ör. açılıştaki çağrı zaman aşımına uğrayıp arka planda
+      // devam ediyorsa) iş bitmiş sayılmaz: sonra tekrar bakılır
+      return LocalStore.pendingMerge == null && !LocalStore.hasGuestData;
     } catch (e) {
       Log.warn('misafir', e);
       if (classifySyncError(e) == SyncFailure.rejected) {
@@ -444,7 +446,15 @@ class Repo {
         await LocalStore.saveQueue(q);
       } catch (e) {
         Log.warn('senkron', e);
-        if (classifySyncError(e) == SyncFailure.rejected) {
+        var rejected = classifySyncError(e) == SyncFailure.rejected;
+        if (isAuthError(e)) {
+          // Yetki hatası: oturum düşmüş olabilir, birkaç kez daha denenir; sürerse kalıcı ret
+          final tries = ((o['a'] as num?)?.toInt() ?? 0) + 1;
+          o['a'] = tries;
+          await LocalStore.saveQueue(q);
+          rejected = tries >= maxAuthRetries;
+        }
+        if (rejected) {
           // Sunucu kalıcı olarak reddetti: tekrar denemek sonsuz döngü olur ve arkadaki kayıtları
           // bekletir. Bu kayıt kuyruktan çıkarılır, kullanıcıya "kaydedilemedi" bilgisi verilir.
           q.removeAt(i);
@@ -488,16 +498,23 @@ class Repo {
         LocalStore.pendingMerge = null;
       }
       if (LocalStore.hasGuestData) {
-        // 2) Misafir vakitleri (aynı güne tekrar yazmak zararsız: son durum yazılır)
+        // 2) Misafir vakitleri (aynı güne tekrar yazmak zararsız: son durum yazılır).
+        //    Sunucunun kalıcı olarak reddettiği gün atlanır; kaza aktarımı yine yapılır.
         for (final e0 in LocalStore.guestDays.entries) {
           final d = e0.key;
           final m = e0.value;
           if (m.isEmpty) continue;
           await LocalStore.saveDay(d, m);
-          await supa.from('daily_prayers').upsert(
-            {'user_id': myId, 'prayer_date': d, for (final e in m.entries) e.key: e.value.code},
-            onConflict: 'user_id,prayer_date',
-          );
+          try {
+            await supa.from('daily_prayers').upsert(
+              {'user_id': myId, 'prayer_date': d, for (final e in m.entries) e.key: e.value.code},
+              onConflict: 'user_id,prayer_date',
+            );
+          } catch (e) {
+            if (classifySyncError(e) != SyncFailure.rejected) rethrow;
+            Log.warn('misafir', 'gün $d reddedildi: $e');
+            rejectNotice.value++;
+          }
         }
         // 3) Bu oturumun kaza sayıları: önce bekleyen aktarım olarak ayrılır, sonra gönderilir
         if (LocalStore.guestKaza.isNotEmpty) {
@@ -523,10 +540,11 @@ class Repo {
     }
   }
 
-  static Future<void> _sendMerge(String id, Map<String, (int, int)> items) => supa.rpc('merge_guest_kaza', params: {
-        'p_merge_id': id,
-        'p_items': guestMergePayload(items),
-      });
+  static Future<void> _sendMerge(String id, Map<String, (int, int)> items) {
+    final payload = guestMergePayload(items);
+    if (payload.length != items.length) Log.warn('misafir', 'negatif kaza sayısı gönderilmedi');
+    return supa.rpc('merge_guest_kaza', params: {'p_merge_id': id, 'p_items': payload});
+  }
 
   /// Kendi namaz kayıtlarım (tarih aralığı, Karne için).
   static Future<Map<String, Map<String, PrayerStatus>>> myRange(DateTime from, DateTime to) async {
@@ -591,6 +609,7 @@ class Repo {
       await LocalStore.setHasGuestData(true);
       return;
     }
+    _userMarked = true;
     try {
       await _upsertKaza(type, owed, completed);
     } catch (_) {

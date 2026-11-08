@@ -18,13 +18,22 @@ void main() {
     });
 
     test('Bağlantı, zaman aşımı ve geçici sunucu hataları tekrar denenir', () {
-      // 42501: oturum düşmüşse yetki hatası gelir; kayıt silinmemeli
-      for (final c in ['42501', '28000', 'PGRST301', 'PGRST000', '57014', '53300', '08006', '40001', null, '']) {
+      // 42501: oturum düşmüşse yetki hatası gelir; kayıt hemen silinmemeli.
+      // 429/422/500: JSON olmayan cevapta kütüphane HTTP durumunu koda yazar; kalıcı ret değildir.
+      for (final c in ['42501', '28000', 'PGRST301', 'PGRST000', '57014', '53300', '08006', '40001',
+          '429', '422', '500', '4290', '42', null, '']) {
         expect(classifySyncError(pg(c)), SyncFailure.temporary, reason: '$c');
       }
       expect(classifySyncError(const SocketException('internet yok')), SyncFailure.temporary);
       expect(classifySyncError(TimeoutException('yavaş')), SyncFailure.temporary);
       expect(classifySyncError(Exception('bilinmeyen')), SyncFailure.temporary);
+    });
+
+    test('Yetki hatası ayrıca tanınır (birkaç denemeden sonra kalıcı sayılır)', () {
+      expect(isAuthError(pg('42501')), isTrue);
+      expect(isAuthError(pg('23514')), isFalse);
+      expect(isAuthError(const SocketException('yok')), isFalse);
+      expect(maxAuthRetries, greaterThan(1));
     });
   });
 
@@ -44,6 +53,10 @@ void main() {
     });
 
     test('Misafir verisi silinince sonucu bilinmeyen aktarım silinmez', () {
+      addTearDown(() {
+        LocalStore.pendingMerge = null;
+        LocalStore.clearGuest();
+      });
       LocalStore.pendingMerge = (id: 'g-1', user: 'u-1', items: {'FAJR': (2, 0)});
       LocalStore.guestKaza['ASR'] = (1, 0);
       LocalStore.clearGuest();
@@ -51,7 +64,6 @@ void main() {
       expect(LocalStore.pendingMerge?.id, 'g-1');
       expect(LocalStore.pendingMerge?.user, 'u-1');
       expect(LocalStore.pendingMerge?.items, {'FAJR': (2, 0)});
-      LocalStore.pendingMerge = null;
     });
   });
 
