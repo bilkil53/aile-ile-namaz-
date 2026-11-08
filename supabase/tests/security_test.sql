@@ -6,14 +6,14 @@
 -- Gereken: en az bir havuz üyesi (pool_members). Erkek üye yoksa o test atlanır.
 do $$
 declare
-  u uuid; p uuid; male uuid; other uuid;
+  u uuid; p uuid; male uuid;
   fails text := ''; passed int := 0; skipped text := '';
-  b boolean; n int; o0 int; o1 int;
+  n int;
 begin
   select m.user_id, m.pool_id into u, p from public.pool_members m limit 1;
   if u is null then raise exception 'SONUC: HATA test icin havuz uyesi yok'; end if;
 
-  -- 1) Misafir (anon): Pro, test, aktarım ve iç fonksiyonlar çağrılamaz
+  -- 1) Misafir (anon): Pro, test ve iç fonksiyonlar çağrılamaz
   set local role anon;
   begin perform public.test_restart_trial(); fails := fails || 'anon_test_restart_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
@@ -21,9 +21,13 @@ begin
   exception when insufficient_privilege then passed := passed + 1; end;
   begin perform public.request_pro_from_reis(); fails := fails || 'anon_request_pro_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
-  begin perform public.merge_guest_kaza('x', '{}'::jsonb); fails := fails || 'anon_merge_acik; ';
-  exception when insufficient_privilege then passed := passed + 1; end;
   begin perform private.retry_push_events(); fails := fails || 'anon_retry_push_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin insert into public.kaza_prayers(user_id, prayer_type, owed_count, completed_count) values (u, 'FAJR', 1, 0);
+    fails := fails || 'anon_kaza_yazabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin insert into public.daily_prayers(user_id, prayer_date, fajr) values (u, '2000-01-02', 'PRAYED');
+    fails := fails || 'anon_namaz_yazabiliyor; ';
   exception when insufficient_privilege then passed := passed + 1; end;
   reset role;
 
@@ -55,27 +59,12 @@ begin
     fails := fails || 'pe_sistem_olayi_yazilabiliyor; ';
   exception when insufficient_privilege or check_violation then passed := passed + 1; end;
 
-  -- 4) Misafir kaza aktarımı: aynı kimlik ikinci kez eklenmez
-  select coalesce(max(owed_count) filter (where prayer_type = 'FAJR'), 0) into o0
-    from public.kaza_prayers where user_id = u;
-  b := public.merge_guest_kaza('test-merge-1', '{"FAJR":[3,1]}'::jsonb);
-  if b is not true then fails := fails || 'merge_ilk_cagri_true_degil; '; else passed := passed + 1; end if;
-  b := public.merge_guest_kaza('test-merge-1', '{"FAJR":[3,1]}'::jsonb);
-  if b is not false then fails := fails || 'merge_tekrar_false_degil; '; else passed := passed + 1; end if;
-  select owed_count into o1 from public.kaza_prayers where user_id = u and prayer_type = 'FAJR';
-  if o1 is distinct from o0 + 3 then fails := fails || format('merge_sayi_yanlis(%s->%s); ', o0, o1);
-  else passed := passed + 1; end if;
-  begin perform public.merge_guest_kaza('test-merge-2', '{"XYZ":[1,0]}'::jsonb); fails := fails || 'merge_gecersiz_tur_kabul; ';
-  exception when sqlstate '22023' then passed := passed + 1; end;
-  begin perform public.merge_guest_kaza('test-merge-3', '{"ASR":[-1,0]}'::jsonb); fails := fails || 'merge_negatif_kabul; ';
-  exception when sqlstate '22023' then passed := passed + 1; end;
-
-  -- 5) Gizlilik: başkasının kaza kayıtları görünmez
+  -- 4) Gizlilik: başkasının kaza kayıtları görünmez
   select count(*) into n from public.kaza_prayers where user_id <> u;
   if n <> 0 then fails := fails || 'baskasinin_kazasi_gorunuyor; '; else passed := passed + 1; end if;
   reset role;
 
-  -- 6) Erkek üyede "Muaf" kaydedilmez (NONE'a çevrilir)
+  -- 5) Erkek üyede "Muaf" kaydedilmez (NONE'a çevrilir)
   select m.user_id into male from public.pool_members m
    where m.gender = 'm' or (m.gender is null and m.role_title in ('Aile Reisi','Baba','Oğlu','Babası','Dedesi','Damadı'))
    limit 1;

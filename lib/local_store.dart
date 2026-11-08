@@ -84,13 +84,6 @@ class LocalStore {
     await saveDay(date, m);
   }
 
-  static List<String> allDates() => AppSettings.prefs
-      .getKeys()
-      .where((k) => k.startsWith('lp_'))
-      .map((k) => k.substring(3))
-      .toList()
-    ..sort();
-
   // ---- Kaza ----
   static Map<String, (int, int)> kaza() {
     if (_mem) return Map.of(_gKaza);

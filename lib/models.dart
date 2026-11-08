@@ -42,24 +42,6 @@ const prayerLabels = {
   'witr': 'Vitir',
 };
 
-/// Vakit emojileri (sadece bildirim metinlerinde; ekranda widgets/prayer_icon.dart kullanılır).
-const prayerEmoji = {
-  'fajr': '🌅',
-  'dhuhr': '☀️',
-  'asr': '⛅',
-  'maghrib': '🌇',
-  'isha': '🌌',
-};
-
-/// Vakit açıklamaları (eski Karne ekranından).
-const prayerSubtitles = {
-  'fajr': 'Güneş doğmadan önceki vaktin bereketi',
-  'dhuhr': 'Günün ortasındaki manevi mola',
-  'asr': 'Günün en kıymetli secde vakti',
-  'maghrib': 'Günün batışıyla ifa edilen şükür',
-  'isha': 'Günün son huzur secdesi',
-};
-
 /// Reisin kendi unvanı (katılım onayında seçer).
 const ownerTitles = {'Aile Reisi': '🏡', 'Baba': '🧔', 'Anne': '🧕'};
 
