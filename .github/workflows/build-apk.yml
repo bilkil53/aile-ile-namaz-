@@ -270,6 +270,23 @@ jobs:
             exit "$rc"
           fi
 
+      - name: Birim testleri (biri bile başarısızsa derleme durur)
+        run: |
+          set +e
+          flutter test --reporter expanded > test.txt 2>&1
+          rc=$?
+          cat test.txt
+          {
+            echo '## flutter test'
+            echo '```'
+            tail -c 6000 test.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Birim testleri başarısız (çıkış kodu $rc); derleme durduruldu."
+            exit "$rc"
+          fi
+
       - name: Derleme numarası (r1, r2, r3 … yalnızca resmi yayınlara göre artar)
         env:
           GH_TOKEN: ${{ github.token }}

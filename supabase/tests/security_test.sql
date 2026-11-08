@@ -1,0 +1,100 @@
+-- Sunucu güvenlik ve kural testleri (canlı veritabanında, GERİ ALINARAK çalışır).
+-- Çalıştırma: Supabase SQL Editor'e yapıştır ya da execute_sql ile çalıştır.
+-- Blok her durumda sonunda hata fırlatır: tüm değişiklikler geri alınır, veri kalmaz.
+--   Mesaj "SONUC: OK" ile başlıyorsa tüm testler geçti.
+--   "SONUC: HATA" ile başlıyorsa başarısız testler listelenir.
+-- Gereken: en az bir havuz üyesi (pool_members). Erkek üye yoksa o test atlanır.
+do $$
+declare
+  u uuid; p uuid; male uuid; other uuid;
+  fails text := ''; passed int := 0; skipped text := '';
+  b boolean; n int; o0 int; o1 int;
+begin
+  select m.user_id, m.pool_id into u, p from public.pool_members m limit 1;
+  if u is null then raise exception 'SONUC: HATA test icin havuz uyesi yok'; end if;
+
+  -- 1) Misafir (anon): Pro, test, aktarım ve iç fonksiyonlar çağrılamaz
+  set local role anon;
+  begin perform public.test_restart_trial(); fails := fails || 'anon_test_restart_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.my_pro_status(); fails := fails || 'anon_my_pro_status_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.request_pro_from_reis(); fails := fails || 'anon_request_pro_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.merge_guest_kaza('x', '{}'::jsonb); fails := fails || 'anon_merge_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform private.retry_push_events(); fails := fails || 'anon_retry_push_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+
+  -- Giriş yapmış kullanıcı u olarak
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  -- 2) Normal Pro akışı çalışır, iç fonksiyon çağrılamaz
+  begin perform public.my_pro_status(); passed := passed + 1;
+  exception when others then fails := fails || 'auth_my_pro_status: ' || sqlerrm || '; '; end;
+  begin perform private.retry_push_events(); fails := fails || 'auth_retry_push_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+
+  -- 3) pool_events: yalnızca izinli 6 sütun; tarih yazılamaz; değiştirme/silme yok
+  begin insert into public.pool_events(pool_id, sender_id, event_type, message) values (p, u, 'DUA', 'test');
+    passed := passed + 1;
+  exception when others then fails := fails || 'pe_insert_6sutun: ' || sqlerrm || '; '; end;
+  begin insert into public.pool_events(pool_id, sender_id, event_type, message) values (p, u, 'DUA', 'test2');
+    fails := fails || 'dua_hiz_siniri_calismadi; ';
+  exception when sqlstate 'P0001' then passed := passed + 1; end;
+  begin insert into public.pool_events(pool_id, sender_id, event_type, created_at) values (p, u, 'KAZA', now() - interval '2 days');
+    fails := fails || 'pe_created_at_yazilabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin update public.pool_events set message = 'x' where pool_id = p; fails := fails || 'pe_update_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin delete from public.pool_events where pool_id = p; fails := fails || 'pe_delete_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin insert into public.pool_events(pool_id, sender_id, event_type) values (p, u, 'MEMBER_JOINED');
+    fails := fails || 'pe_sistem_olayi_yazilabiliyor; ';
+  exception when insufficient_privilege or check_violation then passed := passed + 1; end;
+
+  -- 4) Misafir kaza aktarımı: aynı kimlik ikinci kez eklenmez
+  select coalesce(max(owed_count) filter (where prayer_type = 'FAJR'), 0) into o0
+    from public.kaza_prayers where user_id = u;
+  b := public.merge_guest_kaza('test-merge-1', '{"FAJR":[3,1]}'::jsonb);
+  if b is not true then fails := fails || 'merge_ilk_cagri_true_degil; '; else passed := passed + 1; end if;
+  b := public.merge_guest_kaza('test-merge-1', '{"FAJR":[3,1]}'::jsonb);
+  if b is not false then fails := fails || 'merge_tekrar_false_degil; '; else passed := passed + 1; end if;
+  select owed_count into o1 from public.kaza_prayers where user_id = u and prayer_type = 'FAJR';
+  if o1 is distinct from o0 + 3 then fails := fails || format('merge_sayi_yanlis(%s->%s); ', o0, o1);
+  else passed := passed + 1; end if;
+  begin perform public.merge_guest_kaza('test-merge-2', '{"XYZ":[1,0]}'::jsonb); fails := fails || 'merge_gecersiz_tur_kabul; ';
+  exception when sqlstate '22023' then passed := passed + 1; end;
+  begin perform public.merge_guest_kaza('test-merge-3', '{"ASR":[-1,0]}'::jsonb); fails := fails || 'merge_negatif_kabul; ';
+  exception when sqlstate '22023' then passed := passed + 1; end;
+
+  -- 5) Gizlilik: başkasının kaza kayıtları görünmez
+  select count(*) into n from public.kaza_prayers where user_id <> u;
+  if n <> 0 then fails := fails || 'baskasinin_kazasi_gorunuyor; '; else passed := passed + 1; end if;
+  reset role;
+
+  -- 6) Erkek üyede "Muaf" kaydedilmez (NONE'a çevrilir)
+  select m.user_id into male from public.pool_members m
+   where m.gender = 'm' or (m.gender is null and m.role_title in ('Aile Reisi','Baba','Oğlu','Babası','Dedesi','Damadı'))
+   limit 1;
+  if male is null then
+    skipped := skipped || 'erkek_muaf(erkek uye yok); ';
+  else
+    perform set_config('request.jwt.claims', json_build_object('sub', male, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+    insert into public.daily_prayers(user_id, prayer_date, fajr) values (male, '2000-01-01', 'EXCUSED')
+      on conflict (user_id, prayer_date) do update set fajr = excluded.fajr;
+    if (select fajr from public.daily_prayers where user_id = male and prayer_date = '2000-01-01') <> 'NONE' then
+      fails := fails || 'erkek_muaf_kaydedildi; ';
+    else passed := passed + 1; end if;
+    reset role;
+  end if;
+
+  if fails = '' then
+    raise exception 'SONUC: OK % test gecti (geri alindi). Atlanan: %', passed, coalesce(nullif(skipped, ''), 'yok');
+  else
+    raise exception 'SONUC: HATA % gecti; basarisiz: % Atlanan: %', passed, fails, coalesce(nullif(skipped, ''), 'yok');
+  end if;
+end $$;
