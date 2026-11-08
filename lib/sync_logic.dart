@@ -33,6 +33,18 @@ SyncFailure classifySyncError(Object e) {
   return SyncFailure.temporary;
 }
 
+/// İki kuyruk kaydı aynı işlem mi? (Deneme sayacı `a` gibi ek alanlar karşılaştırılmaz.)
+/// Gönderim sürerken kullanıcı aynı vakti yeniden işaretlerse yeni kayıt eskisinin yerini alır;
+/// eskisi gönderilince yalnızca kendisi silinir, yenisi kuyrukta kalır.
+bool sameQueueOp(Map<String, dynamic> a, Map<String, dynamic> b) {
+  if (a['t'] != b['t']) return false;
+  return switch (a['t']) {
+    'prayer' => a['date'] == b['date'] && a['key'] == b['key'] && a['status'] == b['status'],
+    'kaza' => a['type'] == b['type'] && a['o'] == b['o'] && a['c'] == b['c'],
+    _ => false,
+  };
+}
+
 /// Misafir kaza sayılarını sunucudaki merge_guest_kaza(p_items) biçimine çevirir:
 /// {tür: [borç, kılınan]}. Negatif sayılar gönderilmez (sunucu da reddeder).
 Map<String, List<int>> guestMergePayload(Map<String, (int, int)> kaza) => {

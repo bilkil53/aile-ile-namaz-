@@ -440,25 +440,29 @@ class Repo {
           await _upsertKaza(o['type'] as String, (o['o'] as num).toInt(), (o['c'] as num).toInt())
               .timeout(const Duration(seconds: 10));
         }
-        q.removeAt(i);
+        await LocalStore.removeOp(o);
+        i++;
         sent++;
         offline = false;
-        await LocalStore.saveQueue(q);
       } catch (e) {
         Log.warn('senkron', e);
         var rejected = classifySyncError(e) == SyncFailure.rejected;
         if (isAuthError(e)) {
-          // Yetki hatası: oturum düşmüş olabilir, birkaç kez daha denenir; sürerse kalıcı ret
-          final tries = ((o['a'] as num?)?.toInt() ?? 0) + 1;
-          o['a'] = tries;
-          await LocalStore.saveQueue(q);
-          rejected = tries >= maxAuthRetries;
+          // Yetki hatası: oturum düşmüş olabilir. Yalnızca oturum geçerliyken sayılır (süresi dolmuş
+          // oturumda kayıtlar silinmez, giriş düzelince gönderilir); geçerli oturumda 5 kez üst üste
+          // gelirse kalıcı ret sayılır.
+          final session = supa.auth.currentSession;
+          if (session != null && !session.isExpired) {
+            final tries = ((o['a'] as num?)?.toInt() ?? 0) + 1;
+            final still = await LocalStore.updateOp(o, 'a', tries);
+            rejected = still && tries >= maxAuthRetries;
+          }
         }
         if (rejected) {
           // Sunucu kalıcı olarak reddetti: tekrar denemek sonsuz döngü olur ve arkadaki kayıtları
           // bekletir. Bu kayıt kuyruktan çıkarılır, kullanıcıya "kaydedilemedi" bilgisi verilir.
-          q.removeAt(i);
-          await LocalStore.saveQueue(q);
+          await LocalStore.removeOp(o);
+          i++;
           rejectNotice.value++;
           continue;
         }
