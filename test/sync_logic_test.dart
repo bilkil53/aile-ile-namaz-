@@ -1,0 +1,67 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:aile_ile_namaz/local_store.dart';
+import 'package:aile_ile_namaz/sync_logic.dart';
+import 'package:aile_ile_namaz/update_checker.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
+
+PostgrestException pg(String? code) => PostgrestException(message: 'test', code: code);
+
+void main() {
+  group('Gönderim hatası ayrımı (kalıcı ret mi, geçici mi)', () {
+    test('Kural/kısıt/geçersiz veri/tetikleyici hataları kalıcı ret sayılır', () {
+      for (final c in ['23514', '23505', '42703', '22P02', '22023', 'P0001']) {
+        expect(classifySyncError(pg(c)), SyncFailure.rejected, reason: c);
+      }
+    });
+
+    test('Bağlantı, zaman aşımı ve geçici sunucu hataları tekrar denenir', () {
+      // 42501: oturum düşmüşse yetki hatası gelir; kayıt silinmemeli
+      for (final c in ['42501', '28000', 'PGRST301', 'PGRST000', '57014', '53300', '08006', '40001', null, '']) {
+        expect(classifySyncError(pg(c)), SyncFailure.temporary, reason: '$c');
+      }
+      expect(classifySyncError(const SocketException('internet yok')), SyncFailure.temporary);
+      expect(classifySyncError(TimeoutException('yavaş')), SyncFailure.temporary);
+      expect(classifySyncError(Exception('bilinmeyen')), SyncFailure.temporary);
+    });
+  });
+
+  group('Misafir kaza aktarımı', () {
+    test('Sayılar sunucu biçimine çevrilir', () {
+      expect(guestMergePayload({'FAJR': (3, 1), 'ISHA': (0, 0)}), {
+        'FAJR': [3, 1],
+        'ISHA': [0, 0],
+      });
+    });
+
+    test('Boş veri boş gönderilir, negatif sayı gönderilmez', () {
+      expect(guestMergePayload({}), isEmpty);
+      expect(guestMergePayload({'FAJR': (-1, 0), 'ASR': (2, -3), 'DHUHR': (1, 1)}), {
+        'DHUHR': [1, 1],
+      });
+    });
+
+    test('Misafir verisi silinince sonucu bilinmeyen aktarım silinmez', () {
+      LocalStore.pendingMerge = (id: 'g-1', user: 'u-1', items: {'FAJR': (2, 0)});
+      LocalStore.guestKaza['ASR'] = (1, 0);
+      LocalStore.clearGuest();
+      expect(LocalStore.guestKaza, isEmpty);
+      expect(LocalStore.pendingMerge?.id, 'g-1');
+      expect(LocalStore.pendingMerge?.user, 'u-1');
+      expect(LocalStore.pendingMerge?.items, {'FAJR': (2, 0)});
+      LocalStore.pendingMerge = null;
+    });
+  });
+
+  group('Güncelleme derleme numarası', () {
+    test('İşlemci türüne göre sürüm kodundan derleme numarası çıkarılır', () {
+      expect(UpdateChecker.buildOf('3074'), 74);
+      expect(UpdateChecker.buildOf('1052'), 52);
+      expect(UpdateChecker.buildOf('74'), 74);
+      expect(UpdateChecker.buildOf(''), 0);
+      expect(UpdateChecker.buildOf('abc'), 0);
+    });
+  });
+}

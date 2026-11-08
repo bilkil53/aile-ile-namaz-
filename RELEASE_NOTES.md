@@ -1,4 +1,4 @@
-Namaz Demo — güvenlik ve güvenilirlik: güncelleme dosyası doğrulanamazsa kurulmaz; misafir kaza sayıları hesaba bir kez ve eksiksiz aktarılır; internet yokken "Telefona kaydedildi, internet gelince gönderilecek" bilgisi artık gerçekten gösterilir; güncelleme penceresi hata sonrası takılı kalmaz. Test Pro kodu: 1.
+Namaz Demo — Güvenilirlik: sunucunun kabul etmediği bir kayıt artık "internet gelince gönderilecek" denip sonsuza dek beklemez, "kabul edilmedi" bilgisi verilir ve ekran düzelir; açılışta kendiliğinden "telefona kaydedildi" yazısı çıkmaz; yarım kalan misafir kaza aktarımı otomatik tamamlanır. Her derlemede otomatik testler çalışır. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 

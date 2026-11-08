@@ -39,6 +39,7 @@ class _TodayScreenState extends State<TodayScreen> {
     super.initState();
     LocationHelper.version.addListener(_onLocation);
     Repo.offlineNotice.addListener(_onOffline);
+    Repo.rejectNotice.addListener(_onRejected);
     _load();
     // Geri sayım için dakikada bir yenile (saniyelik yenileme pil harcar).
     _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -56,6 +57,7 @@ class _TodayScreenState extends State<TodayScreen> {
   void dispose() {
     LocationHelper.version.removeListener(_onLocation);
     Repo.offlineNotice.removeListener(_onOffline);
+    Repo.rejectNotice.removeListener(_onRejected);
     _ticker?.cancel();
     super.dispose();
   }
@@ -108,6 +110,15 @@ class _TodayScreenState extends State<TodayScreen> {
   Map<String, PrayerStatus> get _current => _showYesterday ? _yesterday : _today;
 
   void _onOffline() => _showOfflineNote();
+
+  void _onRejected() {
+    if (!mounted || isGuest) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('⚠️ Bir kayıt sunucu tarafından kabul edilmedi ve buluta gönderilmedi. Kontrol edip tekrar işaretle.'),
+      duration: Duration(seconds: 5),
+    ));
+    unawaited(_load()); // ekran buluttaki son duruma döner
+  }
 
   void _showOfflineNote() {
     if (!mounted || isGuest) return;

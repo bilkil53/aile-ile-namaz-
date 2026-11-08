@@ -36,9 +36,10 @@ class LocalStore {
   static final Map<String, (int, int)> _gKaza = {};
   static bool _gData = false;
 
-  /// Bu misafir oturumunun kaza aktarım kimliği. Misafir verisiyle birlikte yalnızca bellekte
-  /// tutulur: veri silinince kimlik de silinir (eski kimlik yeni oturumun aktarımını engellemesin).
-  static String? guestMergeId;
+  /// Gönderilmiş ama sonucu bilinmeyen kaza aktarımı: (aktarım kimliği, hesap, gönderilen sayılar).
+  /// Bellekte tutulur. Misafir oturumunun sayılarından ayrıdır: sonraki misafir oturumunun yeni
+  /// sayıları bu kimliğe karışmaz. Aynı kimlikle tekrar gönderilir; sunucu ikinci kez eklemez.
+  static ({String id, String user, Map<String, (int, int)> items})? pendingMerge;
 
   /// Bu oturumda misafirken işaretlenmiş, henüz buluta gönderilmemiş veri var mı?
   static bool get hasGuestData => _gData;
@@ -51,7 +52,6 @@ class LocalStore {
     _gDays.clear();
     _gKaza.clear();
     _gData = false;
-    guestMergeId = null;
   }
 
   /// Eski sürümlerin kalıcı misafir bayraklarını ve test dönemi önbelleğini bir kez temizle.

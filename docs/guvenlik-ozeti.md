@@ -71,4 +71,4 @@ Son kontrol: 08.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 ## 6. Bilinen açık işler
 
 1. **Play'e çıkmadan önce (ücretli Pro başlamadan) silinecek TEST fonksiyonları — öncelikli.** Şu an her giriş yapmış kullanıcı deneme süresini sıfırlayıp "1" koduyla Pro alabilir. Fonksiyonlar: `test_restart_trial`, `test_remove_pro`, `expire_pro_test`. `redeem_pro_code` ("1" kodu) yerine Google Play ödeme doğrulaması gelecek.
-2. **Otomatik testler henüz yok** (sonraki adım): Flutter birim testleri ve SQL test dosyası.
+2. **Testler (eklendi, 08.11.2026).** `test/` altındaki birim testleri CI'da her derlemede çalışır; biri başarısız olursa yayın çıkmaz. `supabase/tests/security_test.sql` sunucu kurallarını (anon yetkileri, `pool_events` sütun yetkisi, hız sınırı, misafir aktarımının tekrar koruması, gizlilik, erkek üyede "Muaf" kuralı) geri alınarak sınar; her sunucu değişikliğinden sonra çalıştırılmalı. Eksik: ekran (widget) testleri.
