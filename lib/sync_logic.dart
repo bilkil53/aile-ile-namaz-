@@ -45,6 +45,16 @@ bool sameQueueOp(Map<String, dynamic> a, Map<String, dynamic> b) {
   };
 }
 
+/// Kuyruktaki bu kaza türünün en son kaydı (yoksa null). Gönderim her zaman en son değeri yollar;
+/// böylece hızlı art arda değişikliklerde buluta eski bir sayı yazılmaz.
+Map<String, dynamic>? latestKazaOp(List<Map<String, dynamic>> queue, String type) {
+  for (var i = queue.length - 1; i >= 0; i--) {
+    final o = queue[i];
+    if (o['t'] == 'kaza' && o['type'] == type) return o;
+  }
+  return null;
+}
+
 /// Misafir kaza sayılarını sunucudaki merge_guest_kaza(p_items) biçimine çevirir:
 /// {tür: [borç, kılınan]}. Negatif sayılar gönderilmez (sunucu da reddeder).
 Map<String, List<int>> guestMergePayload(Map<String, (int, int)> kaza) => {

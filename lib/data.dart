@@ -437,8 +437,7 @@ class Repo {
             onConflict: 'user_id,prayer_date',
           ).timeout(const Duration(seconds: 10));
         } else if (o['t'] == 'kaza') {
-          await _upsertKaza(o['type'] as String, (o['o'] as num).toInt(), (o['c'] as num).toInt())
-              .timeout(const Duration(seconds: 10));
+          await _sendLatestKaza(o['type'] as String);
         }
         await LocalStore.removeOp(o);
         i++;
@@ -607,17 +606,51 @@ class Repo {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id,prayer_type');
 
+  /// Kaza gönderimleri sırayla yapılır (aynı anda iki gönderim olmaz): hızlı art arda değişiklikte
+  /// eski sayı yenisinden sonra buluta yazılıp onu ezemez.
+  static Future<void> _kazaChain = Future.value();
+
+  /// Bu türün telefondaki kuyrukta bekleyen en son sayısını buluta yazar; başarılıysa kuyruktan
+  /// siler. Bu sırada yeni bir değişiklik geldiyse o kuyrukta kalır ve ayrıca gönderilir.
+  static Future<void> _sendLatestKaza(String type) {
+    Future<void> run() async {
+      final op = latestKazaOp(LocalStore.queue(), type);
+      if (op == null) return;
+      await _upsertKaza(type, (op['o'] as num).toInt(), (op['c'] as num).toInt())
+          .timeout(const Duration(seconds: 10));
+      await LocalStore.removeOp(op);
+    }
+
+    final r = _kazaChain.then((_) => run());
+    _kazaChain = r.then((_) {}, onError: (_) {});
+    return r;
+  }
+
   static Future<void> saveKaza(String type, int owed, int completed, {bool announce = false}) async {
+    // 1) Telefona yaz  2) telefondaki kuyruğa ekle  3) buluta gönder  4) başarılıysa kuyruktan sil.
+    // Gönderim sırasında internet kesilir ya da uygulama kapanırsa değişiklik kuyrukta kalır,
+    // internet gelince (ya da uygulama tekrar açılınca) otomatik gönderilir.
     await LocalStore.saveKaza(type, owed, completed);
     if (isGuest) {
       await LocalStore.setHasGuestData(true);
       return;
     }
     _userMarked = true;
+    final op = <String, dynamic>{'t': 'kaza', 'type': type, 'o': owed, 'c': completed};
+    await LocalStore.enqueue(op);
     try {
-      await _upsertKaza(type, owed, completed);
-    } catch (_) {
-      await LocalStore.enqueue({'t': 'kaza', 'type': type, 'o': owed, 'c': completed});
+      await _sendLatestKaza(type);
+    } catch (e) {
+      Log.warn('kaza', e);
+      if (classifySyncError(e) == SyncFailure.rejected) {
+        await LocalStore.removeOp(op);
+        rejectNotice.value++;
+        return;
+      }
+      if (!offline) {
+        offline = true;
+        offlineNotice.value++;
+      }
       _ensureRetry();
       return;
     }
