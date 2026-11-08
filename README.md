@@ -214,7 +214,7 @@ Tüm migration SQL dosyaları `supabase/migrations/` klasöründedir (sunucudaki
 
 ### Derleme ve dallar
 * `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1) · `demo` → **Namaz Demo** ön sürümü (*v1.N-demo*, `aile-ile-namaz-demo*.apk`, `--dart-define=CHANNEL=demo`; stabil "son sürüm"ü etkilemez, demo uygulaması yalnızca demo ön sürümlerinden güncellenir).
-* Derlemeler sırayla çalışır (aynı sürüm numarası iki kez verilmez); yayınlar/etiketler silinse bile derleme no 52'nin altına düşmez. Yalnızca belge (`docs/`, `*.md`) değişince sürüm çıkmaz.
+* Derlemeler sırayla çalışır (aynı sürüm numarası iki kez verilmez); yayınlar/etiketler silinse bile derleme no 77'nin altına düşmez (8 Kasım 2026'da r1–r77 silindi; taban 77). Yalnızca belge (`docs/`, `*.md`) değişince sürüm çıkmaz.
 * Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
 * İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
 
