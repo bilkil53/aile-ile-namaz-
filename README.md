@@ -113,8 +113,9 @@
 * Kayıtlar anonimdir (sürüm, Android sürümü, bellek kullanımı, hata ve kod satırları); kişisel veri içermez, 30 gün saklanır.
 
 ### 8. 👀 Gezinti Modu (giriş yapmadan)
-* Bütün ekranlar, Aile Havuzu dahil, denenebilir. Yapılanlar **sadece bellekte** tutulur; uygulama kapanınca silinir.
-* Giriş yapılırsa o oturumdakiler buluta kaydedilir (kaza sayıları hesaptakilerin üzerine eklenir).
+* Gezinti modu **yalnızca bakmak içindir**: bütün ekranlar, Aile Havuzu dahil, görülebilir ama işaretleme ve kayıt yapılmaz.
+* Vakit işaretleme, kaza değiştirme, dua gönderme gibi kayıt gerektiren işlemlerde "Google ile giriş" penceresi çıkar.
+* Giriş yapınca gezinti sırasında yapılan hiçbir şey hesaba aktarılmaz (aktarılacak kayıt zaten yoktur).
 
 ### 9. 📲 Güncelleme ve görünüm
 * **Uygulama simgesi:** yeşil zeminde altın minare, hilal ve E harfi (Android uyarlanabilir simge: `android-config/res`).
@@ -140,7 +141,7 @@
 | Kaza detayı | Veritabanı kuralıyla sadece sahibine açık; aile `kaza_summary` toplamını görür |
 | Ünvan değiştirme | Sadece Aile Reisi (sunucu fonksiyonunda kontrol) |
 | Konum | Sadece telefonda; sunucuya gönderilmez |
-| Misafir verisi | Telefona yazılmaz, sadece bellekte |
+| Misafir (gezinti) | Kayıt yapılmaz; ekranlar yalnızca görüntülenir |
 | Telefon yedeği | Android otomatik yedeklemesi kapalı; oturum bilgisi başka cihaza taşınamaz. Kişisel kayıtlar hesaba bağlı bulutta |
 | Giriş yöntemi | Sadece Google; e-posta/şifre ile kayıt kapalı |
 | Hesap silme | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
@@ -167,10 +168,10 @@
 | Çevrimdışı | shared_preferences önbelleği + bekleme kuyruğu (aynı vakit için en son kayıt) |
 | Güncelleme | GitHub Releases API → işlemci türüne uygun APK (arm64-v8a / armeabi-v7a / x86_64) uygulama içinde indirilir → kendi FileProvider'ı ile ayrı görevde kurulum, eski pencere `finishAndRemoveTask` ile kapanır · Play sürümünde Google Play uygulama içi güncelleme |
 | Derleme | GitHub Actions: `flutter create` → manifest/Gradle yaması → R8 koruma kuralları (`android-config/proguard-rules.pro`, APK içinde otomatik doğrulanır) → imzalı, karıştırılmış APK'lar + AAB → GitHub Releases · **Kapılar:** `flutter analyze` hata veya uyarı bulursa ya da birim testlerinden (`test/`) biri başarısız olursa derleme durur; `main` ve `demo` dallarında kalıcı imza anahtarı (veya parmak izi) yoksa yayın çıkmaz (`dev` geçici anahtarla devam eder) |
-| Hata takibi | Dart: `FlutterError.onError` + `PlatformDispatcher.onError` · Android: `ApplicationExitInfo` (kapanma sebebi) + `App.kt` çökme izi · anonim `crash_reports` tablosu (30 gün) · kullanıcıya sebep penceresi + mail |
+| Hata takibi | Dart: `FlutterError.onError` + `PlatformDispatcher.onError` · Android: `ApplicationExitInfo` (kapanma sebebi) + `App.kt` çökme izi · anonim `crash_reports` tablosu (30 gün) · kullanıcıya sebep penceresi + mail · gönderilmeden önce e-posta, oturum anahtarı, kimlik (uuid), telefon, gizli parametre ve dosya adları maskelenir (`lib/privacy.dart`) |
 | Zamanlanmış görevler | pg_cron: süresi dolan istekleri her dakika düşürür; **`aile-push-retry`** her dakika gönderilemeyen aile bildirimlerini tekrar dener; her gece 7 günden eski aile hareketlerini ve 30 günden eski hata kayıtlarını temizler |
 | Bildirim kuyruğu | `pool_events.push_status`: bekliyor → gönderiliyor → gönderildi / hata · `claim_push_event` ile atomik sahiplenme (aynı bildirim iki kez gitmez) · 10 dk içinde en fazla 3 deneme · geçici hatada (429/5xx) o cihaza hemen bir tekrar · ulaşamayan bildirim 1 saat sonra düşer (TTL) |
-| Testler | `test/`: CI'da her derlemede çalışan birim testleri (gönderim hatası ayrımı, misafir aktarımı, sürüm numarası, durum kodları) · `supabase/tests/security_test.sql`: sunucu güvenlik ve kural testleri (20 kontrol); Supabase SQL Editor'de çalıştırılır, sonunda her şey geri alınır, "SONUC: OK" görünmeli |
+| Testler | `test/`: CI'da her derlemede çalışan birim testleri (gönderim hatası ayrımı, kuyruk, kaza gönderimi, gezinti modu, hata metni maskeleme, sürüm numarası, durum kodları) · `supabase/tests/security_test.sql`: sunucu güvenlik ve kural testleri (20 kontrol); Supabase SQL Editor'de çalıştırılır, sonunda her şey geri alınır, "SONUC: OK" görünmeli |
 | Hata kaydı | `lib/log.dart`: sessiz hatalar konsola ve telefona (konu başına son hata) yazılır; Bildirim izinleri ekranında görünür |
 
 ### Paketler
@@ -181,8 +182,10 @@
 lib/
   main.dart            AuthGate: oturum → HomeShell, yoksa gezinti + Hoş Geldiniz penceresi
   config.dart          Supabase URL, publishable anahtar, Google web client ID
-  data.dart            Repo: tüm Supabase sorguları ve RPC'ler, çevrimdışı kuyruk, misafir aktarımı
-  local_store.dart     Önbellek, bekleme kuyruğu, bellekteki misafir verisi
+  data.dart            Repo: tüm Supabase sorguları ve RPC'ler, çevrimdışı kuyruk
+  local_store.dart     Önbellek, bekleme kuyruğu
+  privacy.dart         Hata metinlerinden kişisel/gizli bilgiyi maskeleme
+  sync_logic.dart      Senkron kararları (hata ayrımı, kuyruk eşleştirme)
   models.dart          PrayerStatus, Pool, Member, JoinRequest, PoolEvent, ünvanlar
   prayer_times.dart    Diyanet vakitleri, 81 il, kıble açısı
   location.dart        GPS → ilçe/il
@@ -194,7 +197,7 @@ lib/
   update_checker.dart  GitHub Releases'tan uygulama içi güncelleme (SHA-256 doğrulamalı)
   cuma_reminder.dart   Erkeklere peş peşe 3 Cuma uyarısı
   log.dart             Sessiz hataların kaydı (son hata)
-  integrity.dart       APK imza kontrolü (uyarı)
+  integrity.dart       APK imza kontrolü (yalnızca uyarı; yetki kontrolü sunucuda RLS/RPC ile)
   kvkk.dart            KVKK aydınlatma ve açık rıza
   screens/             today, family, kaza, karne, settings, login (Hoş Geldiniz), home_shell, notify_health (Bildirim izinleri)
   widgets/             prayer_icon, qibla_card (pusula), dini_gun_card (bayram / kandil kartı)

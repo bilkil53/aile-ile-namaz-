@@ -1,4 +1,4 @@
-Namaz Demo — Güvenilirlik: kaza sayıları da önce telefona kaydedilir, sonra buluta gönderilir; gönderim sırasında internet kesilse ya da uygulama kapansa bile değişiklik kaybolmaz, internet gelince otomatik gider. Art arda hızlı değişikliklerde buluta her zaman en son sayı yazılır. Test Pro kodu: 1.
+Namaz Demo — Gezinti (giriş yapmadan) modu artık yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz, kayıt için Google ile giriş penceresi çıkar; giriş sonrası gezintiden hiçbir şey aktarılmaz. Hata raporlarından e-posta, oturum anahtarı, kimlik ve telefon gibi bilgiler gönderilmeden önce silinir. Kaza sayıları önce telefona, sonra buluta kaydedilir. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
