@@ -630,6 +630,7 @@ class Repo {
     // 1) Telefona yaz  2) telefondaki kuyruğa ekle  3) buluta gönder  4) başarılıysa kuyruktan sil.
     // Gönderim sırasında internet kesilir ya da uygulama kapanırsa değişiklik kuyrukta kalır,
     // internet gelince (ya da uygulama tekrar açılınca) otomatik gönderilir.
+    final prev = isGuest ? null : LocalStore.kaza()[type];
     await LocalStore.saveKaza(type, owed, completed);
     if (isGuest) {
       await LocalStore.setHasGuestData(true);
@@ -640,12 +641,15 @@ class Repo {
     await LocalStore.enqueue(op);
     try {
       await _sendLatestKaza(type);
+      offline = false;
     } catch (e) {
       Log.warn('kaza', e);
       if (classifySyncError(e) == SyncFailure.rejected) {
+        // Sunucu kabul etmedi: telefondaki sayı eski değerine döner, ekran "Kaydedilemedi" der
         await LocalStore.removeOp(op);
-        rejectNotice.value++;
-        return;
+        final (o0, c0) = prev ?? (0, 0);
+        await LocalStore.saveKaza(type, o0, c0);
+        rethrow;
       }
       if (!offline) {
         offline = true;
