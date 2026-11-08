@@ -56,7 +56,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
 
   /// 1) Telefondaki Google hesaplarından seçtirir (tarayıcı açılmaz).
   /// 2) Bu yol çalışmazsa (ör. Google Play Hizmetleri yok) tarayıcı girişine düşer.
-  bool _consent = Kvkk.given;
+  bool _consent = Kvkk.given; // giriş yokken: yalnızca bu girişte işaretlendiyse
   bool _consentWarn = false;
 
   Future<void> _signIn() async {

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
 import 'crash_report.dart';
+import 'data.dart';
 import 'local_store.dart';
 import 'notifications.dart';
 import 'pro.dart';
@@ -101,6 +102,8 @@ class _AuthGateState extends State<AuthGate> {
             return const Scaffold(body: Center(child: CircularProgressIndicator()));
           }
           if (session != null) {
+            // Telefondaki kişisel veriler bu hesaba bağlanır; başka hesabın verisi varsa silinir
+            if (LocalStore.bindUser(session.user.id)) Repo.resetUserCache();
             return HomeShell(key: ValueKey(session.user.id));
           }
           // Giriş yoksa uygulama açılır; ilk açılışta üzerine "Hoş Geldiniz" penceresi gelir.

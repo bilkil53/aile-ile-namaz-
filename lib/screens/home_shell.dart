@@ -48,6 +48,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         final loggedIn = await showWelcome(context);
         if (loggedIn || !mounted) return; // giriş yapıldıysa yeni oturum ekranı açılır
       }
+      if (!isGuest) await Kvkk.attach(); // giriş ekranında verilen rıza bu hesaba bağlanır
       if (!isGuest && !Kvkk.given && mounted) {
         await Kvkk.askIfNeeded(context);
         if (isGuest || !mounted) return; // kabul etmediyse oturum kapandı

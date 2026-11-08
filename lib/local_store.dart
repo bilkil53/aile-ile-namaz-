@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -42,6 +43,40 @@ class LocalStore {
   static void clearGuest() {
     _gDays.clear();
     _gKaza.clear();
+  }
+
+  // ---- Hesap ayrımı: telefondaki kişisel veriler tek hesaba aittir ----
+  static const _kOwner = 'store.owner';
+
+  /// Bir hesaba ait telefondaki kişisel veriler mi? (Ayarlar ve vakit önbelleği cihaza aittir, silinmez.)
+  static bool isUserKey(String k) =>
+      k.startsWith('lp_') ||
+      k.startsWith('pro.') ||
+      k.startsWith('cuma.') ||
+      const {'lk', 'queue', 'myName', 'familySnapshot'}.contains(k);
+
+  /// Telefondaki kişisel verileri (bekleyen kuyruk, gün/kaza önbelleği, ad, aile görünümü) bu hesaba
+  /// bağlar. Başka bir hesabın verisi varsa önce silinir: bir hesabın bekleyen kaydı başka hesaba
+  /// yazılamaz, verisi başka hesapta görünmez. Dönüş: önceki hesabın verisi silindi mi.
+  /// (Eski sürümden gelen sahipsiz veri bu hesabındır sayılır: güncellemede bekleyen kayıt kaybolmaz.)
+  static bool bindUser(String uid) {
+    final p = AppSettings.prefs;
+    final owner = p.getString(_kOwner);
+    if (owner == uid) return false;
+    if (owner != null) wipeUserData();
+    unawaited(p.setString(_kOwner, uid));
+    return owner != null;
+  }
+
+  /// Hesaba ait telefondaki bütün kişisel verileri siler (çıkışta, hesap silmede, hesap değişince).
+  /// Bellekteki önbellek hemen güncellenir; diske yazma arka planda tamamlanır.
+  static void wipeUserData() {
+    final p = AppSettings.prefs;
+    for (final k in p.getKeys().where(isUserKey).toList()) {
+      unawaited(p.remove(k));
+    }
+    unawaited(p.remove(_kOwner));
+    clearGuest();
   }
 
   /// Eski sürümlerin kalıcı misafir bayraklarını ve test dönemi önbelleğini bir kez temizle.
