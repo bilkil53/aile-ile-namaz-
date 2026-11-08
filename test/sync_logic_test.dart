@@ -60,6 +60,21 @@ void main() {
     });
   });
 
+  group('Kaza gönderimi', () {
+    test('Kuyruktaki ilgili türün en son kaydı seçilir', () {
+      final q = <Map<String, dynamic>>[
+        {'t': 'kaza', 'type': 'FAJR', 'o': 3, 'c': 0},
+        {'t': 'prayer', 'date': '2026-11-08', 'key': 'fajr', 'status': 'PRAYED'},
+        {'t': 'kaza', 'type': 'ASR', 'o': 1, 'c': 0},
+        {'t': 'kaza', 'type': 'FAJR', 'o': 3, 'c': 2},
+      ];
+      expect(latestKazaOp(q, 'FAJR'), {'t': 'kaza', 'type': 'FAJR', 'o': 3, 'c': 2});
+      expect(latestKazaOp(q, 'ASR')?['o'], 1);
+      expect(latestKazaOp(q, 'ISHA'), isNull);
+      expect(latestKazaOp([], 'FAJR'), isNull);
+    });
+  });
+
   group('Misafir kaza aktarımı', () {
     test('Sayılar sunucu biçimine çevrilir', () {
       expect(guestMergePayload({'FAJR': (3, 1), 'ISHA': (0, 0)}), {
