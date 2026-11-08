@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -266,8 +267,12 @@ class Repo {
     return _poolIds ??= (await myPools()).map((p) => p.id).toList();
   }
 
-  /// Son buluta gönderim internet/sunucu yüzünden başarısız oldu mu (başarılı gönderimde sıfırlanır).
+  /// Son buluta gönderim internet/sunucu yüzünden başarısız oldu mu (başarılı gönderimde ya da
+  /// bekleyen kayıt kalmayınca sıfırlanır).
   static bool offline = false;
+
+  /// Çevrimiçiden çevrimdışına geçildiğinde artar; ekran "telefona kaydedildi" bilgisini gösterir.
+  static final offlineNotice = ValueNotifier<int>(0);
 
   /// Bir vakti kaydeder. Önce telefona yazılır; aile bildirimi 15 sn, buluta yazma 20 sn sonra
   /// son duruma göre yapılır (hızlı değiştirmelerde tek yazma, tek bildirim). İnternet yoksa kayıt
@@ -302,9 +307,9 @@ class Repo {
       _writeTimers.remove(id);
       unawaited(syncNow());
     });
-    // Çevrimdışı: son gönderim başarısız olduysa ya da daha önceki kayıtlar hâlâ bekliyorsa
-    final stale = LocalStore.pendingCount > _writeTimers.length;
-    return !(offline || stale);
+    // Zaten çevrimdışıysa bilgi hemen verilir. İnternet yeni kesildiyse gönderim (20 sn sonra)
+    // başarısız olunca offlineNotice ile verilir.
+    return !offline;
   }
 
   static final Map<String, Timer> _writeTimers = {};
@@ -384,6 +389,7 @@ class Repo {
   static Future<int> flushQueue() async {
     if (isGuest) return 0;
     final q = LocalStore.queue();
+    if (q.isEmpty) offline = false;
     var sent = 0;
     var i = 0;
     while (i < q.length) {
@@ -408,7 +414,10 @@ class Repo {
         offline = false;
         await LocalStore.saveQueue(q);
       } catch (e) {
-        offline = true;
+        if (!offline) {
+          offline = true;
+          offlineNotice.value++;
+        }
         Log.warn('senkron', e);
         break;
       }
@@ -432,13 +441,9 @@ class Repo {
     if (LocalStore.guestKaza.isNotEmpty) {
       // Misafirken eklenenler hesabın mevcut kaza sayılarının üzerine eklenir (silinmez).
       // Sunucuda tek işlem: ya hepsi eklenir ya hiçbiri. Aktarım kimliği sabit tutulur; bağlantı
-      // koparsa ve tekrar denenirse sunucu aynı aktarımı ikinci kez eklemez (mükerrer kaza olmaz).
+      // koparsa ve bu oturumda tekrar denenirse sunucu aynı aktarımı ikinci kez eklemez (mükerrer kaza olmaz).
       final guest = Map.of(LocalStore.guestKaza);
-      var mergeId = AppSettings.prefs.getString('guestMergeId');
-      if (mergeId == null) {
-        mergeId = 'g-${DateTime.now().microsecondsSinceEpoch}';
-        await AppSettings.prefs.setString('guestMergeId', mergeId);
-      }
+      final mergeId = LocalStore.guestMergeId ??= 'g-${DateTime.now().microsecondsSinceEpoch}';
       await supa.rpc('merge_guest_kaza', params: {
         'p_merge_id': mergeId,
         'p_items': {for (final e in guest.entries) e.key: [e.value.$1, e.value.$2]},
@@ -448,9 +453,8 @@ class Repo {
       for (final e in cloud.entries) {
         await LocalStore.saveKaza(e.key, e.value.$1, e.value.$2);
       }
-      await AppSettings.prefs.remove('guestMergeId');
     }
-    LocalStore.clearGuest();
+    LocalStore.clearGuest(); // aktarım kimliği de silinir
   }
 
   /// Kendi namaz kayıtlarım (tarih aralığı, Karne için).

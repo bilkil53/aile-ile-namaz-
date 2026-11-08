@@ -1,6 +1,6 @@
 # Güvenlik özeti (Supabase)
 
-Son kontrol: 05.11.2026, canlı veritabanından okundu. Şema geçmişinin tamamı `supabase/migrations/` klasöründe (30 dosya). Her dosya sunucudaki kayıtla bayt bayt aynı (MD5 karşılaştırıldı).
+Son kontrol: 08.11.2026, canlı veritabanından okundu. Şema geçmişinin tamamı `supabase/migrations/` klasöründe (31 dosya). Her dosya sunucudaki kayıtla bayt bayt aynı (MD5 karşılaştırıldı).
 
 ## 1. Temel ilkeler
 
@@ -27,7 +27,7 @@ Son kontrol: 05.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 | `pools` | SELECT, DELETE; UPDATE yalnızca `name` sütunu | Üyeler görür; yalnızca sahibi adını değiştirir ve siler. Oluşturma: `ensure_my_pool()` RPC. |
 | `pool_members` | SELECT (sütunlar: `pool_id`, `user_id`, `role_title`, `icon`, `gender`, `joined_at`) | Aynı havuzdakiler görür. Ekleme, çıkarma ve ünvan işleri yalnızca RPC ile. |
 | `join_requests` | SELECT | İsteyen kişi ve havuz sahibi görür. Yazma yalnızca RPC ile. |
-| `pool_events` | SELECT, INSERT (UPDATE/DELETE yetkisi var ama **politika yok → reddedilir**; migration 31 ile yetki de alınacak) | Okuma: havuz üyesi; hedefli dua yalnızca hedef ve gönderen tarafından görülür. Ekleme: kendi adına, yalnızca PRAYED/MISSED/KAZA/DUA. MEMBER_*, PRO_* olayları yalnızca RPC'den gelir. Tetikleyiciler: hız sınırı (dua dakikada 1, saatte 3, günde 10; aynı vakit günde 2) ve bildirim kuyruğu. |
+| `pool_events` | SELECT, INSERT — yalnızca `pool_id`, `sender_id`, `event_type`, `message`, `prayer`, `target_id` sütunlarına (migration 31; `id`, `created_at`, `push_*` istemciden yazılamaz, tarih geriye atılıp hız sınırı atlatılamaz). UPDATE/DELETE yetkisi yok | Okuma: havuz üyesi; hedefli dua yalnızca hedef ve gönderen tarafından görülür. Ekleme: kendi adına, yalnızca PRAYED/MISSED/KAZA/DUA. MEMBER_*, PRO_* olayları yalnızca RPC'den gelir. Tetikleyiciler: hız sınırı (dua dakikada 1, saatte 3, günde 10; aynı vakit günde 2) ve bildirim kuyruğu. |
 | `devices` | SELECT, INSERT, UPDATE, DELETE | Yalnızca kendi cihaz kayıtları (FCM jetonu). |
 | `crash_reports` | Yalnızca INSERT (anon + authenticated) | Okunamaz, değiştirilemez; 30 günde silinir. |
 | `join_attempts` | Yok | Politika yok; yalnızca RPC yazar (katılma denemesi sınırı: saatte 20). |
@@ -60,14 +60,15 @@ Son kontrol: 05.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 | `aile-cleanup` | her gün 00:30 | 7 günden eski olayları ve sonuçlanmış istekleri, 1 günden eski katılma denemelerini siler (KVKK saklama süresi) |
 | `aile-crash-cleanup` | her gün 00:40 | 30 günden eski çökme raporlarını siler |
 
-## 5. Bilinen açık işler
+## 5. Yapılan sıkılaştırma (migration 31, 8 Kasım 2026)
 
-1. **Bekleyen sıkılaştırma (migration 31, uygulanmadı).** Bazı fonksiyonlar hâlâ `anon` tarafından çağrılabiliyor: `my_pro_status`, `request_pro_from_reis`, `decline_pro_request`, `test_restart_trial`, `test_remove_pro`.
-   - Hepsi `auth.uid()` boşsa durduğu için şu an kötüye kullanılamıyor.
-   - Yine de `anon` yetkisi geri alınacak.
-   - 5 fonksiyonun `search_path`'i `public` yerine boş yapılacak: `ensure_pro_trial`, `redeem_pro_code`, `expire_pro_test`, `test_*`.
-   - **`pool_events` sütun yetkisi.** Şu an istemci eklerken `id`, `created_at` ve `push_*` sütunlarını da yazabiliyor.
-     - `created_at` geçmişe atılırsa hız sınırı sayımı atlatılıp aile akışına çok sayıda olay yazılabilir. Bu olaylara bildirim gitmez (kuyruk 10 dakikadan eski olayı almaz) ve ertesi gün temizlenir.
-     - Çözüm: INSERT yalnızca `pool_id`, `sender_id`, `event_type`, `message`, `prayer`, `target_id` sütunlarına açılacak. Uygulama zaten yalnızca bunları gönderiyor.
-2. **Play'e çıkmadan önce silinecek TEST fonksiyonları:** `test_restart_trial`, `test_remove_pro`, `expire_pro_test`. `redeem_pro_code` ("1" kodu) yerine Google Play ödeme doğrulaması gelecek.
-3. **Otomatik testler henüz yok** (sonraki adım): Flutter birim testleri ve SQL test dosyası.
+- `my_pro_status`, `request_pro_from_reis`, `decline_pro_request`, `test_restart_trial`, `test_remove_pro`: `anon` yetkisi alındı, yalnızca `authenticated`.
+- `private.retry_push_events`, `private.block_male_excused`: API rolleri çağıramaz (cron ve tetikleyici çalışmaya devam eder).
+- `ensure_pro_trial`, `redeem_pro_code`, `expire_pro_test`, `test_*`: `search_path` boş.
+- `pool_events` INSERT sütun bazlı (yukarıdaki tablo).
+- Geri alınan canlı testle doğrulandı: anon reddedildi; giriş yapmış kullanıcının Pro akışı ve 6 sütunla ekleme çalışıyor; `created_at` ile ekleme ve UPDATE reddedildi.
+
+## 6. Bilinen açık işler
+
+1. **Play'e çıkmadan önce (ücretli Pro başlamadan) silinecek TEST fonksiyonları — öncelikli.** Şu an her giriş yapmış kullanıcı deneme süresini sıfırlayıp "1" koduyla Pro alabilir. Fonksiyonlar: `test_restart_trial`, `test_remove_pro`, `expire_pro_test`. `redeem_pro_code` ("1" kodu) yerine Google Play ödeme doğrulaması gelecek.
+2. **Otomatik testler henüz yok** (sonraki adım): Flutter birim testleri ve SQL test dosyası.

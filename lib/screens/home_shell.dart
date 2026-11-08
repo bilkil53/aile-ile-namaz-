@@ -62,7 +62,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           try {
             await Repo.migrateGuestData().timeout(const Duration(seconds: 20));
           } catch (e) {
-            Log.warn('misafir', e); // bir sonraki açılışta aynı aktarım kimliğiyle tekrar denenir
+            Log.warn('misafir', e); // misafir verisi bellekte kalır; bu oturumda aynı kimlikle tekrar denenebilir
           }
           await Repo.syncNow();
           await _listenFamily();
