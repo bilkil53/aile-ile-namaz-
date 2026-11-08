@@ -575,14 +575,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
   String get _myRole => _members.where((m) => m.userId == myId).firstOrNull?.roleTitle ?? 'Aile Ferdi';
 
   Future<void> _sendDua({Member? to}) async {
+    if (isGuest) return _needLogin('Dua göndermek');
     if (_demoLock('Dua gönderme')) return;
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || text.trim().isEmpty || _pool == null) return;
     final msg = text.trim();
-    if (isGuest) {
-      _toast('Duanın ailene gitmesi için Google ile giriş yap 🤲');
-      return;
-    }
     try {
       await Repo.sendDua(_pool!.id, msg.length > 280 ? msg.substring(0, 280) : msg, targetId: to?.userId);
       _toast(to == null ? 'Dua tüm aileye gönderildi 🤲' : 'Dua yalnızca ona gönderildi 🤲 (${_label(to)})');
@@ -592,6 +589,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Future<void> _memberAction(Member m, String action) async {
+    if (isGuest) return _needLogin('Üye yönetimi');
     if (_demoLock('Üye yönetimi')) return;
     final pool = _pool;
     if (pool == null) return;

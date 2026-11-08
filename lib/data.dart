@@ -224,26 +224,6 @@ class Repo {
           if (o['t'] == 'prayer' && o['date'] == date) o['key'] as String: PrayerStatusX.parse(o['status'] as String?),
       };
 
-  /// Aile üyelerinin tarih aralığındaki kayıtları (Birlikte Secde için): date -> userId -> durumlar
-  static Future<Map<String, Map<String, Map<String, PrayerStatus>>>> rangeFor(
-      List<String> userIds, DateTime from, DateTime to) async {
-    if (userIds.isEmpty || isGuest) return {};
-    String f(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
-    final rows = await supa
-        .from('daily_prayers')
-        .select('user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha')
-        .inFilter('user_id', userIds)
-        .gte('prayer_date', f(from))
-        .lte('prayer_date', f(to));
-    final out = <String, Map<String, Map<String, PrayerStatus>>>{};
-    for (final r in rows) {
-      (out[r['prayer_date'] as String] ??= {})[r['user_id'] as String] = {
-        for (final k in prayerKeys) k: PrayerStatusX.parse(r[k] as String?),
-      };
-    }
-    return out;
-  }
-
   /// Kaza özeti: userId -> [borç, ödenen]
   static Future<Map<String, List<int>>> kazaSummary(List<String> userIds) async {
     if (userIds.isEmpty) return {};
@@ -587,13 +567,6 @@ class Repo {
   }
 
   // ---- Olaylar ----
-  static Stream<List<Map<String, dynamic>>> eventsStream(String poolId) => supa
-      .from('pool_events')
-      .stream(primaryKey: ['id'])
-      .eq('pool_id', poolId)
-      .order('created_at', ascending: false)
-      .limit(5); // Son 5 hareket (sunucu 1 haftalık kaydı tutar)
-
   /// [targetId] verilirse dua yalnızca o kişiye gider; verilmezse tüm aileye.
   static Future<void> sendDua(String poolId, String message, {String? targetId}) async {
     await supa.from('pool_events').insert({

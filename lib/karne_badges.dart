@@ -66,16 +66,6 @@ class KarneBadges {
     return best;
   }
 
-  /// Bugün henüz bitmediyse dünden geriye sayılan güncel seri.
-  int _current(bool Function(DateTime) ok) {
-    var n = 0;
-    for (var i = ok(today) ? 0 : 1; i < 400; i++) {
-      if (!ok(_ago(i))) break;
-      n++;
-    }
-    return n;
-  }
-
   /// Ardışık Cumalarda Cuma (öğle) namazı: en uzun seri.
   int _bestFridays() {
     var d = today;
@@ -213,5 +203,4 @@ class KarneBadges {
     return out;
   }
 
-  int get currentStreak => _current(fullDay);
 }

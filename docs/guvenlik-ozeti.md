@@ -1,6 +1,6 @@
 # Güvenlik özeti (Supabase)
 
-Son kontrol: 08.11.2026, canlı veritabanından okundu. Şema geçmişinin tamamı `supabase/migrations/` klasöründe (31 dosya). Her dosya sunucudaki kayıtla bayt bayt aynı (MD5 karşılaştırıldı).
+Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamamı `supabase/migrations/` klasöründe (32 dosya). Her dosya sunucudaki kayıtla bayt bayt aynı (MD5 karşılaştırıldı).
 
 ## 1. Temel ilkeler
 
@@ -31,7 +31,6 @@ Son kontrol: 08.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 | `devices` | SELECT, INSERT, UPDATE, DELETE | Yalnızca kendi cihaz kayıtları (FCM jetonu). |
 | `crash_reports` | Yalnızca INSERT (anon + authenticated) | Okunamaz, değiştirilemez; 30 günde silinir. |
 | `join_attempts` | Yok | Politika yok; yalnızca RPC yazar (katılma denemesi sınırı: saatte 20). |
-| `guest_merges` | Yok | Politika yok; yalnızca `merge_guest_kaza` yazar. |
 
 ## 3. RPC'ler (çağıran rol: authenticated)
 
@@ -45,7 +44,6 @@ Son kontrol: 08.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 | `remove_member`, `transfer_ownership`, `regenerate_invite_code` | Havuz yönetimi | Yalnızca havuz sahibi |
 | `leave_pool`, `my_outgoing_requests` | Ayrılma / kendi istekleri | Yalnızca kendisi |
 | `delete_my_account()` | Hesabı ve tüm verisini siler | Kendisi; bağlı tablolar `on delete cascade` |
-| `merge_guest_kaza(merge_id, items)` | **Kullanımdan kalktı** (gezinti modu artık kayıt tutmuyor). Eski sürümler güncellenene kadar duruyor, sonra kaldırılacak | Tek işlem; aynı `merge_id` ikinci kez eklenmez; tür ve sayı (0–100000) doğrulanır |
 | `my_pro_status()`, `ensure_pro_trial()` | Pro durumu / 7 günlük deneme başlatma | Deneme yalnızca bir kez başlar |
 | `redeem_pro_code(code)` | Test Pro kodu ("1") | Yalnızca Aile Reisi |
 | `request_pro_from_reis()`, `decline_pro_request(member)` | Reisten Pro isteme / reddetme | 20 saatte 1 istek; reddetmeyi yalnızca o üyenin havuz sahibi yapabilir |
@@ -72,9 +70,9 @@ Son kontrol: 08.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 - **APK imza kontrolü (`lib/integrity.dart`) bir güvenlik sınırı değildir.** İmza uyuşmazsa kullanıcı uyarılır ama uygulama engellenmez; değiştirilmiş bir APK bu kontrolü zaten atlayabilir. Bütün yetkilendirme sunucuda yapılır: RLS politikaları, sütun yetkileri ve `security definer` RPC'ler (bkz. bölüm 2–3, `supabase/tests/security_test.sql`). İstemciden gelen hiçbir bilgiye (imza, Pro durumu, rol) güvenilmez.
 - **Hata raporları:** `crash_reports`'a ve geliştirici mailine gitmeden önce hata metni ve yığın izi `scrubSensitive` ile temizlenir: e-posta, JWT/Bearer, `access_token`/`apikey`/`password` vb. değerleri, `?code=`, uuid, telefon, ortak depolamadaki dosya adları ve 40+ karakterli anahtar benzeri diziler. Hata kodları, satır numaraları ve sunucu adresi korunur. Telefondaki hata kaydı (`Log`) da aynı şekilde temizlenir. Kişi adı gibi serbest metinler otomatik tanınamaz; hata metinlerine ad yazılmamalı.
-- **Gezinti (misafir) modu yalnızca görüntüleme:** kayıt yapılmaz, giriş sonrası aktarım yoktur (`Repo.setPrayer`/`saveKaza` misafirde hiçbir şey yazmaz).
+- **Gezinti (misafir) modu yalnızca görüntüleme:** kayıt yapılmaz, giriş sonrası aktarım yoktur (`Repo.setPrayer`/`saveKaza` misafirde hiçbir şey yazmaz). Sunucuda da misafir (anon) hiçbir tabloya yazamaz. Eski aktarım fonksiyonu `merge_guest_kaza` ve `guest_merges` tablosu migration 32 ile kaldırıldı.
 
 ## 7. Bilinen açık işler
 
 1. **Play'e çıkmadan önce (ücretli Pro başlamadan) silinecek TEST fonksiyonları — öncelikli.** Şu an her giriş yapmış kullanıcı deneme süresini sıfırlayıp "1" koduyla Pro alabilir. Fonksiyonlar: `test_restart_trial`, `test_remove_pro`, `expire_pro_test`. `redeem_pro_code` ("1" kodu) yerine Google Play ödeme doğrulaması gelecek.
-2. **Testler (eklendi, 08.11.2026).** `test/` altındaki birim testleri CI'da her derlemede çalışır; biri başarısız olursa yayın çıkmaz. `supabase/tests/security_test.sql` sunucu kurallarını (anon yetkileri, `pool_events` sütun yetkisi, hız sınırı, misafir aktarımının tekrar koruması (fonksiyon kalkınca bu kontroller de çıkarılacak), gizlilik, erkek üyede "Muaf" kuralı) geri alınarak sınar; her sunucu değişikliğinden sonra çalıştırılmalı. Eksik: ekran (widget) testleri.
+2. **Testler (eklendi, 08.11.2026).** `test/` altındaki birim testleri CI'da her derlemede çalışır; biri başarısız olursa yayın çıkmaz. `supabase/tests/security_test.sql` sunucu kurallarını (anon yetkileri, `pool_events` sütun yetkisi, hız sınırı, misafirin kayıt yazamaması, gizlilik, erkek üyede "Muaf" kuralı) geri alınarak sınar; her sunucu değişikliğinden sonra çalıştırılmalı. Eksik: ekran (widget) testleri.
