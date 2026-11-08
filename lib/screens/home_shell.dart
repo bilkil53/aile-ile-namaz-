@@ -10,7 +10,6 @@ import '../pro.dart';
 import '../kvkk.dart';
 import '../local_store.dart';
 import '../location.dart';
-import '../log.dart';
 import '../models.dart';
 import '../settings.dart';
 import '../notifications.dart';
@@ -59,11 +58,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
         // Ağ işlerini arka planda başlat (internet yavaş/yoksa ekranı bekletmez)
         unawaited(() async {
-          try {
-            await Repo.migrateGuestData().timeout(const Duration(seconds: 20));
-          } catch (e) {
-            Log.warn('misafir', e); // misafir verisi bellekte kalır; bu oturumda aynı kimlikle tekrar denenebilir
-          }
           await Repo.syncNow();
           await _listenFamily();
           // Uygulama kapalıyken de aile bildirimleri için cihazı kaydet (FCM)

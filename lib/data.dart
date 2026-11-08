@@ -291,13 +291,11 @@ class Repo {
     required PrayerStatus status,
     String? date,
   }) async {
+    // Gezinti (misafir) modunda kayıt yapılmaz. Ekranlar zaten giriş penceresi gösterir; burası son güvence.
+    if (isGuest) return false;
     final day = date ?? todayStr();
     await LocalStore.setPrayer(day, key, status);
     CumaReminder.onMarked(day, key, status); // erkeklere peş peşe 3. Cuma uyarısı
-    if (isGuest) {
-      await LocalStore.setHasGuestData(true);
-      return false;
-    }
     _userMarked = true;
     await LocalStore.enqueue({'t': 'prayer', 'date': day, 'key': key, 'status': status.code});
     final id = '$day|$key';
@@ -334,8 +332,6 @@ class Repo {
     _syncing = true;
     try {
       await flushQueue();
-      // Misafir aktarımı yarım kaldıysa (bağlantı koptu) burada tekrar denenir
-      final mergeOk = await _retryGuestMerge();
       if (LocalStore.pendingCount > _writeTimers.length) {
         _retry ??= Timer.periodic(const Duration(seconds: 20), (_) => syncNow());
         return;
@@ -348,30 +344,9 @@ class Repo {
         final parts = id.split('|');
         if (await _announce(parts[0], parts[1])) _pendingAnnounce.remove(id);
       }
-      if (_pendingAnnounce.isNotEmpty || !mergeOk) _ensureRetry();
+      if (_pendingAnnounce.isNotEmpty) _ensureRetry();
     } finally {
       _syncing = false;
-    }
-  }
-
-  /// Yarım kalan misafir aktarımını dener. false: geçici hata, sonra tekrar denenmeli.
-  static Future<bool> _retryGuestMerge() async {
-    if (LocalStore.pendingMerge == null && !LocalStore.hasGuestData) return true;
-    try {
-      await migrateGuestData().timeout(const Duration(seconds: 20));
-      // Başka bir aktarım hâlâ sürüyorsa (ör. açılıştaki çağrı zaman aşımına uğrayıp arka planda
-      // devam ediyorsa) iş bitmiş sayılmaz: sonra tekrar bakılır
-      return LocalStore.pendingMerge == null && !LocalStore.hasGuestData;
-    } catch (e) {
-      Log.warn('misafir', e);
-      if (classifySyncError(e) == SyncFailure.rejected) {
-        // Sunucu kalıcı olarak reddetti: sonsuz denemeye girilmez, kullanıcıya bilgi verilir
-        LocalStore.pendingMerge = null;
-        LocalStore.clearGuest();
-        rejectNotice.value++;
-        return true;
-      }
-      return false;
     }
   }
 
@@ -475,80 +450,6 @@ class Repo {
     return sent;
   }
 
-  static bool _migrating = false;
-
-  /// Misafirken girilen kayıtları giriş sonrası buluta taşır.
-  /// Kaza sayıları sunucuda tek işlemde eklenir (ya hepsi ya hiçbiri). Her aktarımın sabit bir kimliği
-  /// vardır; cevap gelmeden bağlantı koparsa aynı kimlikle tekrar gönderilir ve sunucu ikinci kez
-  /// eklemez (mükerrer kaza olmaz). Sonucu bilinmeyen aktarım ayrı tutulur ve önce o tamamlanır;
-  /// böylece sonraki misafir oturumunun yeni sayıları eski kimliğe karışıp kaybolmaz.
-  static Future<void> migrateGuestData() async {
-    if (isGuest || _migrating) return;
-    if (!LocalStore.hasGuestData && LocalStore.pendingMerge == null) return;
-    _migrating = true;
-    try {
-      var merged = false;
-      // 1) Önceki, sonucu bilinmeyen aktarım
-      final pending = LocalStore.pendingMerge;
-      if (pending != null) {
-        if (pending.user == myId) {
-          await _sendMerge(pending.id, pending.items);
-          merged = true;
-        } else {
-          // Aynı açılışta başka hesaba geçildi: o hesabın misafir verisi bu hesaba eklenmez
-          Log.warn('misafir', 'bekleyen aktarım başka hesaba ait, atlandı');
-        }
-        LocalStore.pendingMerge = null;
-      }
-      if (LocalStore.hasGuestData) {
-        // 2) Misafir vakitleri (aynı güne tekrar yazmak zararsız: son durum yazılır).
-        //    Sunucunun kalıcı olarak reddettiği gün atlanır; kaza aktarımı yine yapılır.
-        for (final e0 in LocalStore.guestDays.entries) {
-          final d = e0.key;
-          final m = e0.value;
-          if (m.isEmpty) continue;
-          await LocalStore.saveDay(d, m);
-          try {
-            await supa.from('daily_prayers').upsert(
-              {'user_id': myId, 'prayer_date': d, for (final e in m.entries) e.key: e.value.code},
-              onConflict: 'user_id,prayer_date',
-            );
-          } catch (e) {
-            if (classifySyncError(e) != SyncFailure.rejected) rethrow;
-            Log.warn('misafir', 'gün $d reddedildi: $e');
-            rejectNotice.value++;
-          }
-        }
-        // 3) Bu oturumun kaza sayıları: önce bekleyen aktarım olarak ayrılır, sonra gönderilir
-        if (LocalStore.guestKaza.isNotEmpty) {
-          final id = 'g-${DateTime.now().microsecondsSinceEpoch}';
-          final items = Map.of(LocalStore.guestKaza);
-          LocalStore.pendingMerge = (id: id, user: myId, items: items);
-          LocalStore.guestKaza.clear();
-          await _sendMerge(id, items);
-          LocalStore.pendingMerge = null;
-          merged = true;
-        }
-        LocalStore.clearGuest();
-      }
-      if (merged) {
-        // Telefondaki sayılar buluttaki birleşik sonuçla güncellenir
-        final cloud = await myKaza();
-        for (final e in cloud.entries) {
-          await LocalStore.saveKaza(e.key, e.value.$1, e.value.$2);
-        }
-      }
-    } finally {
-      _migrating = false;
-    }
-  }
-
-  static Future<void> _sendMerge(String id, Map<String, (int, int)> items) {
-    final payload = guestMergePayload(items);
-    if (payload.length != items.length) Log.warn('misafir', 'negatif kaza sayısı gönderilmedi');
-    return supa.rpc('merge_guest_kaza', params: {'p_merge_id': id, 'p_items': payload});
-  }
-
   /// Kendi namaz kayıtlarım (tarih aralığı, Karne için).
   static Future<Map<String, Map<String, PrayerStatus>>> myRange(DateTime from, DateTime to) async {
     String f(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
@@ -630,12 +531,10 @@ class Repo {
     // 1) Telefona yaz  2) telefondaki kuyruğa ekle  3) buluta gönder  4) başarılıysa kuyruktan sil.
     // Gönderim sırasında internet kesilir ya da uygulama kapanırsa değişiklik kuyrukta kalır,
     // internet gelince (ya da uygulama tekrar açılınca) otomatik gönderilir.
-    final prev = isGuest ? null : LocalStore.kaza()[type];
+    // Gezinti (misafir) modunda kayıt yapılmaz (ekranlar giriş penceresi gösterir; burası son güvence)
+    if (isGuest) return;
+    final prev = LocalStore.kaza()[type];
     await LocalStore.saveKaza(type, owed, completed);
-    if (isGuest) {
-      await LocalStore.setHasGuestData(true);
-      return;
-    }
     _userMarked = true;
     final op = <String, dynamic>{'t': 'kaza', 'type': type, 'o': owed, 'c': completed};
     await LocalStore.enqueue(op);

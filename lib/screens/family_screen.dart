@@ -16,6 +16,7 @@ import '../pro.dart';
 import '../settings.dart';
 import '../theme.dart';
 import '../widgets/danger_box.dart';
+import '../widgets/login_required.dart';
 import '../widgets/pro_lock.dart';
 import '../widgets/prayer_icon.dart';
 
@@ -356,7 +357,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     } catch (_) {}
   }
 
-  // ---------- Gezinti (misafir) modu: her şey bellekte, uygulama kapanınca silinir ----------
+  // ---------- Gezinti (misafir) modu: yalnızca bakmak için, kayıt yapılmaz ----------
 
   Future<void> _loadGuest() async {
     final me = Member(userId: myId, name: 'Misafir', roleTitle: 'Aile Ferdi', icon: '👤');
@@ -375,31 +376,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   /// Bulut gerektiren işlemlerde giriş penceresi.
-  Future<void> _needLogin(String what) async {
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        icon: const Text('🔐', style: TextStyle(fontSize: 34)),
-        title: const Text('Google Girişi Gerekir', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-        content: Text(
-          '$what için Google ile giriş yapmalısın.\n\n'
-          'Şu an gezinti modundasın: yaptığın işaretlemeler sadece bu oturumda tutulur ve uygulama kapanınca silinir. '
-          'Giriş yaparsan bu oturumdakiler buluta kaydedilir.',
-          style: const TextStyle(fontSize: 13, height: 1.4),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Gezinmeye Devam')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Google ile Giriş Yap'),
-          ),
-        ],
-      ),
-    );
-    if (go == true) await LocalStore.setGuestMode(false);
-  }
+  Future<void> _needLogin(String what) => showLoginRequired(context, what);
 
   void _toast(String m) {
     if (!mounted) return;

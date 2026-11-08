@@ -427,7 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final name = (user?.userMetadata?['full_name'] ?? user?.userMetadata?['name'] ?? '') as String;
     final email = user?.email ?? '';
     final syncText = guest
-        ? 'Kaydedilmiyor · uygulama kapanınca silinir'
+        ? 'Gezinti modu · kayıt yapılmaz'
         : (_syncing
             ? 'Gönderiliyor…'
             : (pending > 0

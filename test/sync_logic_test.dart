@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:aile_ile_namaz/local_store.dart';
+import 'package:aile_ile_namaz/models.dart';
 import 'package:aile_ile_namaz/sync_logic.dart';
 import 'package:aile_ile_namaz/update_checker.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -75,33 +76,15 @@ void main() {
     });
   });
 
-  group('Misafir kaza aktarımı', () {
-    test('Sayılar sunucu biçimine çevrilir', () {
-      expect(guestMergePayload({'FAJR': (3, 1), 'ISHA': (0, 0)}), {
-        'FAJR': [3, 1],
-        'ISHA': [0, 0],
-      });
-    });
-
-    test('Boş veri boş gönderilir, negatif sayı gönderilmez', () {
-      expect(guestMergePayload({}), isEmpty);
-      expect(guestMergePayload({'FAJR': (-1, 0), 'ASR': (2, -3), 'DHUHR': (1, 1)}), {
-        'DHUHR': [1, 1],
-      });
-    });
-
-    test('Misafir verisi silinince sonucu bilinmeyen aktarım silinmez', () {
-      addTearDown(() {
-        LocalStore.pendingMerge = null;
-        LocalStore.clearGuest();
-      });
-      LocalStore.pendingMerge = (id: 'g-1', user: 'u-1', items: {'FAJR': (2, 0)});
-      LocalStore.guestKaza['ASR'] = (1, 0);
-      LocalStore.clearGuest();
-      expect(LocalStore.guestKaza, isEmpty);
-      expect(LocalStore.pendingMerge?.id, 'g-1');
-      expect(LocalStore.pendingMerge?.user, 'u-1');
-      expect(LocalStore.pendingMerge?.items, {'FAJR': (2, 0)});
+  group('Gezinti (misafir) modu', () {
+    test('Giriş yokken telefona kalıcı kayıt yapılmaz; gezintiye girince bellek boşaltılır', () async {
+      // Testte Supabase başlatılmadı: LocalStore "giriş yok" sayar ve yalnızca belleğe yazar
+      await LocalStore.saveKaza('FAJR', 2, 0);
+      await LocalStore.setPrayer('2026-11-08', 'fajr', PrayerStatus.prayed);
+      await LocalStore.setGuestMode(true);
+      addTearDown(() => LocalStore.setGuestMode(false));
+      expect(LocalStore.kaza(), isEmpty);
+      expect(LocalStore.day('2026-11-08'), isEmpty);
     });
   });
 

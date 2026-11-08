@@ -7,6 +7,7 @@ import '../models.dart';
 import '../pro.dart';
 import '../theme.dart';
 import '../widgets/danger_box.dart';
+import '../widgets/login_required.dart';
 import '../widgets/pro_lock.dart';
 import '../widgets/prayer_icon.dart';
 
@@ -84,6 +85,7 @@ class _KazaScreenState extends State<KazaScreen> {
   String _n(int v) => Pro.isDemo ? '–' : '$v';
 
   Future<void> _set(String type, int owed, int completed, {bool announce = false}) async {
+    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
     if (Pro.isDemo) {
       showProRequired(context, feature: 'Kaza takibi');
       return;
@@ -99,6 +101,7 @@ class _KazaScreenState extends State<KazaScreen> {
   }
 
   Future<void> _bulkAdd() async {
+    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
     if (Pro.isDemo) {
       showProRequired(context, feature: 'Kaza takibi');
       return;
@@ -114,6 +117,7 @@ class _KazaScreenState extends State<KazaScreen> {
 
   /// Kaza kayıtlarını sıfırla: yanlışlıkla olmasın diye iki kez onay ister.
   Future<void> _reset() async {
+    if (isGuest) return showLoginRequired(context, 'Kaza kayıtlarını sıfırlamak');
     if (Pro.isDemo) {
       showProRequired(context, feature: 'Kaza takibi');
       return;
