@@ -301,9 +301,9 @@ jobs:
           tag=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/r" --paginate \
             -q '[.[].ref | ltrimstr("refs/tags/") | select(test("^r[0-9]+$")) | ltrimstr("r") | tonumber] | max // 0')
           last=$(( rel > tag ? rel : tag ))
-          # Taban: sürümler/etiketler silinse bile numara 52'nin (son yayın) altına düşmesin;
+          # Taban: sürümler/etiketler silinse bile numara 77'nin (silinmeden önceki son yayın) altına düşmesin;
           # aksi halde Android yeni APK'yı "eski sürüm" sayar ve güncelleme olarak kurmaz.
-          [ "$last" -lt 52 ] && last=52
+          [ "$last" -lt 77 ] && last=77
           echo "BUILD_NO=$((last + 1))" >> "$GITHUB_ENV"
           # Görünen sürüm: v1.1, v1.2, v1.3 … (derleme 13 = v1.1)
           minor=$((last + 1 - ${{ env.MINOR_BASE }})); [ "$minor" -lt 0 ] && minor=0
