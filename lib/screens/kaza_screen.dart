@@ -88,7 +88,7 @@ class _KazaScreenState extends State<KazaScreen> {
   Future<void> _set(String type, int owed, int completed, {bool announce = false}) async {
     if (isGuest) return showLoginRequired(context, t('Kaza kaydı tutmak', 'keep kaza records'));
     if (Pro.isDemo) {
-      showProRequired(context, feature: 'Kaza takibi');
+      showProRequired(context, feature: t('Kaza takibi', 'Kaza tracking'));
       return;
     }
     final before = _of(type);
@@ -104,7 +104,7 @@ class _KazaScreenState extends State<KazaScreen> {
   Future<void> _bulkAdd() async {
     if (isGuest) return showLoginRequired(context, t('Kaza kaydı tutmak', 'keep kaza records'));
     if (Pro.isDemo) {
-      showProRequired(context, feature: 'Kaza takibi');
+      showProRequired(context, feature: t('Kaza takibi', 'Kaza tracking'));
       return;
     }
     final days = await showDialog<int>(context: context, builder: (_) => const _BulkDialog());
@@ -120,7 +120,7 @@ class _KazaScreenState extends State<KazaScreen> {
   Future<void> _reset() async {
     if (isGuest) return showLoginRequired(context, t('Kaza kayıtlarını sıfırlamak', 'reset kaza records'));
     if (Pro.isDemo) {
-      showProRequired(context, feature: 'Kaza takibi');
+      showProRequired(context, feature: t('Kaza takibi', 'Kaza tracking'));
       return;
     }
     final first = await showDialog<bool>(
@@ -200,31 +200,31 @@ class _KazaScreenState extends State<KazaScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Row(children: [
+          Row(children: [
             Icon(Icons.lock_outline, size: 18, color: Color(0xFF78350F)),
             SizedBox(width: 6),
             Expanded(
-              child: Text('Kaza takibi Pro\'da',
+              child: Text(t('Kaza takibi Pro\'da', 'Kaza tracking is in Pro'),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
             ),
           ]),
           const SizedBox(height: 4),
-          const Text(
-              'Kaza borcu ekleme, kıldıkça düşme, toplu ekleme ve ailenin kaza durumu Pro ile açılır.',
+          Text(
+              t('Kaza borcu ekleme, kıldıkça düşme, toplu ekleme ve ailenin kaza durumu Pro ile açılır.', 'Adding kaza prayers, reducing them as you pray, bulk adding and your family\'s kaza status open with Pro.'),
               style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
           const SizedBox(height: 4),
           Text(Pro.statusText(), style: const TextStyle(fontSize: 11, color: Color(0xFF78350F))),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
+            child: FilledButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
           ),
         ]),
       ),
       for (final w in children)
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => showProRequired(context, feature: 'Kaza takibi'),
+          onTap: () => showProRequired(context, feature: t('Kaza takibi', 'Kaza tracking')),
           child: AbsorbPointer(child: Opacity(opacity: 0.5, child: w)),
         ),
     ];

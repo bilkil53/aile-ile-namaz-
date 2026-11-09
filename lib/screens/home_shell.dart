@@ -201,7 +201,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               'MEMBER_JOINED' => (t('Aile havuzuna katılım 🤝', 'New family member 🤝'),
                   t('${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.',
                       '${r['message'] ?? 'A new member'} joined the family circle.')),
-              'PRO_REQUEST' => ('$who Pro istiyor 🌟', 'Aile Pro\'sunu alırsan havuzdaki herkes Pro olur.'),
+              'PRO_REQUEST' => (t('$who Pro istiyor 🌟', '$who wants Pro 🌟'),
+                  t('Aile Pro\'sunu alırsan havuzdaki herkes Pro olur.', 'If you get Family Pro, everyone in the circle becomes Pro.')),
               _ => ('', ''),
             };
             if (title.isEmpty) return;

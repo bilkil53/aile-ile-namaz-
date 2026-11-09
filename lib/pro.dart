@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'lang.dart';
 import 'models.dart';
 import 'settings.dart';
 
@@ -66,9 +67,11 @@ class Pro {
       return null;
     } catch (e) {
       final s = e.toString();
-      if (s.contains('already_requested')) return 'Bugün zaten ilettin. Aile Reisin bildirimi gördü 🌙';
-      if (s.contains('is_reis')) return 'Aile Reisi sensin; Pro\'yu sen alabilirsin.';
-      return 'İletilemedi. İnternet bağlantını kontrol et.';
+      if (s.contains('already_requested')) {
+        return t('Bugün zaten ilettin. Aile Reisin bildirimi gördü 🌙', 'You already sent it today. Your head of family saw the notification 🌙');
+      }
+      if (s.contains('is_reis')) return t('Aile Reisi sensin; Pro\'yu sen alabilirsin.', 'You are the head of family; you can get Pro yourself.');
+      return t('İletilemedi. İnternet bağlantını kontrol et.', 'Could not send. Check your internet connection.');
     }
   }
 
@@ -166,7 +169,7 @@ class Pro {
     if (isDemo) {
       final lines = <String>[];
       if (ts != null && te != null) {
-        lines.add('🕒 7 günlük deneme: ${fmt(ts)} – ${fmt(te)} (bitti)');
+        lines.add(t('🕒 7 günlük deneme: ${fmt(ts)} – ${fmt(te)} (bitti)', '🕒 7-day trial: ${fmt(ts)} – ${fmt(te)} (ended)'));
       }
       final since = u ?? te;
       if (since != null) {
@@ -174,17 +177,23 @@ class Pro {
         final d = DateTime(now.year, now.month, now.day)
             .difference(DateTime(since.year, since.month, since.day))
             .inDays;
-        lines.add('🔒 Ücretsiz sürümdesin · ${d <= 0 ? 'bugün başladı' : d == 1 ? 'dün başladı' : '$d gündür'}');
+        lines.add(t('🔒 Ücretsiz sürümdesin · ${d <= 0 ? 'bugün başladı' : d == 1 ? 'dün başladı' : '$d gündür'}',
+            '🔒 You are on the free version · ${d <= 0 ? 'since today' : d == 1 ? 'since yesterday' : 'for $d days'}'));
       } else {
-        lines.add('🔒 Ücretsiz sürümdesin');
+        lines.add(t('🔒 Ücretsiz sürümdesin', '🔒 You are on the free version'));
       }
       return lines.join('\n');
     }
     return switch (source) {
-      'trial' => '🕒 7 günlük deneme${ts != null && te != null ? ': ${fmt(ts)} – ${fmt(te)}' : ''} · $daysLeft gün kaldı'
-          '\n8. gün Ücretsiz sürüme geçer: Aile Havuzu ve Kaza pasif olur, bildirimler kapanır.',
-      'family' => '⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}\n👨‍👩‍👧 Aile Reisinin aboneliğiyle',
-      _ => '⭐ Pro${kTestChannel ? ' (test)' : ''}${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
+      'trial' => t(
+          '🕒 7 günlük deneme${ts != null && te != null ? ': ${fmt(ts)} – ${fmt(te)}' : ''} · $daysLeft gün kaldı'
+              '\n8. gün Ücretsiz sürüme geçer: Aile Havuzu ve Kaza pasif olur, bildirimler kapanır.',
+          '🕒 7-day trial${ts != null && te != null ? ': ${fmt(ts)} – ${fmt(te)}' : ''} · $daysLeft days left'
+              '\nOn day 8 it switches to the free version: Family Circle and Kaza become inactive, notifications turn off.'),
+      'family' => t('⭐ Pro${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}\n👨‍👩‍👧 Aile Reisinin aboneliğiyle',
+          '⭐ Pro${u == null ? '' : ' · until ${fmt(u)}'}\n👨‍👩‍👧 Through the head of family\'s subscription'),
+      _ => t('⭐ Pro${kTestChannel ? ' (test)' : ''}${u == null ? '' : ' · ${fmt(u)} tarihine kadar'}',
+          '⭐ Pro${kTestChannel ? ' (test)' : ''}${u == null ? '' : ' · until ${fmt(u)}'}'),
     };
   }
 
@@ -230,8 +239,8 @@ class Pro {
     _until = ms > 0 ? DateTime.fromMillisecondsSinceEpoch(ms) : null;
     final src = AppSettings.prefs.getString(_kSource) ?? '';
     source = src.isEmpty ? null : src;
-    final t = AppSettings.prefs.getInt(_kTrial) ?? 0;
-    trialUntil = t > 0 ? DateTime.fromMillisecondsSinceEpoch(t) : null;
+    final tr = AppSettings.prefs.getInt(_kTrial) ?? 0;
+    trialUntil = tr > 0 ? DateTime.fromMillisecondsSinceEpoch(tr) : null;
     final ts = AppSettings.prefs.getInt(_kTrialStart) ?? 0;
     trialStart = ts > 0 ? DateTime.fromMillisecondsSinceEpoch(ts) : null;
   }
@@ -286,7 +295,9 @@ class Pro {
       lastError = null;
       return active;
     } catch (e) {
-      lastError = e.toString().contains('only_reis') ? 'Pro\'yu yalnızca Aile Reisi alabilir.' : null;
+      lastError = e.toString().contains('only_reis')
+          ? t('Pro\'yu yalnızca Aile Reisi alabilir.', 'Only the head of family can get Pro.')
+          : null;
       return false;
     }
   }

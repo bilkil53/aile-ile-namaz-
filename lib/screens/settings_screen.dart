@@ -598,7 +598,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                     ),
                     const SizedBox(height: 8),
-                    _outlineBtn('Pro\'ya geç', () => showProCodeDialog(context), icon: Icons.workspace_premium),
+                    _outlineBtn(t('Pro\'ya geç', 'Get Pro'), () => showProCodeDialog(context), icon: Icons.workspace_premium),
                   ]);
                 },
               ),
@@ -733,10 +733,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Row(children: [
                   const Icon(Icons.notifications_off_outlined, color: Colors.white70, size: 20),
                   const SizedBox(width: 10),
-                  const Expanded(
-                      child: Text('Ücretsiz sürümde bildirimler kapalı · Pro ile açılır',
+                  Expanded(
+                      child: Text(t('Ücretsiz sürümde bildirimler kapalı · Pro ile açılır', 'Notifications are off in the free version · open with Pro'),
                           style: TextStyle(color: Colors.white70, fontSize: 13))),
-                  TextButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro kodu')),
+                  TextButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro kodu', 'Pro code'))),
                 ]),
               ),
             ])

@@ -90,22 +90,22 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
           ]),
           const SizedBox(height: 4),
-          const Text(
-              'Ailenin namaz durumlarını görme, dua gönderme, davet ve üye yönetimi Pro ile açılır.',
+          Text(
+              t('Ailenin namaz durumlarını görme, dua gönderme, davet ve üye yönetimi Pro ile açılır.', 'Seeing your family\'s prayers, sending duas, invites and member management open with Pro.'),
               style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
           const SizedBox(height: 4),
           Text(Pro.statusText(), style: const TextStyle(fontSize: 11, color: Color(0xFF78350F))),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
+            child: FilledButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
           ),
         ]),
       ),
       for (final w in children)
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => showProRequired(context, feature: 'Aile Havuzu'),
+          onTap: () => showProRequired(context, feature: t('Aile Havuzu', 'Family Circle')),
           child: AbsorbPointer(child: Opacity(opacity: 0.5, child: w)),
         ),
     ];
@@ -132,10 +132,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
               for (final (m, at) in list)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('📩 ${withFirstName(_label(m!), m.firstName)} Pro istedi · ${Pro.fmt(at)}',
+                  child: Text(t('📩 ${withFirstName(_label(m!), m.firstName)} Pro istedi · ${Pro.fmt(at)}', '📩 ${withFirstName(_label(m!), m.firstName)} asked for Pro · ${Pro.fmt(at)}'),
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 ),
-              const Text('Pro alırsan havuzdaki herkes (en fazla 5 kişi) Pro olur.',
+              Text(t('Pro alırsan havuzdaki herkes (en fazla 5 kişi) Pro olur.', 'If you get Pro, everyone in the circle (up to 5 people) becomes Pro.'),
                   style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               const SizedBox(height: 8),
               Row(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -144,12 +144,12 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     for (final (m, _) in list) {
                       await Pro.declineRequest(m!.userId);
                     }
-                    _toast('İstek reddedildi; isteyene bilgi gitti.');
+                    _toast(t('İstek reddedildi; isteyene bilgi gitti.', 'Request declined; they have been notified.'));
                   },
                   child: const Text('Reddet'),
                 ),
                 const SizedBox(width: 8),
-                FilledButton(onPressed: () => showProCodeDialog(context), child: const Text('Pro\'ya geç')),
+                FilledButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
               ]),
             ]),
           );
@@ -512,7 +512,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   // ======================= Eylemler =======================
 
   Future<void> _join(String input) async {
-    if (_demoLock('Aile havuzuna katılma')) return;
+    if (_demoLock(t('Aile havuzuna katılma', 'Joining a family circle'))) return;
     final v = input.trim();
     if (v.isEmpty) return;
     if (isGuest) return _needLogin(t('Bir aile havuzuna katılmak', 'join a family circle'));
@@ -541,7 +541,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Future<void> _approve(JoinRequest r) async {
-    if (_demoLock('Katılım onayı')) return;
+    if (_demoLock(t('Katılım onayı', 'Approving a join'))) return;
     final who = r.name.isNotEmpty ? r.name : t('Bir aile ferdi', 'A family member');
     final me = _members.where((m) => m.userId == myId).firstOrNull;
     final res = await showDialog<_TitleResult>(
@@ -577,7 +577,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Future<void> _sendDua({Member? to}) async {
     if (isGuest) return _needLogin(t('Dua göndermek', 'send a prayer (dua)'));
-    if (_demoLock('Dua gönderme')) return;
+    if (_demoLock(t('Dua gönderme', 'Sending a dua'))) return;
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || text.trim().isEmpty || _pool == null) return;
     final msg = text.trim();
@@ -591,7 +591,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Future<void> _memberAction(Member m, String action) async {
     if (isGuest) return _needLogin(t('Üye yönetimi', 'manage members'));
-    if (_demoLock('Üye yönetimi')) return;
+    if (_demoLock(t('Üye yönetimi', 'Member management'))) return;
     final pool = _pool;
     if (pool == null) return;
     try {
@@ -688,7 +688,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 title: t('Havuzu Kapat & Sıfırla', 'Close & Reset Circle'),
                 subtitle: t('Tüm üyeler havuzdan çıkarılır', 'All members are removed from the circle'),
                 onTap: () async {
-                  if (_demoLock('Havuzu kapatma')) return;
+                  if (_demoLock(t('Havuzu kapatma', 'Closing the circle'))) return;
                   if (!await _doubleConfirm(
                     title: t('Havuzu Kapat & Sıfırla', 'Close & Reset Circle'),
                     text: t(
@@ -1019,7 +1019,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               OutlinedButton(
                 style: OutlinedButton.styleFrom(foregroundColor: AppColors.missed),
                 onPressed: () async {
-                  if (_demoLock('Katılım isteği')) return;
+                  if (_demoLock(t('Katılım isteği', 'Join request'))) return;
                   try {
                     await Repo.reject(r.id);
                     await _load();
@@ -1070,7 +1070,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               tooltip: t('Paylaş', 'Share'),
               onPressed: () async {
                 if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
-                if (_demoLock('Davet kodu')) return;
+                if (_demoLock(t('Davet kodu', 'Invite code'))) return;
                 await Share.share(
                   t(
                       '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
@@ -1090,7 +1090,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               tooltip: t('Kopyala', 'Copy'),
               onPressed: () async {
                 if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
-                if (_demoLock('Davet kodu')) return;
+                if (_demoLock(t('Davet kodu', 'Invite code'))) return;
                 await Clipboard.setData(ClipboardData(text: pool.displayCode));
                 _toast(t('Kod kopyalandı: ${pool.displayCode}', 'Code copied: ${pool.displayCode}'));
               },
@@ -1100,7 +1100,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               tooltip: t('Yeni kod', 'New code'),
               onPressed: () async {
                 if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
-                if (_demoLock('Davet kodu')) return;
+                if (_demoLock(t('Davet kodu', 'Invite code'))) return;
                 if (await _confirm(t('Eski kod geçersiz olacak. Yeni kod üretilsin mi?', 'The old code will stop working. Create a new code?')) != true) return;
                 try {
                   await Repo.regenerateCode(pool.id);
