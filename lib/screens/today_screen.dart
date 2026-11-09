@@ -293,8 +293,8 @@ class _TodayScreenState extends State<TodayScreen> {
       );
 
   Widget _heroCard() {
-    final t = _times!;
-    final n = PrayerTimesService.next(t, _tomorrow ?? t);
+    final pt = _times!;
+    final n = PrayerTimesService.next(pt, _tomorrow ?? pt);
     final mins = n.remaining.inMinutes;
     final h = mins ~/ 60, m = mins % 60;
     final white85 = Colors.white.withValues(alpha: 0.85);
@@ -335,7 +335,7 @@ class _TodayScreenState extends State<TodayScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              for (final (name, time) in t.all)
+              for (final (name, time) in pt.all)
                 Column(children: [
                   Text(name, style: TextStyle(fontSize: 10, color: white85)),
                   const SizedBox(height: 2),
@@ -352,7 +352,7 @@ class _TodayScreenState extends State<TodayScreen> {
           Divider(color: Colors.white.withValues(alpha: 0.2), height: 1),
           const SizedBox(height: 10),
           Text(
-            t.fromDiyanet
+            pt.fromDiyanet
                 ? t('Diyanet İşleri Başkanlığı hesaplama yöntemiyle, bulunduğun konuma göre vakitler.', 'Prayer times for your location, using the Diyanet (Turkish Presidency of Religious Affairs) method.')
                 : t(
                     '≈ Yaklaşık vakit: internet olmadığı için cihazda hesaplandı, birkaç dakika sapabilir. '

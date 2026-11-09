@@ -79,12 +79,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Önbelleği temizle', style: TextStyle(fontSize: 17)),
-        content: const Text('Telefonda saklanan namaz vakitleri ve aile havuzu özeti silinir, internetten yeniden alınır.\n\n'
-            'Namaz kayıtların, kaza sayıların ve buluttaki verilerin silinmez.'),
+        title: Text(t('Önbelleği temizle', 'Clear cache'), style: TextStyle(fontSize: 17)),
+        content: Text(t(
+            'Telefonda saklanan namaz vakitleri ve aile havuzu özeti silinir, internetten yeniden alınır.\n\n'
+                'Namaz kayıtların, kaza sayıların ve buluttaki verilerin silinmez.',
+            'Prayer times and the family summary stored on the phone are deleted and reloaded from the internet.\n\n'
+                'Your prayer records, kaza counts and cloud data are not deleted.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Temizle')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t('Temizle', 'Clear'))),
         ],
       ),
     );
@@ -98,7 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
     unawaited(Notifications.reschedule());
-    _toast(n == 0 ? 'Önbellek zaten temiz ✓' : 'Önbellek temizlendi ✓ ($n kayıt)');
+    _toast(n == 0 ? t('Önbellek zaten temiz ✓', 'Cache is already clean ✓') : t('Önbellek temizlendi ✓ ($n kayıt)', 'Cache cleared ✓ ($n items)'));
   }
 
   /// Anlık bildirim hatası: ayrıntı + kopyala + tekrar dene (destek için).
@@ -107,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final again = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Anlık bildirim hatası', style: TextStyle(fontSize: 17)),
+        title: Text(t('Anlık bildirim hatası', 'Push notification error'), style: TextStyle(fontSize: 17)),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
@@ -120,11 +123,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: detail));
               if (ctx.mounted) Navigator.pop(ctx, false);
-              _toast('Hata ayrıntısı kopyalandı. Geliştiriciye gönderebilirsin.');
+              _toast(t('Hata ayrıntısı kopyalandı. Geliştiriciye gönderebilirsin.', 'Error details copied. You can send them to the developer.'));
             },
-            child: const Text('Kopyala'),
+            child: Text(t('Kopyala', 'Copy')),
           ),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tekrar dene')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t('Tekrar dene', 'Try again'))),
         ],
       ),
     );
@@ -144,12 +147,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       scheme: 'mailto',
       path: AppConfig.supportEmail,
       query: _enc({
-        'subject': 'Aile ile Namaz – Öneri / Destek (v$_version)',
-        'body': 'Merhaba,\n\n\n\n---\nSürüm: v$_version (iç derleme $_build)',
+        'subject': t('Aile ile Namaz – Öneri / Destek (v$_version)', 'Aile ile Namaz – Feedback / Support (v$_version)'),
+        'body': t('Merhaba,\n\n\n\n---\nSürüm: v$_version (iç derleme $_build)',
+            'Hello,\n\n\n\n---\nVersion: v$_version (build $_build)'),
       }),
     );
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok) _toast('Telefonda mail uygulaması bulunamadı.');
+    if (!ok) _toast(t('Telefonda mail uygulaması bulunamadı.', 'No email app found on the phone.'));
   }
 
   static String _enc(Map<String, String> q) =>
@@ -167,9 +171,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     });
     if (r == null) {
-      _toast('Sürüm bilgisi alınamadı. İnternet bağlantını kontrol et.');
+      _toast(t('Sürüm bilgisi alınamadı. İnternet bağlantını kontrol et.', 'Could not get version info. Check your internet connection.'));
     } else if (r.$1 <= _build) {
-      _toast('Uygulaman güncel ✓');
+      _toast(t('Uygulaman güncel ✓', 'Your app is up to date ✓'));
     }
   }
 
@@ -183,8 +187,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     final left = LocalStore.pendingCount;
     _toast(left == 0
-        ? (sent > 0 ? '$sent işaretin gönderildi ✓' : 'Tüm işaretlerin zaten kaydedildi ✓')
-        : '$left işaretin henüz gönderilemedi. İnternet gelince kendiliğinden gider.');
+        ? (sent > 0 ? t('$sent işaretin gönderildi ✓', '$sent marks sent ✓') : t('Tüm işaretlerin zaten kaydedildi ✓', 'All your marks are already saved ✓'))
+        : t('$left işaretin henüz gönderilemedi. İnternet gelince kendiliğinden gider.', '$left marks not sent yet. They will be sent automatically when online.'));
   }
 
   Future<void> _gps() async {
@@ -192,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final (ok, msg) = await LocationHelper.updateFromGps();
     if (!mounted) return;
     setState(() => _gpsBusy = false);
-    _toast(ok ? 'Konum güncellendi: $msg' : msg);
+    _toast(ok ? t('Konum güncellendi: $msg', 'Location updated: $msg') : msg);
     if (ok) {
       await Notifications.reschedule();
     }
@@ -202,17 +206,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final first = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hesabımı ve verilerimi sil'),
-        content: const Text(
+        title: Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data')),
+        content: Text(t(
           'Namaz kayıtların, kaza sayıların ve havuz üyeliklerin kalıcı olarak silinir. '
-          'Reisi olduğun ve başka üyesi olan havuzların reisliği en eski üyeye geçer. Bu işlem geri alınamaz.',
-        ),
+              'Reisi olduğun ve başka üyesi olan havuzların reisliği en eski üyeye geçer. Bu işlem geri alınamaz.',
+          'Your prayer records, kaza counts and family circle memberships are permanently deleted. '
+              'For circles you lead that have other members, leadership passes to the oldest member. This cannot be undone.',
+        )),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Devam'),
+            child: Text(t('Devam', 'Continue')),
           ),
         ],
       ),
@@ -221,13 +227,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        content: const Text('Son kez soruyoruz: hesabın ve tüm verilerin silinsin mi?'),
+        content: Text(t('Son kez soruyoruz: hesabın ve tüm verilerin silinsin mi?', 'Last chance: delete your account and all your data?')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hayır')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Hayır', 'No'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Evet, sil'),
+            child: Text(t('Evet, sil', 'Yes, delete')),
           ),
         ],
       ),
@@ -237,7 +243,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await Repo.deleteMyAccount();
       if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
     } catch (_) {
-      _toast('Silinemedi. İnternet bağlantını kontrol edip tekrar dene.');
+      _toast(t('Silinemedi. İnternet bağlantını kontrol edip tekrar dene.', 'Could not delete. Check your internet connection and try again.'));
     }
   }
 
@@ -252,17 +258,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final go = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Gönderilmemiş kayıt var'),
-          content: Text('$left kayıt henüz buluta gönderilemedi (internet yok olabilir).\n\n'
-              'Çıkış yaparsan bu kayıtlar kaybolmaz: bu telefonda senin adına saklanır '
-              '(${LocalStore.parkDays} gün), aynı hesapla tekrar giriş yapınca otomatik gönderilir. '
-              'Bu telefonda başka biri giriş yaparsa senin kayıtlarını göremez.'),
+          title: Text(t('Gönderilmemiş kayıt var', 'Unsent records')),
+          content: Text(t(
+              '$left kayıt henüz buluta gönderilemedi (internet yok olabilir).\n\n'
+                  'Çıkış yaparsan bu kayıtlar kaybolmaz: bu telefonda senin adına saklanır '
+                  '(${LocalStore.parkDays} gün), aynı hesapla tekrar giriş yapınca otomatik gönderilir. '
+                  'Bu telefonda başka biri giriş yaparsa senin kayıtlarını göremez.',
+              '$left records have not been sent to the cloud yet (maybe no internet).\n\n'
+                  'If you sign out they are not lost: they are kept on this phone for you '
+                  '(${LocalStore.parkDays} days) and sent automatically when you sign in again with the same account. '
+                  'Anyone else signing in on this phone cannot see your records.')),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Çıkış yap'),
+              child: Text(t('Çıkış yap', 'Sign out')),
             ),
           ],
         ),
@@ -363,17 +374,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Sürüm v$_version', style: const TextStyle(fontSize: 17)),
+        title: Text(t('Sürüm v$_version', 'Version v$_version'), style: const TextStyle(fontSize: 17)),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
-            child: Text(_notes.isEmpty ? 'Sürüm açıklaması alınamadı. İnternet bağlantını kontrol et.' : _notes,
+            child: Text(_notes.isEmpty ? t('Sürüm açıklaması alınamadı. İnternet bağlantını kontrol et.', 'Could not load release notes. Check your internet connection.') : _notes,
                 style: const TextStyle(fontSize: 12, height: 1.4)),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => _open('$_repo/releases/latest'), child: const Text('GitHub\'da aç')),
-          FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tamam')),
+          TextButton(onPressed: () => _open('$_repo/releases/latest'), child: Text(t('GitHub\'da aç', 'Open on GitHub'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(t('Tamam', 'OK'))),
         ],
       ),
     );
@@ -434,20 +445,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final name = (user?.userMetadata?['full_name'] ?? user?.userMetadata?['name'] ?? '') as String;
     final email = user?.email ?? '';
     final syncText = guest
-        ? 'Gezinti modu · kayıt yapılmaz'
+        ? t('Gezinti modu · kayıt yapılmaz', 'Browsing mode · nothing is saved')
         : (_syncing
-            ? 'Gönderiliyor…'
+            ? t('Gönderiliyor…', 'Sending…')
             : (pending > 0
-                ? '⏳ $pending işaretin henüz gönderilmedi · internet gelince kendiliğinden gider'
-                : '✓ Tüm işaretlerin kaydedildi${_lastSync.isEmpty ? '' : ' · Son: $_lastSync'}'));
+                ? t('⏳ $pending işaretin henüz gönderilmedi · internet gelince kendiliğinden gider', '⏳ $pending marks not sent yet · they will be sent automatically when online')
+                : t('✓ Tüm işaretlerin kaydedildi', '✓ All your marks are saved') +
+                    (_lastSync.isEmpty ? '' : t(' · Son: $_lastSync', ' · Last: $_lastSync'))));
     return Scaffold(
-      appBar: AppBar(title: const Text('Ayarlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+      appBar: AppBar(title: Text(t('Ayarlar', 'Settings'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // 1) Hesap
           _bigCard([
-            _title('Hesap'),
+            _title(t('Hesap', 'Account')),
             _divider(),
             Row(children: [
               CircleAvatar(
@@ -458,13 +470,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(guest ? 'Gezinti modu' : (name.isEmpty ? 'Google hesabı' : name),
+                  Text(guest ? t('Gezinti modu', 'Browsing mode') : (name.isEmpty ? t('Google hesabı', 'Google account') : name),
                       style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold)),
                   if (!guest && email.isNotEmpty)
                     Text(email, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
                   if (!guest && _fmtDate(user?.createdAt).isNotEmpty)
-                    Text('Üyelik: ${_fmtDate(user?.createdAt)}'
-                        '${_fmtDate(user?.lastSignInAt).isEmpty ? '' : ' · Son giriş: ${_fmtDate(user?.lastSignInAt)}'}',
+                    Text(
+                        t('Üyelik: ${_fmtDate(user?.createdAt)}', 'Member since: ${_fmtDate(user?.createdAt)}') +
+                            (_fmtDate(user?.lastSignInAt).isEmpty
+                                ? ''
+                                : t(' · Son giriş: ${_fmtDate(user?.lastSignInAt)}',
+                                    ' · Last sign-in: ${_fmtDate(user?.lastSignInAt)}')),
                         style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
                 ]),
               ),
@@ -487,21 +503,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 6),
             if (guest)
-              _whiteBtn('Google ile Giriş Yap', () async {
+              _whiteBtn(t('Google ile Giriş Yap', 'Sign in with Google'), () async {
                 Navigator.of(context).popUntil((r) => r.isFirst);
                 await LocalStore.setGuestMode(false);
               }, icon: Icons.login)
             else
               Align(
                 alignment: Alignment.centerLeft,
-                child: _outlineBtn('Çıkış Yap', _signOut, icon: Icons.logout),
+                child: _outlineBtn(t('Çıkış Yap', 'Sign Out'), _signOut, icon: Icons.logout),
               ),
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
           // 2) Uygulama
           _bigCard([
-            _title('Uygulama'),
+            _title(t('Uygulama', 'App')),
             _divider(),
             Row(children: [
               const Icon(Icons.location_on, color: Colors.white, size: 20),
@@ -512,8 +528,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600)),
                   Text(
                     LocationHelper.permissionDenied
-                        ? 'Konum izni yok — İstanbul vakitleri gösteriliyor'
-                        : 'GPS ile otomatik · sadece telefonda tutulur',
+                        ? t('Konum izni yok — İstanbul vakitleri gösteriliyor', 'No location permission — showing Istanbul times')
+                        : t('GPS ile otomatik · sadece telefonda tutulur', 'Automatic via GPS · stored only on the phone'),
                     style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8)),
                   ),
                 ]),
@@ -522,7 +538,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: _gpsBusy
                     ? null
                     : (LocationHelper.permissionDenied ? LocationHelper.openSettings : _gps),
-                child: Text(LocationHelper.permissionDenied ? 'İzin ver' : (_gpsBusy ? '…' : 'Yenile'),
+                child: Text(LocationHelper.permissionDenied ? t('İzin ver', 'Allow') : (_gpsBusy ? '…' : t('Yenile', 'Refresh')),
                     style: const TextStyle(color: AppColors.prayedMint, fontWeight: FontWeight.bold)),
               ),
             ]),
@@ -538,9 +554,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Sürüm v$_version',
+                      Text(t('Sürüm v$_version', 'Version v$_version'),
                           style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600)),
-                      Text('Sürüm notları için dokun',
+                      Text(t('Sürüm notları için dokun', 'Tap for release notes'),
                           style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
                     ]),
                   ),
@@ -551,7 +567,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: hasUpdate ? AppColors.gold : AppColors.prayedMint),
                     ),
-                    child: Text(hasUpdate ? 'Güncelleme var!' : '✓ Güncel',
+                    child: Text(hasUpdate ? t('Güncelleme var!', 'Update available!') : t('✓ Güncel', '✓ Up to date'),
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -566,7 +582,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(14)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Yeni Güncelleme Hazır 🎉',
+                  Text(t('Yeni Güncelleme Hazır 🎉', 'New Update Ready 🎉'),
                       style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
                   if (_notes.isNotEmpty)
                     Text(_notes, maxLines: 6, overflow: TextOverflow.ellipsis,
@@ -576,38 +592,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
                     onPressed: () => UpdateChecker.install(context, _latest!),
                     icon: const Icon(Icons.system_update, size: 18),
-                    label: const Text('Hemen Güncelle'),
+                    label: Text(t('Hemen Güncelle', 'Update Now')),
                   ),
                 ]),
               )
             else
               Align(
                 alignment: Alignment.centerRight,
-                child: _outlineBtn(_checking ? 'Sorgulanıyor…' : 'Güncellemeleri Kontrol Et', _checking ? null : _check),
+                child: _outlineBtn(_checking ? t('Sorgulanıyor…', 'Checking…') : t('Güncellemeleri Kontrol Et', 'Check for Updates'), _checking ? null : _check),
               ),
             _divider(),
-            _tapRow('Önbelleği temizle', Icons.cleaning_services_outlined, _clearCache,
-                sub: 'Vakitler ve aile özeti yeniden alınır · kayıtların silinmez'),
+            _tapRow(t('Önbelleği temizle', 'Clear cache'), Icons.cleaning_services_outlined, _clearCache,
+                sub: t('Vakitler ve aile özeti yeniden alınır · kayıtların silinmez', 'Prayer times and family summary are reloaded · your records are kept')),
             const SizedBox(height: 6),
           ]),
           const SizedBox(height: 14),
           // 3) Diğer
           _bigCard([
-            _title('Diğer'),
+            _title(t('Diğer', 'Other')),
             _divider(),
-            _tapRow('Uygulamayı paylaş', Icons.share, () async {
+            _tapRow(t('Uygulamayı paylaş', 'Share the app'), Icons.share, () async {
               // Telefonun paylaşım penceresi: WhatsApp, Gmail, Mesajlar, Telegram…
               await Share.share(
-                '🕌 Aile ile Namaz — ailenle birlikte namaz takibi, kaza takibi ve aile havuzu.\n\n'
-                'Android için indir: $_repo/releases/latest/download/aile-ile-namaz.apk',
-                subject: 'Aile ile Namaz uygulaması',
+                t('🕌 Aile ile Namaz — ailenle birlikte namaz takibi, kaza takibi ve aile havuzu.\n\n'
+                    'Android için indir: $_repo/releases/latest/download/aile-ile-namaz.apk',
+                  '🕌 Aile ile Namaz — prayer tracking, kaza tracking and a family circle, together with your family.\n\n'
+                    'Download for Android: $_repo/releases/latest/download/aile-ile-namaz.apk'),
+                subject: t('Aile ile Namaz uygulaması', 'Aile ile Namaz app'),
               );
             }),
-            _tapRow('Öneri yaz', Icons.mail_outline, _mail, sub: 'Mail uygulaması açılır'),
+            _tapRow(t('Öneri yaz', 'Send feedback'), Icons.mail_outline, _mail, sub: t('Mail uygulaması açılır', 'Opens your email app')),
             _tapRow('GitHub', Icons.star_rounded, () => _open(_repo),
-                sub: 'Kaynak kod · Yıldız ver ⭐',
+                sub: t('Kaynak kod · Yıldız ver ⭐', 'Source code · Give a star ⭐'),
                 trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
-            _tapRow('Gizlilik politikası', Icons.privacy_tip_outlined,
+            _tapRow(t('Gizlilik politikası', 'Privacy policy'), Icons.privacy_tip_outlined,
                 () => _open('https://bilkil53.github.io/aile-ile-namaz-/privacy.html'),
                 trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
             const SizedBox(height: 6),
@@ -615,11 +633,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 14),
           // 4) Bildirimler
           _bigCard([
-            _title('Bildirimler'),
+            _title(t('Bildirimler', 'Notifications')),
             _divider(),
-            _tapRow('Bildirim izinlerini kontrol et', Icons.health_and_safety_outlined,
+            _tapRow(t('Bildirim izinlerini kontrol et', 'Check notification permissions'), Icons.health_and_safety_outlined,
                 () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotifyHealthScreen())),
-                sub: 'İzin, kesin alarm, pil tasarrufu · test bildirimi',
+                sub: t('İzin, kesin alarm, pil tasarrufu · test bildirimi', 'Permission, exact alarms, battery saver · test notification'),
                 trailing: const Icon(Icons.chevron_right, color: Colors.white)),
             if (AppSettings.prayerReminders && !_exact)
               InkWell(
@@ -633,28 +651,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(12)),
-                  child: const Row(children: [
+                  child: Row(children: [
                     Icon(Icons.alarm, color: Color(0xFF78350F), size: 20),
                     SizedBox(width: 8),
                     Expanded(
-                      child: Text('Hatırlatmalar birkaç dakika gecikebilir. Tam zamanında gelmesi için "Alarm ve hatırlatıcılar" iznini ver.',
+                      child: Text(t('Hatırlatmalar birkaç dakika gecikebilir. Tam zamanında gelmesi için "Alarm ve hatırlatıcılar" iznini ver.', 'Reminders may be a few minutes late. Allow "Alarms & reminders" for on-time reminders.'),
                           style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
                     ),
-                    Text('İzin ver', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
+                    Text(t('İzin ver', 'Allow'), style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
                   ]),
                 ),
               ),
-            _switchRow('Aile bildirimleri', 'Aileden biri namaz kılınca / dua gönderince', AppSettings.familyAlerts,
+            _switchRow(t('Aile bildirimleri', 'Family notifications'), t('Aileden biri namaz kılınca / dua gönderince', 'When a family member prays / sends a dua'), AppSettings.familyAlerts,
                 (v) async {
               await AppSettings.setFamilyAlerts(v);
               await Push.register();
               setState(() {});
             }),
             if (AppSettings.familyAlerts) ...[
-              _subSwitch('Namaz kıldı bildirimleri', AppSettings.notifyPrayer, 'notifyPrayer'),
-              _subSwitch('Kaza namazı bildirimleri', AppSettings.notifyKaza, 'notifyKaza'),
-              _subSwitch('Dua bildirimleri', AppSettings.notifyDua, 'notifyDua'),
-              _subSwitch('Kilit ekranında içeriği göster', AppSettings.lockScreen, 'lockScreen'),
+              _subSwitch(t('Namaz kıldı bildirimleri', 'Prayer notifications'), AppSettings.notifyPrayer, 'notifyPrayer'),
+              _subSwitch(t('Kaza namazı bildirimleri', 'Kaza prayer notifications'), AppSettings.notifyKaza, 'notifyKaza'),
+              _subSwitch(t('Dua bildirimleri', 'Dua notifications'), AppSettings.notifyDua, 'notifyDua'),
+              _subSwitch(t('Kilit ekranında içeriği göster', 'Show content on lock screen'), AppSettings.lockScreen, 'lockScreen'),
             ],
             // Anlık bildirim satırı yalnızca sorun varsa görünür
             if (!guest)
@@ -676,7 +694,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             const Icon(Icons.notifications_off, size: 18, color: AppColors.missedCoral),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text('Uygulama kapalıyken aile bildirimleri gelmeyebilir: $s · tekrar denemek için dokun',
+                              child: Text(t('Uygulama kapalıyken aile bildirimleri gelmeyebilir: $s · tekrar denemek için dokun', 'Family notifications may not arrive while the app is closed: $s · tap to retry'),
                                   style: const TextStyle(fontSize: 12, color: Colors.white)),
                             ),
                           ]),
@@ -702,11 +720,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Row(children: [
                     const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
                     const SizedBox(width: 10),
-                    const Expanded(
+                    Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Hesabımı ve verilerimi sil',
+                        Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data'),
                             style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
-                        Text('Tüm kayıtların kalıcı olarak silinir',
+                        Text(t('Tüm kayıtların kalıcı olarak silinir', 'All your records are permanently deleted'),
                             style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                       ]),
                     ),
