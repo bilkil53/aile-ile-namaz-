@@ -11,10 +11,10 @@ extension PrayerStatusX on PrayerStatus {
       };
 
   String get label => switch (this) {
-        PrayerStatus.none => 'Belirtilmedi',
-        PrayerStatus.prayed => 'Kıldı',
-        PrayerStatus.missed => 'Kılmadı',
-        PrayerStatus.excused => 'Muaf',
+        PrayerStatus.none => t('Belirtilmedi', 'Not marked'),
+        PrayerStatus.prayed => t('Kıldı', 'Prayed'),
+        PrayerStatus.missed => t('Kılmadı', 'Missed'),
+        PrayerStatus.excused => t('Muaf', 'Excused'),
       };
 
   String get emoji => switch (this) {
