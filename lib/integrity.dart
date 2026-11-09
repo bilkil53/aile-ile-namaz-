@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'lang.dart';
 import 'theme.dart';
 
 /// Kontrolün sonucu.
@@ -67,20 +68,26 @@ class Integrity {
         canPop: false,
         child: AlertDialog(
           icon: const Icon(Icons.gpp_bad_outlined, color: AppColors.missed, size: 34),
-          title: const Text('Bu kopya doğrulanamadı'),
+          title: Text(t('Bu kopya doğrulanamadı', 'This copy could not be verified')),
           content: Text(
             sig == null || sig.isEmpty
-                ? 'Uygulamanın imzası okunamadığı için güvenliğin adına açılmıyor. '
-                    'Lütfen uygulamayı resmi bağlantıdan yeniden kur.'
-                : 'Bu uygulama resmi kaynaktan kurulmamış ya da üzerinde değişiklik yapılmış. '
-                    'Güvenliğin adına açılmıyor. Lütfen resmi sürümü kur.',
+                ? t(
+                    'Uygulamanın imzası okunamadığı için güvenliğin adına açılmıyor. '
+                        'Lütfen uygulamayı resmi bağlantıdan yeniden kur.',
+                    "The app's signature could not be read, so it will not open for your safety. "
+                        'Please reinstall the app from the official link.')
+                : t(
+                    'Bu uygulama resmi kaynaktan kurulmamış ya da üzerinde değişiklik yapılmış. '
+                        'Güvenliğin adına açılmıyor. Lütfen resmi sürümü kur.',
+                    'This app was not installed from the official source or has been modified. '
+                        'It will not open for your safety. Please install the official version.'),
           ),
           actions: [
-            TextButton(onPressed: () => SystemNavigator.pop(), child: const Text('Kapat')),
+            TextButton(onPressed: () => SystemNavigator.pop(), child: Text(t('Kapat', 'Close'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
               onPressed: () => launchUrl(Uri.parse(_officialUrl), mode: LaunchMode.externalApplication),
-              child: const Text('Resmi sürümü indir'),
+              child: Text(t('Resmi sürümü indir', 'Download the official version')),
             ),
           ],
         ),

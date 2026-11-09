@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'lang.dart';
 import 'log.dart';
 
 /// Güncelleme iki kanaldan yapılır (derlemede `--dart-define=STORE=` ile seçilir):
@@ -46,7 +47,7 @@ class UpdateChecker {
   static Future<(int, String)?> latest() async {
     if (isPlay) {
       final cur = await currentBuild();
-      return await _playAvailable() ? (cur + 1, 'Google Play\'de yeni güncelleme var.') : (cur, '');
+      return await _playAvailable() ? (cur + 1, t('Google Play\'de yeni güncelleme var.', 'A new update is available on Google Play.')) : (cur, '');
     }
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
     try {
@@ -170,9 +171,9 @@ class UpdateChecker {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Yeni güncelleme var'),
+          title: Text(t('Yeni güncelleme var', 'New update available')),
           content: Text(
-            'Aile ile Namaz için yeni bir güncelleme hazır.'
+            t('Aile ile Namaz için yeni bir güncelleme hazır.', 'A new update for Aile ile Namaz is ready.')
             '${notes.isNotEmpty ? '\n\n$notes' : ''}',
           ),
           actions: [
@@ -182,7 +183,7 @@ class UpdateChecker {
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Güncelle'),
+              child: Text(t('Güncelle', 'Update')),
             ),
           ],
         ),
@@ -214,7 +215,7 @@ class UpdateChecker {
       builder: (ctx) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: const Text('Güncelleniyor'),
+          title: Text(t('Güncelleniyor', 'Updating')),
           content: ValueListenableBuilder<double?>(
             valueListenable: progress,
             builder: (_, p, __) => Column(
@@ -223,7 +224,7 @@ class UpdateChecker {
               children: [
                 LinearProgressIndicator(value: p),
                 const SizedBox(height: 10),
-                Text(p == null ? 'İndirme başlıyor…' : 'İndiriliyor… %${(p * 100).toStringAsFixed(0)}'),
+                Text(p == null ? t('İndirme başlıyor…', 'Starting download…') : t('İndiriliyor… %${(p * 100).toStringAsFixed(0)}', 'Downloading… ${(p * 100).toStringAsFixed(0)}%')),
               ],
             ),
           ),
@@ -234,7 +235,7 @@ class UpdateChecker {
                 dialogOpen = false;
                 Navigator.pop(ctx);
               },
-              child: const Text('Vazgeç'),
+              child: Text(t('Vazgeç', 'Cancel')),
             ),
           ],
         ),
@@ -286,8 +287,8 @@ class UpdateChecker {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             duration: const Duration(seconds: 6),
             content: Text(expected == null
-                ? 'Güncelleme doğrulanamadı (bağlantı). Biraz sonra tekrar dene.'
-                : 'İndirilen dosya doğrulanamadı (bozuk ya da değiştirilmiş). Kurulmadı; tekrar dene.'),
+                ? t('Güncelleme doğrulanamadı (bağlantı). Biraz sonra tekrar dene.', 'Could not verify the update (connection). Try again a bit later.')
+                : t('İndirilen dosya doğrulanamadı (bozuk ya da değiştirilmiş). Kurulmadı; tekrar dene.', 'The downloaded file could not be verified (corrupt or modified). It was not installed; try again.')),
           ));
         }
         return;
@@ -328,8 +329,8 @@ class UpdateChecker {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           duration: const Duration(seconds: 6),
           content: Text(verified
-              ? 'Kurulum ekranı açılamadı. "Bilinmeyen uygulamaları yükle" iznini verip tekrar dene.'
-              : 'Güncelleme indirilemedi. İnternet bağlantını kontrol edip tekrar dene.'),
+              ? t('Kurulum ekranı açılamadı. "Bilinmeyen uygulamaları yükle" iznini verip tekrar dene.', 'Could not open the installer. Allow "Install unknown apps" and try again.')
+              : t('Güncelleme indirilemedi. İnternet bağlantını kontrol edip tekrar dene.', 'Could not download the update. Check your internet connection and try again.')),
         ));
       }
     } finally {

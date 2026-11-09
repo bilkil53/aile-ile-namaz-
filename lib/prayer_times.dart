@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:intl/intl.dart' show DateFormat;
 
+import 'lang.dart';
 import 'settings.dart';
 
 class City {
@@ -106,12 +107,12 @@ class DayTimes {
 
   /// Tüm vakitler (ad, saat) sırayla.
   List<(String, String)> get all => [
-        ('İmsak', imsak),
-        ('Güneş', gunes),
-        (date.weekday == DateTime.friday ? 'Cuma' : 'Öğle', ogle),
-        ('İkindi', ikindi),
-        ('Akşam', aksam),
-        ('Yatsı', yatsi),
+        (t('İmsak', 'Imsak'), imsak),
+        (t('Güneş', 'Sunrise'), gunes),
+        (date.weekday == DateTime.friday ? t('Cuma', "Jumu'ah") : t('Öğle', 'Dhuhr'), ogle),
+        (t('İkindi', 'Asr'), ikindi),
+        (t('Akşam', 'Maghrib'), aksam),
+        (t('Yatsı', 'Isha'), yatsi),
       ];
 
   Map<String, String> toJson() => {
@@ -279,12 +280,12 @@ class PrayerTimesService {
 
   static NextPrayer next(DayTimes today, DayTimes tomorrow) {
     final now = DateTime.now();
-    for (final (name, t) in today.all) {
-      final at = today.at(t);
-      if (at.isAfter(now)) return NextPrayer(name, t, at.difference(now));
+    for (final (name, hhmm) in today.all) {
+      final at = today.at(hhmm);
+      if (at.isAfter(now)) return NextPrayer(name, hhmm, at.difference(now));
     }
     final at = tomorrow.at(tomorrow.imsak);
-    return NextPrayer('İmsak', tomorrow.imsak, at.difference(now));
+    return NextPrayer(t('İmsak', 'Imsak'), tomorrow.imsak, at.difference(now));
   }
 
   /// Kıble yönü (kuzeyden saat yönünde derece).

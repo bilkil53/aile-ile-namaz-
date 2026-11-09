@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+import '../lang.dart';
 import '../prayer_times.dart';
 import '../settings.dart';
 import '../theme.dart';
@@ -91,8 +92,8 @@ class _QiblaCardState extends State<QiblaCard> {
         children: [
           ListTile(
             leading: const Icon(Icons.explore, color: AppColors.emerald),
-            title: const Text('Kıble Pusulası', style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('${AppSettings.cityName} için kıble: ${qibla.toStringAsFixed(0)}°'),
+            title: Text(t('Kıble Pusulası', 'Qibla Compass'), style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(t('${AppSettings.cityName} için kıble: ${qibla.toStringAsFixed(0)}°', 'Qibla for ${AppSettings.cityName}: ${qibla.toStringAsFixed(0)}°')),
             trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
             onTap: () {
               setState(() => _open = !_open);
@@ -108,7 +109,7 @@ class _QiblaCardState extends State<QiblaCard> {
                     width: 200,
                     height: 200,
                     child: heading == null
-                        ? const Center(child: Text('Sensör bekleniyor…'))
+                        ? Center(child: Text(t('Sensör bekleniyor…', 'Waiting for sensor…')))
                         : Transform.rotate(
                             angle: -heading * math.pi / 180,
                             child: CustomPaint(painter: _CompassPainter(qibla, aligned)),
@@ -117,18 +118,18 @@ class _QiblaCardState extends State<QiblaCard> {
                   const SizedBox(height: 8),
                   Text(
                     heading == null
-                        ? 'Telefonu düz tut.'
+                        ? t('Telefonu düz tut.', 'Hold the phone flat.')
                         : aligned
-                            ? 'Kıbleye dönüksün ✓'
-                            : (diff! > 0 ? 'Sağa dön (${diff.abs().toStringAsFixed(0)}°)' : 'Sola dön (${diff.abs().toStringAsFixed(0)}°)'),
+                            ? t('Kıbleye dönüksün ✓', 'You are facing the qibla ✓')
+                            : (diff! > 0 ? t('Sağa dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn right (${diff.abs().toStringAsFixed(0)}°)') : t('Sola dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn left (${diff.abs().toStringAsFixed(0)}°)')),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: aligned ? AppColors.emerald : AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Telefonu yere paralel tut, metal ve mıknatıslardan uzak dur.',
+                  Text(
+                    t('Telefonu yere paralel tut, metal ve mıknatıslardan uzak dur.', 'Hold the phone parallel to the ground, away from metal and magnets.'),
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                   ),
