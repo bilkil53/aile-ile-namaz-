@@ -175,7 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _sync() async {
     setState(() => _syncing = true);
-    final sent = await Repo.flushQueue();
+    final sent = await Repo.syncNowCount();
     if (!mounted) return;
     setState(() {
       _syncing = false;

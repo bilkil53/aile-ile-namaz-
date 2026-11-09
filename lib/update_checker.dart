@@ -58,9 +58,9 @@ class UpdateChecker {
       final req = await client.getUrl(Uri.parse(isDemo ? '$_api?per_page=30' : '$_api/latest'));
       req.headers.set('Accept', 'application/vnd.github+json');
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
+      final res = await req.close().timeout(const Duration(seconds: 10));
       if (res.statusCode != 200) return null;
-      final data = jsonDecode(await res.transform(utf8.decoder).join());
+      final data = jsonDecode(await res.transform(utf8.decoder).join().timeout(const Duration(seconds: 15)));
       Map<String, dynamic>? body;
       if (isDemo) {
         for (final r in (data as List).cast<Map<String, dynamic>>()) {
@@ -270,7 +270,7 @@ class UpdateChecker {
       // (Küçük APK'dan büyük APK'ya geçilemez: Android bunu eski sürüm sayar. Bu yüzden yedek yok.)
       final req = await client.getUrl(Uri.parse(_abiUrl() ?? downloadUrl));
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
+      final res = await req.close().timeout(const Duration(seconds: 20));
       if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
 
       final total = res.contentLength;

@@ -193,7 +193,6 @@ class JoinRequest {
   final String id;
   final String userId;
   final String name;
-  final String email;
   final String roleTitle;
   final String icon;
   final DateTime? createdAt;
@@ -203,7 +202,6 @@ class JoinRequest {
     required this.id,
     required this.userId,
     required this.name,
-    required this.email,
     required this.roleTitle,
     required this.icon,
   });
@@ -214,7 +212,6 @@ class JoinRequest {
       id: m['id'] as String,
       userId: m['user_id'] as String,
       name: profile is Map ? (profile['display_name'] as String? ?? '') : '',
-      email: profile is Map ? (profile['email'] as String? ?? '') : '',
       roleTitle: m['role_title'] as String? ?? 'Aile Ferdi',
       icon: m['icon'] as String? ?? '👥',
       createdAt: m['created_at'] == null ? null : DateTime.parse(m['created_at'] as String).toLocal(),

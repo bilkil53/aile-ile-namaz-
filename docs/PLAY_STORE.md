@@ -31,6 +31,25 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
 7. **Mağaza sayfası:** kısa/uzun açıklama, en az 2 ekran görüntüsü, 512×512 simge, 1024×500 öne çıkan görsel.
 8. Dahili test → kapalı test (Play yeni bireysel hesaplarda 12 test kullanıcısı / 14 gün şartı arayabilir) → üretim.
 
+## Mağaza metni (taslak)
+**Kısa açıklama (80 karakter):**
+Ailece namaz takibi: vakitler, aile havuzu, kaza takibi, karne ve hatırlatmalar.
+
+**Uzun açıklama:**
+Aile İle Namaz, namazlarınızı ailenizle birlikte takip etmeniz için hazırlandı.
+
+• Diyanet uyumlu namaz vakitleri ve vakit hatırlatmaları
+• Aile Havuzu: en fazla 5 kişilik ailenizle kim hangi vakti kıldı, birlikte görün; birbirinize dua gönderin
+• Kaza namazı takibi: borcunuzu kaydedin, kıldıkça düşün
+• Karne: seri, aylık takvim, istatistikler ve manevi rozetler
+• Mübarek gün ve gece hatırlatmaları, Cuma hatırlatması
+• Reklamsız, sade ve Türkçe
+
+👨‍👩‍👧 Aile Pro'su: Aile Reisinin Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur. Her yeni kullanıcıya 7 gün ücretsiz deneme.
+Fiyat: aylık 153 ₺ · yıllık 1.553 ₺ (Google Play üzerinden, otomatik yenilenir; Google Play aboneliklerinden istediğiniz zaman iptal edebilirsiniz).
+
+ℹ️ Hizmet notu: Aile havuzu, aile bildirimleri, bulut yedekleme ve Pro gibi internet gerektiren özellikler, uygulamanın sunucu altyapısı (Supabase, Google Firebase) çalıştığı sürece kullanılabilir. Bakım veya altyapı kesintilerinde bu özellikler geçici olarak çalışmayabilir. Namaz vakitleri ve telefona kaydedilen işaretler internetsiz de çalışır; bağlantı gelince otomatik eşitlenir.
+
 ## Ücretsiz plandan çıkış
 - Supabase ücretsiz proje **7 gün hiç kullanılmazsa duraklatılır**; aktif kullanıcılarla sorun olmaz. Büyüyünce Pro (25 $/ay) — kod değişikliği gerekmez.
 - Test ve gerçek ortam ayrılmak istenirse: yeni Supabase projesi + derlemede `--dart-define=SUPABASE_URL=… --dart-define=SUPABASE_PUBLISHABLE_KEY=…` (kod hazır).
