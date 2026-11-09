@@ -53,9 +53,10 @@ class UpdateChecker {
       final req = await client.getUrl(Uri.parse(_latestApi));
       req.headers.set('Accept', 'application/vnd.github+json');
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
+      final res = await req.close().timeout(const Duration(seconds: 10));
       if (res.statusCode != 200) return null;
-      final body = jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
+      final body = jsonDecode(await res.transform(utf8.decoder).join().timeout(const Duration(seconds: 15)))
+          as Map<String, dynamic>;
       final tag = body['tag_name'] as String? ?? '';
       final n = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
       final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
@@ -151,12 +152,12 @@ class UpdateChecker {
       final req = await client.getUrl(Uri.parse(_latestApi));
       req.headers.set('Accept', 'application/vnd.github+json');
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
+      final res = await req.close().timeout(const Duration(seconds: 10));
       if (res.statusCode != 200) {
         client.close();
         return;
       }
-      final body = jsonDecode(await res.transform(utf8.decoder).join())
+      final body = jsonDecode(await res.transform(utf8.decoder).join().timeout(const Duration(seconds: 15)))
           as Map<String, dynamic>;
       client.close();
 
