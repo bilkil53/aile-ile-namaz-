@@ -260,15 +260,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
   // ---------- Gezinti (misafir) modu: yalnızca bakmak için, kayıt yapılmaz ----------
 
   Future<void> _loadGuest() async {
-    final me = Member(userId: myId, name: 'Misafir', roleTitle: 'Aile Ferdi', icon: '👤');
-    final pool = Pool(id: 'local', name: 'Aile İbadet Havuzum', ownerId: myId, inviteCode: 'EMB-······');
+    final me = Member(userId: myId, name: t('Misafir', 'Guest'), roleTitle: 'Aile Ferdi', icon: '👤');
+    final pool = Pool(id: 'local', name: t('Aile İbadet Havuzum', 'My Family Worship Circle'), ownerId: myId, inviteCode: 'EMB-······');
     final t = await Repo.dayPrayers([myId], todayStr());
     final y = await Repo.dayPrayers([myId], _yStr());
     if (!mounted) return;
     setState(() {
       _pools = [pool];
       _members = [me];
-      _myName = 'Misafir';
+      _myName = t('Misafir', 'Guest');
       _today = t;
       _yesterday = y;
       _loading = false;
@@ -324,29 +324,29 @@ class _FamilyScreenState extends State<FamilyScreen> {
     setState(() => _checkingLink = false);
     if (_members.length > 1) {
       _toast(_members.length > before
-          ? '🎉 Bağlantı kuruldu! Aile havuzunda ${_members.length} kişisiniz.'
-          : '🟢 Bağlantı aktif: ${_members.length} kişi aile havuzunda.');
+          ? t('🎉 Bağlantı kuruldu! Aile havuzunda ${_members.length} kişisiniz.', '🎉 Connected! There are ${_members.length} of you in the family circle.')
+          : t('🟢 Bağlantı aktif: ${_members.length} kişi aile havuzunda.', '🟢 Connection active: ${_members.length} people in the family circle.'));
     } else if (_outgoing.isNotEmpty) {
-      _toast('⏳ Talebin hâlâ Aile Reisinin onayını bekliyor (${_mmss(_left(_outgoing.first.$4))} kaldı).');
+      _toast(t('⏳ Talebin hâlâ Aile Reisinin onayını bekliyor (${_mmss(_left(_outgoing.first.$4))} kaldı).', '⏳ Your request is still waiting for the head of family\'s approval (${_mmss(_left(_outgoing.first.$4))} left).'));
     } else if (_requests.isNotEmpty) {
-      _toast('🔔 Onay bekleyen ${_requests.length} katılım isteğin var.');
+      _toast(t('🔔 Onay bekleyen ${_requests.length} katılım isteğin var.', '🔔 You have ${_requests.length} join requests awaiting approval.'));
     } else {
-      _toast('Henüz bağlı bir aile ferdi yok. Davet kodunu paylaş veya bir koda katıl.');
+      _toast(t('Henüz bağlı bir aile ferdi yok. Davet kodunu paylaş veya bir koda katıl.', 'No family member connected yet. Share your invite code or join with a code.'));
     }
   }
 
   String _err(Object e) {
     final s = e.toString();
-    if (s.contains('already_member')) return 'Zaten bu havuzdasın.';
-    if (s.contains('too_many_attempts')) return 'Çok fazla deneme. Biraz sonra tekrar dene.';
-    if (s.contains('request_expired')) return 'İsteğin 5 dakikalık onay süresi doldu. Tekrar istek gönderebilirsin.';
-    if (s.contains('rate_limited')) return 'Çok sık gönderdin. Biraz bekleyip tekrar dene.';
-    if (s.contains('pending_exists')) return 'Zaten bekleyen bir katılım isteğin var. 5 dakika içinde onaylanmazsa yenisini gönderebilirsin.';
-    if (s.contains('invalid_owner_role')) return 'Kendi ünvanın Aile Reisi, Baba veya Anne olabilir.';
-    if (s.contains('pool_full')) return 'Bu aile havuzu dolu (en fazla $kPoolMax kişi).';
-    if (s.contains('already_in_family')) return 'Zaten bir aile havuzundasın. Önce mevcut havuzdan ayrılmalısın.';
-    if (s.contains('owner_cannot_leave')) return 'Aile Reisi ayrılamaz; önce yöneticiliği devret.';
-    return 'İşlem yapılamadı. İnternet bağlantını kontrol et.';
+    if (s.contains('already_member')) return t('Zaten bu havuzdasın.', 'You are already in this circle.');
+    if (s.contains('too_many_attempts')) return t('Çok fazla deneme. Biraz sonra tekrar dene.', 'Too many attempts. Try again a bit later.');
+    if (s.contains('request_expired')) return t('İsteğin 5 dakikalık onay süresi doldu. Tekrar istek gönderebilirsin.', 'Your request\'s 5-minute approval window expired. You can send a new request.');
+    if (s.contains('rate_limited')) return t('Çok sık gönderdin. Biraz bekleyip tekrar dene.', 'You sent too often. Wait a little and try again.');
+    if (s.contains('pending_exists')) return t('Zaten bekleyen bir katılım isteğin var. 5 dakika içinde onaylanmazsa yenisini gönderebilirsin.', 'You already have a pending join request. If it is not approved within 5 minutes you can send a new one.');
+    if (s.contains('invalid_owner_role')) return t('Kendi ünvanın Aile Reisi, Baba veya Anne olabilir.', 'Your own title can be Head of Family, Father or Mother.');
+    if (s.contains('pool_full')) return t('Bu aile havuzu dolu (en fazla $kPoolMax kişi).', 'This family circle is full (at most $kPoolMax people).');
+    if (s.contains('already_in_family')) return t('Zaten bir aile havuzundasın. Önce mevcut havuzdan ayrılmalısın.', 'You are already in a family circle. Leave it first.');
+    if (s.contains('owner_cannot_leave')) return t('Aile Reisi ayrılamaz; önce yöneticiliği devret.', 'The head of family cannot leave; hand over leadership first.');
+    return t('İşlem yapılamadı. İnternet bağlantını kontrol et.', 'Could not complete. Check your internet connection.');
   }
 
   /// Yanlışlıkla basılmasın: tek pencerede iki ayrı onay kutusu işaretlenmeden düğme açılmaz.
@@ -384,7 +384,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
               onPressed: a && b ? () => Navigator.pop(ctx, true) : null,
@@ -402,7 +402,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         builder: (ctx) => AlertDialog(
           content: Text(text),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
             FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(yes)),
           ],
         ),
@@ -418,7 +418,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       // Unvanı ve simgeyi onaylarken Aile Reisi belirler.
       final ok = await Repo.requestJoin(v, 'Aile Ferdi', '👥');
       if (!ok) {
-        _toast('Davet kodu geçersiz. Aile Reisinden kodu tekrar iste.');
+        _toast(t('Davet kodu geçersiz. Aile Reisinden kodu tekrar iste.', 'Invalid invite code. Ask the head of family for the code again.'));
         return;
       }
       await _load();
@@ -428,28 +428,28 @@ class _FamilyScreenState extends State<FamilyScreen> {
       await _load();
       if (!mounted) return;
       if (_outgoing.isNotEmpty) {
-        _toast('Talebin iletildi ⏳ Aile Reisinin onayı bekleniyor.');
+        _toast(t('Talebin iletildi ⏳ Aile Reisinin onayı bekleniyor.', 'Request sent ⏳ Waiting for the head of family\'s approval.'));
       } else if (e.toString().contains('pending_exists') || e.toString().contains('rate_limited') ||
           e.toString().contains('already_member') || e.toString().contains('too_many_attempts')) {
         _toast(_err(e));
       } else {
-        _toast('Talep iletilemedi. İnternet bağlantını kontrol edip tekrar dene.');
+        _toast(t('Talep iletilemedi. İnternet bağlantını kontrol edip tekrar dene.', 'Could not send the request. Check your internet connection and try again.'));
       }
     }
   }
 
   Future<void> _approve(JoinRequest r) async {
-    final who = r.name.isNotEmpty ? r.name : 'Bir aile ferdi';
+    final who = r.name.isNotEmpty ? r.name : t('Bir aile ferdi', 'A family member');
     final me = _members.where((m) => m.userId == myId).firstOrNull;
     final res = await showDialog<_TitleResult>(
       context: context,
       builder: (_) => _TitleDialog(
         initialOwnerGender: me?.gender,
-        title: '🤝 $who havuzuna katılmak istiyor',
-        subtitle: 'Sana göre unvanını ve simgesini seç:',
+        title: t('🤝 $who havuzuna katılmak istiyor', '🤝 $who wants to join your circle'),
+        subtitle: t('Sana göre unvanını ve simgesini seç:', 'Choose their title (relative to you) and icon:'),
         initialTitle: 'Aile Ferdi',
         initialIcon: '👥',
-        confirm: 'Onayla & Havuza Ekle',
+        confirm: t('Onayla & Havuza Ekle', 'Approve & Add to Circle'),
         askOwner: true,
         initialOwner: ownerTitles.containsKey(_myRole) ? _myRole : 'Aile Reisi',
       ),
@@ -463,7 +463,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ownerIcon: ownerTitles[res.owner],
           memberGender: res.gender,
           ownerGender: res.ownerGender);
-      _toast('🎉 ${res.title} aile havuzuna katıldı!');
+      _toast(t('🎉 ${res.title} aile havuzuna katıldı!', '🎉 ${res.title} joined the family circle!'));
       await _load();
     } catch (e) {
       _toast(_err(e));
@@ -479,7 +479,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final msg = text.trim();
     try {
       await Repo.sendDua(_pool!.id, msg.length > 280 ? msg.substring(0, 280) : msg, targetId: to?.userId);
-      _toast(to == null ? 'Dua tüm aileye gönderildi 🤲' : 'Dua yalnızca ona gönderildi 🤲 (${_label(to)})');
+      _toast(to == null ? t('Dua tüm aileye gönderildi 🤲', 'Dua sent to the whole family 🤲') : t('Dua yalnızca ona gönderildi 🤲 (${_label(to)})', 'Dua sent only to them 🤲 (${_label(to)})'));
     } catch (e) {
       _toast(_err(e));
     }
@@ -496,7 +496,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             context: context,
             builder: (_) => _TitleDialog(
               title: m.name.isNotEmpty ? m.name : _label(m),
-              subtitle: 'Sana göre unvanı ve simgesi:',
+              subtitle: t('Sana göre unvanı ve simgesi:', 'Their title (relative to you) and icon:'),
               initialTitle: m.roleTitle,
               initialIcon: m.icon,
               initialGender: m.gender,
@@ -506,10 +506,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
           if (res == null) return;
           await Repo.setMemberRole(pool.id, m.userId, res.title, res.icon, gender: res.gender);
         case 'owner':
-          if (await _confirm('Aile Reisliği ${_label(m)} kişisine devredilsin mi? Bunu geri alamazsın.') != true) return;
+          if (await _confirm(t('Aile Reisliği ${_label(m)} kişisine devredilsin mi? Bunu geri alamazsın.', 'Hand over leadership of the family to ${_label(m)}? You cannot undo this.')) != true) return;
           await Repo.transferOwnership(pool.id, m.userId);
         case 'remove':
-          if (await _confirm('${_label(m)} havuzdan çıkarılsın mı?') != true) return;
+          if (await _confirm(t('${_label(m)} havuzdan çıkarılsın mı?', 'Remove ${_label(m)} from the circle?')) != true) return;
           await Repo.removeMember(pool.id, m.userId);
       }
       await _load();
@@ -534,11 +534,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(14)),
-              child: const Row(children: [
+              child: Row(children: [
                 Icon(Icons.wifi_off, color: Color(0xFF78350F), size: 20),
                 SizedBox(width: 8),
                 Expanded(
-                  child: Text('İnternet yok: ailenin son bilinen durumu gösteriliyor. Bağlantı gelince kendiliğinden yenilenir.',
+                  child: Text(t('İnternet yok: ailenin son bilinen durumu gösteriliyor. Bağlantı gelince kendiliğinden yenilenir.', 'No internet: showing your family\'s last known status. It refreshes automatically when online.'),
                       style: TextStyle(fontSize: 12, color: Color(0xFF78350F))),
                 ),
               ]),
@@ -572,23 +572,26 @@ class _FamilyScreenState extends State<FamilyScreen> {
               ),
               onPressed: () => _sendDua(),
               icon: const Text('🤲'),
-              label: const Text('Aileye Dua Gönder', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: Text(t('Aileye Dua Gönder', 'Send a Dua to the Family'), style: TextStyle(fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 16),
             _membersSection(),
             const SizedBox(height: 16),
             if (_isOwner && _members.length > 1)
               DangerBox(
-                title: 'Havuzu Kapat & Sıfırla',
-                subtitle: 'Tüm üyeler havuzdan çıkarılır',
+                title: t('Havuzu Kapat & Sıfırla', 'Close & Reset Circle'),
+                subtitle: t('Tüm üyeler havuzdan çıkarılır', 'All members are removed from the circle'),
                 onTap: () async {
                   if (!await _doubleConfirm(
-                    title: 'Havuzu Kapat & Sıfırla',
-                    text: 'Havuz kapatılırsa bütün aile fertleri havuzdan çıkarılır; ünvanlar, dua ve hareket kayıtları silinir. '
-                        'Herkesin kendi namaz ve kaza kayıtları kendi hesabında kalır.',
-                    first: 'Tüm üyelerin havuzdan çıkarılacağını anladım',
-                    second: 'Havuzu kapatmak istiyorum',
-                    yes: 'Havuzu Kapat',
+                    title: t('Havuzu Kapat & Sıfırla', 'Close & Reset Circle'),
+                    text: t(
+                        'Havuz kapatılırsa bütün aile fertleri havuzdan çıkarılır; ünvanlar, dua ve hareket kayıtları silinir. '
+                            'Herkesin kendi namaz ve kaza kayıtları kendi hesabında kalır.',
+                        'If the circle is closed, all family members are removed; titles, duas and activity records are deleted. '
+                            "Everyone's own prayer and kaza records stay in their own account."),
+                    first: t('Tüm üyelerin havuzdan çıkarılacağını anladım', 'I understand all members will be removed'),
+                    second: t('Havuzu kapatmak istiyorum', 'I want to close the circle'),
+                    yes: t('Havuzu Kapat', 'Close Circle'),
                   )) {
                     return;
                   }
@@ -616,19 +619,19 @@ class _FamilyScreenState extends State<FamilyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [
+          Row(children: [
             Text('👨‍👩‍👧‍👦', style: TextStyle(fontSize: 14)),
             SizedBox(width: 6),
-            Text('AİLE HAVUZU • İBADET HALKASI',
+            Text(t('AİLE HAVUZU • İBADET HALKASI', 'FAMILY CIRCLE • WORSHIP CIRCLE'),
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1)),
           ]),
           const SizedBox(height: 10),
           Text(
             pool == null
-                ? 'Aile havuzun hazırlanıyor…'
+                ? t('Aile havuzun hazırlanıyor…', 'Preparing your family circle…')
                 : _members.length <= 1
-                    ? 'Davet kodunu ailenle paylaş; katıldıkça burada görünecekler.'
-                    : '${_members.length} kişi • Aile Havuzunda Bağlı 🟢 Aktif',
+                    ? t('Davet kodunu ailenle paylaş; katıldıkça burada görünecekler.', 'Share the invite code with your family; they will appear here as they join.')
+                    : t('${_members.length} kişi • Aile Havuzunda Bağlı 🟢 Aktif', '${_members.length} people • Connected in the Family Circle 🟢 Active'),
             style: TextStyle(fontSize: 13, color: white85),
           ),
           if (_pools.length > 1) ...[
@@ -653,7 +656,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 color: _members.length > 1 ? AppColors.prayedMint : AppColors.goldContainer,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(_members.length > 1 ? '🟢 AKTİF' : '⏳ BEKLEMEDE',
+              child: Text(_members.length > 1 ? t('🟢 AKTİF', '🟢 ACTIVE') : '⏳ BEKLEMEDE',
                   style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -661,7 +664,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(_members.length > 1 ? 'Bağlantı Kuruldu ✓' : 'Bağlantı Bekleniyor ⏳',
+              child: Text(_members.length > 1 ? t('Bağlantı Kuruldu ✓', 'Connected ✓') : t('Bağlantı Bekleniyor ⏳', 'Waiting for Connection ⏳'),
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
             ),
           ]),
@@ -678,7 +681,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               icon: _checkingLink
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Text('🔄'),
-              label: Text(_checkingLink ? 'Sorgulanıyor…' : 'Bağlantıyı Teyit Et',
+              label: Text(_checkingLink ? t('Sorgulanıyor…', 'Checking…') : t('Bağlantıyı Teyit Et', 'Verify Connection'),
                   style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
@@ -697,13 +700,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: () => LocalStore.setGuestMode(false),
-          child: const Padding(
+          child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(children: [
               Icon(Icons.visibility_outlined, size: 18, color: Color(0xFF78350F)),
               SizedBox(width: 8),
               Expanded(
-                child: Text('Gezinti modundasın · Ailene bağlanmak için giriş yap',
+                child: Text(t('Gezinti modundasın · Ailene bağlanmak için giriş yap', 'You are browsing · Sign in to connect with your family'),
                     style: TextStyle(fontSize: 13, color: Color(0xFF78350F), fontWeight: FontWeight.w600)),
               ),
               Icon(Icons.chevron_right, color: Color(0xFF78350F)),
@@ -725,9 +728,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_myName.isNotEmpty ? _myName : 'Aile Ferdi',
+            Text(_myName.isNotEmpty ? _myName : roleText('Aile Ferdi'),
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            Text('${me?.roleTitle ?? 'Aile Ferdi'} · ${isGuest ? 'Gezinti modu (giriş yapılmadı)' : 'Google Hesabı Bağlı ✓'}',
+            Text('${roleText(me?.roleTitle ?? 'Aile Ferdi')} · ${isGuest ? t('Gezinti modu (giriş yapılmadı)', 'Browsing mode (not signed in)') : t('Google Hesabı Bağlı ✓', 'Google Account Connected ✓')}',
                 style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ]),
         ),
@@ -737,7 +740,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             color: family ? AppColors.emerald : AppColors.emeraldContainer,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Text(family ? 'Aile Modu' : 'Bireysel Mod',
+          child: Text(family ? t('Aile Modu', 'Family Mode') : t('Bireysel Mod', 'Individual Mode'),
               style: TextStyle(
                   fontSize: 11, fontWeight: FontWeight.bold, color: family ? Colors.white : AppColors.emerald)),
         ),
@@ -750,7 +753,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return Row(children: [
       Icon(Icons.timer_outlined, size: 16, color: color),
       const SizedBox(width: 4),
-      Text('Onay için kalan süre: ${_mmss(left)}',
+      Text(t('Onay için kalan süre: ${_mmss(left)}', 'Time left for approval: ${_mmss(left)}'),
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
       const SizedBox(width: 8),
       Expanded(
@@ -784,16 +787,16 @@ class _FamilyScreenState extends State<FamilyScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(children: [
+            Row(children: [
               Text('📥', style: TextStyle(fontSize: 15)),
               SizedBox(width: 6),
               Expanded(
-                child: Text('Başka Bir Aile Havuzuna Katıl',
+                child: Text(t('Başka Bir Aile Havuzuna Katıl', 'Join Another Family Circle'),
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.goldContainer)),
               ),
             ]),
             const SizedBox(height: 4),
-            Text('Aile Reisin sen değilsen, onun sana ilettiği davet kodunu gir:',
+            Text(t('Aile Reisin sen değilsen, onun sana ilettiği davet kodunu gir:', 'If you are not the head of family, enter the invite code they gave you:'),
                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9))),
             const SizedBox(height: 10),
             TextField(
@@ -801,7 +804,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               style: const TextStyle(color: Colors.white),
               textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
-                hintText: 'Örn: EMB-123456',
+                hintText: t('Örn: EMB-123456', 'e.g. EMB-123456'),
                 hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.12),
@@ -809,7 +812,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text('Katıldıktan sonra ünvanını (Eşi, Oğlu, Kızı…) ve simgeni Aile Reisi belirler.',
+            Text(t('Katıldıktan sonra ünvanını (Eşi, Oğlu, Kızı…) ve simgeni Aile Reisi belirler.', 'After you join, the head of family sets your title (Wife, Son, Daughter…) and icon.'),
                 style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85))),
             const SizedBox(height: 12),
             SizedBox(
@@ -817,7 +820,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               child: FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.emerald),
                 onPressed: () => _join(_joinCtrl.text),
-                child: const Text('Havuza Katıl', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(t('Havuza Katıl', 'Join Circle'), style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -832,17 +835,21 @@ class _FamilyScreenState extends State<FamilyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [
+          Row(children: [
             Text('⏳', style: TextStyle(fontSize: 15)),
             SizedBox(width: 8),
-            Text('Katılım Talebi İletildi',
+            Text(t('Katılım Talebi İletildi', 'Join Request Sent'),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
           ]),
           const SizedBox(height: 6),
           Text(
-            '"$poolName" havuzuna katılma isteğin ${ownerName.isNotEmpty ? '$ownerName adlı ' : ''}Aile Reisine iletildi. '
-            'Onaylayıp ünvanını belirlediğinde havuz burada açılacak. '
-            'Talep 5 dakika içinde onaylanmalıdır; bu sürede başka talep gönderemezsin.',
+            t(
+                '"$poolName" havuzuna katılma isteğin ${ownerName.isNotEmpty ? '$ownerName adlı ' : ''}Aile Reisine iletildi. '
+                    'Onaylayıp ünvanını belirlediğinde havuz burada açılacak. '
+                    'Talep 5 dakika içinde onaylanmalıdır; bu sürede başka talep gönderemezsin.',
+                'Your request to join "$poolName" was sent to the head of family${ownerName.isNotEmpty ? ' ($ownerName)' : ''}. '
+                    'The circle opens here once they approve it and set your title. '
+                    'The request must be approved within 5 minutes; you cannot send another one meanwhile.'),
             style: const TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.35),
           ),
           const SizedBox(height: 8),
@@ -857,7 +864,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 _toast(_err(e));
               }
             },
-            child: const Text('Talebi İptal Et'),
+            child: Text(t('Talebi İptal Et', 'Cancel Request')),
           ),
         ],
       ),
@@ -869,11 +876,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(children: [
+            Row(children: [
               Text('🔔', style: TextStyle(fontSize: 15)),
               SizedBox(width: 8),
               Expanded(
-                child: Text('Aşağıdaki aile ferdin havuzuna dahil olmak istiyor:',
+                child: Text(t('Aşağıdaki aile ferdin havuzuna dahil olmak istiyor:', 'This family member wants to join your circle:'),
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
               ),
             ]),
@@ -883,9 +890,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(r.name.isNotEmpty ? r.name : 'Bir aile ferdi',
+                  Text(r.name.isNotEmpty ? r.name : t('Bir aile ferdi', 'A family member'),
                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  const Text('Onaylarken ünvanını ve simgesini sen belirleyeceksin.',
+                  Text(t('Onaylarken ünvanını ve simgesini sen belirleyeceksin.', 'You will set their title and icon when approving.'),
                       style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                 ]),
               ),
@@ -898,7 +905,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 child: FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
                   onPressed: () => _approve(r),
-                  child: const Text('Onayla & Rol Seç'),
+                  child: Text(t('Onayla & Rol Seç', 'Approve & Choose Role')),
                 ),
               ),
               const SizedBox(width: 8),
@@ -924,11 +931,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
-        child: const Row(children: [
+        child: Row(children: [
           Text('🏡', style: TextStyle(fontSize: 22)),
           SizedBox(width: 10),
           Expanded(
-            child: Text('Havuz dolu ($kPoolMax/$kPoolMax). Yeni kişi eklemek için önce bir üyeyi çıkarmalısın.',
+            child: Text(t('Havuz dolu ($kPoolMax/$kPoolMax). Yeni kişi eklemek için önce bir üyeyi çıkarmalısın.', 'The circle is full ($kPoolMax/$kPoolMax). Remove a member to add someone new.'),
                 style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
           ),
         ]),
@@ -940,10 +947,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Davet Kodunuzu Paylaşın 🔗',
+          Text(t('Davet Kodunuzu Paylaşın 🔗', 'Share Your Invite Code 🔗'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 2),
-          Text('Aile Havuz Paylaşım Kodun',
+          Text(t('Aile Havuz Paylaşım Kodun', 'Your Family Circle Invite Code'),
               style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
           const SizedBox(height: 6),
           Row(children: [
@@ -952,15 +959,20 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2)),
             ),
             IconButton(
-              tooltip: 'Paylaş',
+              tooltip: t('Paylaş', 'Share'),
               onPressed: () async {
                 if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
                 await Share.share(
-                  '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
-                  'Davet kodu: ${pool.displayCode}\n'
-                  '(Kodu 5 dakika içinde onaylarım.)\n\n'
-                  'Uygulama: https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz.apk',
-                  subject: 'Aile Havuzu davet kodu',
+                  t(
+                      '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
+                          'Davet kodu: ${pool.displayCode}\n'
+                          '(Kodu 5 dakika içinde onaylarım.)\n\n'
+                          'Uygulama: https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz.apk',
+                      '🕌 Join our family circle in the Aile ile Namaz app!\n\n'
+                          'Invite code: ${pool.displayCode}\n'
+                          '(I will approve it within 5 minutes.)\n\n'
+                          'App: https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz.apk'),
+                  subject: t('Aile Havuzu davet kodu', 'Family Circle invite code'),
                 );
               },
               icon: const Icon(Icons.share, color: Colors.white),
@@ -970,15 +982,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
               onPressed: () async {
                 if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
                 await Clipboard.setData(ClipboardData(text: pool.displayCode));
-                _toast('Kod kopyalandı: ${pool.displayCode}');
+                _toast(t('Kod kopyalandı: ${pool.displayCode}', 'Code copied: ${pool.displayCode}'));
               },
               icon: const Icon(Icons.copy, color: Colors.white),
             ),
             IconButton(
-              tooltip: 'Yeni kod',
+              tooltip: t('Yeni kod', 'New code'),
               onPressed: () async {
                 if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
-                if (await _confirm('Eski kod geçersiz olacak. Yeni kod üretilsin mi?') != true) return;
+                if (await _confirm(t('Eski kod geçersiz olacak. Yeni kod üretilsin mi?', 'The old code will stop working. Create a new code?')) != true) return;
                 try {
                   await Repo.regenerateCode(pool.id);
                   await _load();
@@ -990,8 +1002,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
           ]),
           Text(
-            'Bu kodu ailenle paylaş. Katılmak istediklerinde burada onay kartı açılır; '
-            'onaylarken ona sana göre ünvanını (Eşi, Oğlu, Kızı…) ve simgesini verirsin.',
+            t(
+                'Bu kodu ailenle paylaş. Katılmak istediklerinde burada onay kartı açılır; '
+                    'onaylarken ona sana göre ünvanını (Eşi, Oğlu, Kızı…) ve simgesini verirsin.',
+                'Share this code with your family. When they want to join, an approval card opens here; '
+                    'while approving you give them a title relative to you (Wife, Son, Daughter…) and an icon.'),
             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85), height: 1.35),
           ),
         ],
@@ -1001,28 +1016,31 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Widget _memberStatusCard(Pool pool) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _whiteCard(
-          child: const Row(children: [
+          child: Row(children: [
             Text('🕌', style: TextStyle(fontSize: 24)),
             SizedBox(width: 10),
             Expanded(
-              child: Text('Aile İbadet Havuzundasın',
+              child: Text(t('Aile İbadet Havuzundasın', 'You are in a Family Worship Circle'),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             ),
           ]),
         ),
         const SizedBox(height: 10),
         DangerBox(
-          title: 'Havuzdan Ayrıl',
-          subtitle: 'Ailenin namaz durumunu artık göremezsin',
+          title: t('Havuzdan Ayrıl', 'Leave Circle'),
+          subtitle: t('Ailenin namaz durumunu artık göremezsin', 'You will no longer see your family\'s prayers'),
           icon: Icons.logout,
           onTap: () async {
               if (!await _doubleConfirm(
-                title: 'Havuzdan Ayrıl',
-                text: 'Ayrılırsan ailen senin namaz durumunu artık göremez, sen de onlarınkini göremezsin. '
-                    'Kendi namaz ve kaza kayıtların hesabında kalır. Tekrar katılmak için Aile Reisinden yeni onay gerekir.',
-                first: 'Ailemin durumunu artık göremeyeceğimi anladım',
-                second: 'Havuzdan ayrılmak istiyorum',
-                yes: 'Evet, Ayrıl',
+                title: t('Havuzdan Ayrıl', 'Leave Circle'),
+                text: t(
+                    'Ayrılırsan ailen senin namaz durumunu artık göremez, sen de onlarınkini göremezsin. '
+                        'Kendi namaz ve kaza kayıtların hesabında kalır. Tekrar katılmak için Aile Reisinden yeni onay gerekir.',
+                    'If you leave, your family can no longer see your prayers and you cannot see theirs. '
+                        'Your own prayer and kaza records stay in your account. Rejoining needs new approval from the head of family.'),
+                first: t('Ailemin durumunu artık göremeyeceğimi anladım', 'I understand I will no longer see my family\'s status'),
+                second: t('Havuzdan ayrılmak istiyorum', 'I want to leave the circle'),
+                yes: t('Evet, Ayrıl', 'Yes, Leave'),
               )) {
                 return;
               }
@@ -1062,13 +1080,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
           Row(children: [
             const Text('👨‍👩‍👧', style: TextStyle(fontSize: 17)),
             const SizedBox(width: 8),
-            const Expanded(
-              child: Text('Aile İbadet Halkası',
+            Expanded(
+              child: Text(t('Aile İbadet Halkası', 'Family Worship Circle'),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
-            toggle('◄ Dünü Gör', _showYesterday, true),
+            toggle(t('◄ Dünü Gör', '◄ See Yesterday'), _showYesterday, true),
             const SizedBox(width: 6),
-            toggle('Bugün', !_showYesterday, false),
+            toggle(t('Bugün', 'Today'), !_showYesterday, false),
           ]),
           const SizedBox(height: 4),
           Builder(builder: (_) {
@@ -1088,7 +1106,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 const Text('🏆', style: TextStyle(fontSize: 15)),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('${_showYesterday ? 'Dün' : 'Bugün'} Aile Başarısı: $done / $total Vakit',
+                  child: Text(
+                      _showYesterday
+                          ? t('Dün Aile Başarısı: $done / $total Vakit', "Yesterday's Family Success: $done / $total prayers")
+                          : t('Bugün Aile Başarısı: $done / $total Vakit', "Today's Family Success: $done / $total prayers"),
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
                 Text('%$pct',
@@ -1097,11 +1118,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
             );
           }),
           Row(children: [
-            Text('ORTAK MATRİS',
+            Text(t('ORTAK MATRİS', 'SHARED GRID'),
                 style: TextStyle(fontSize: 10, letterSpacing: 1, color: Colors.white.withValues(alpha: 0.7))),
             const Spacer(),
             if (_members.length > 3)
-              Text('Sağa Kaydırılabilir (${_members.length} Kişi) →',
+              Text(t('Sağa Kaydırılabilir (${_members.length} Kişi) →', 'Scroll right (${_members.length} people) →'),
                   style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7))),
           ]),
           const SizedBox(height: 10),
@@ -1113,7 +1134,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 Row(children: [
                   SizedBox(
                     width: 72,
-                    child: Text('VAKİT',
+                    child: Text(t('VAKİT', 'PRAYER'),
                         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white.withValues(alpha: 0.7))),
                   ),
                   for (final m in _members)
@@ -1156,8 +1177,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Widget _cell(PrayerStatus s) {
     final (label, bg, fg) = switch (s) {
-      PrayerStatus.prayed => ('Kıldı', Colors.white, AppColors.emerald),
-      PrayerStatus.missed => ('Kılmadı', AppColors.missed, Colors.white),
+      PrayerStatus.prayed => (t('Kıldı', 'Prayed'), Colors.white, AppColors.emerald),
+      PrayerStatus.missed => (t('Kılmadı', 'Missed'), AppColors.missed, Colors.white),
       PrayerStatus.excused => ('Muaf', Colors.white.withValues(alpha: 0.25), Colors.white),
       PrayerStatus.none => ('—', Colors.transparent, Colors.white.withValues(alpha: 0.45)),
     };
@@ -1179,11 +1200,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
-          const Expanded(
-            child: Text('Havuzdaki Bireyler ve Durumları',
+          Expanded(
+            child: Text(t('Havuzdaki Bireyler ve Durumları', 'Circle Members and Their Status'),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           ),
-          Text('👥 ${_members.length}/$kPoolMax kişi',
+          Text(t('👥 ${_members.length}/$kPoolMax kişi', '👥 ${_members.length}/$kPoolMax people'),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
         ]),
         const SizedBox(height: 8),
@@ -1192,9 +1213,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 8),
         ],
         if (_members.length == 1)
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(8),
-            child: Text('Aile fertlerin davet kodun ile havuza dahil oldukça burada listelenecek ⏳',
+            child: Text(t('Aile fertlerin davet kodun ile havuza dahil oldukça burada listelenecek ⏳', 'Family members will be listed here as they join with your invite code ⏳'),
                 style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
           ),
       ],
@@ -1219,7 +1240,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(isMe ? '${m.shownName} (sen)' : _label(m),
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                Text(isOwner ? '• 🏡 Havuz Yöneticisi' : '• 👥 Aile Ferdi',
+                Text(isOwner ? t('• 🏡 Havuz Yöneticisi', '• 🏡 Circle Admin') : t('• 👥 Aile Ferdi', '• 👥 Family Member'),
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -1237,10 +1258,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
             if (_isOwner && !isMe)
               PopupMenuButton<String>(
                 onSelected: (v) => _memberAction(m, v),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'role', child: Text('Ünvan / simge belirle')),
-                  PopupMenuItem(value: 'owner', child: Text('Aile Reisi yap')),
-                  PopupMenuItem(value: 'remove', child: Text('Havuzdan çıkar')),
+                itemBuilder: (_) => [
+                  PopupMenuItem(value: 'role', child: Text(t('Ünvan / simge belirle', 'Set title / icon'))),
+                  PopupMenuItem(value: 'owner', child: Text(t('Aile Reisi yap', 'Make head of family'))),
+                  PopupMenuItem(value: 'remove', child: Text(t('Havuzdan çıkar', 'Remove from circle'))),
                 ],
               ),
           ]),
@@ -1249,7 +1270,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(8)),
-              child: Text('📿 Kaza: $kazaLeft kaldı • ${kaza![1]} eda edildi',
+              child: Text(t('📿 Kaza: $kazaLeft kaldı • ${kaza![1]} eda edildi', '📿 Kaza: $kazaLeft left • ${kaza[1]} made up'),
                   style: const TextStyle(fontSize: 11, color: Color(0xFF78350F))),
             ),
           ],
@@ -1258,7 +1279,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             TextButton.icon(
               onPressed: () => _sendDua(to: m),
               icon: const Text('👏'),
-              label: const Text('Tebrik Et & Dua Gönder',
+              label: Text(t('Tebrik Et & Dua Gönder', 'Congratulate & Send Dua'),
                   style: TextStyle(color: AppColors.emerald, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -1340,12 +1361,12 @@ class _TitleDialogState extends State<_TitleDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.askOwner) ...[
-              const Text('Senin ünvanın', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(t('Senin ünvanın', 'Your title'), style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               Wrap(spacing: 6, children: [
                 for (final e in ownerTitles.entries)
                   ChoiceChip(
-                    label: Text('${e.value} ${e.key}'),
+                    label: Text('${e.value} ${roleText(e.key)}'),
                     selected: _owner == e.key,
                     onSelected: (_) => setState(() => _owner = e.key),
                   ),
@@ -1354,7 +1375,7 @@ class _TitleDialogState extends State<_TitleDialog> {
             ],
             Text(widget.subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             const SizedBox(height: 10),
-            const Text('Ünvanı (sana göre)', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(t('Ünvanı (sana göre)', 'Their title (relative to you)'), style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Wrap(spacing: 6, runSpacing: 6, children: [
               for (final e in reisTitles.entries)
@@ -1371,16 +1392,16 @@ class _TitleDialogState extends State<_TitleDialog> {
             TextField(
               controller: _ctrl,
               maxLength: 30,
-              decoration: const InputDecoration(labelText: 'Veya ismini yaz (örn. Ahmet)'),
+              decoration: InputDecoration(labelText: t('Veya ismini yaz (örn. Ahmet)', 'Or type their name (e.g. Ahmet)')),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 4),
             const Text('Simgesi', style: TextStyle(fontWeight: FontWeight.bold)),
-            const Text('Kadın ve kız simgelerinde "Muaf" seçeneği otomatik açılır.',
+            Text(t('Kadın ve kız simgelerinde "Muaf" seçeneği otomatik açılır.', 'For woman and girl icons the "Excused" option is enabled automatically.'),
                 style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
             for (final g in iconGroups.entries) ...[
               const SizedBox(height: 6),
-              Text(g.key, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+              Text(iconGroupText(g.key), style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
               const SizedBox(height: 4),
               Wrap(spacing: 6, children: [
                 for (final ic in g.value)
@@ -1404,7 +1425,7 @@ class _TitleDialogState extends State<_TitleDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(t('Vazgeç', 'Cancel'))),
         FilledButton(
           onPressed: () => Navigator.pop(
               context,
@@ -1428,7 +1449,8 @@ class _DuaDialog extends StatefulWidget {
 
 class _DuaDialogState extends State<_DuaDialog> {
   final _ctrl = TextEditingController();
-  static const _defaultDua = 'Allah ibadetlerimizi kabul etsin, ailemizi namazda buluştursun 🤲';
+  static String get _defaultDua => t('Allah ibadetlerimizi kabul etsin, ailemizi namazda buluştursun 🤲',
+      'May Allah accept our worship and unite our family in prayer 🤲');
 
   @override
   void dispose() {
@@ -1439,14 +1461,14 @@ class _DuaDialogState extends State<_DuaDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.to == null ? '🤲 Dua ve Tebrik Gönder' : '🤲 ${widget.to} için dua',
+      title: Text(widget.to == null ? t('🤲 Dua ve Tebrik Gönder', '🤲 Send Dua and Greetings') : t('🤲 ${widget.to} için dua', '🤲 Dua for ${widget.to}'),
           style: const TextStyle(fontSize: 15)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Hazır manevi dualar ve tebrikler:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(t('Hazır manevi dualar ve tebrikler:', 'Ready-made duas and greetings:'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             for (final g in greetings)
               Card(
@@ -1465,27 +1487,27 @@ class _DuaDialogState extends State<_DuaDialog> {
               controller: _ctrl,
               maxLength: 240,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Veya kendi duanı yaz',
-                hintText: 'Örn: Allah kabul etsin, hayırlı ve bereketli olsun…',
+              decoration: InputDecoration(
+                labelText: t('Veya kendi duanı yaz', 'Or write your own dua'),
+                hintText: t('Örn: Allah kabul etsin, hayırlı ve bereketli olsun…', 'e.g. May Allah accept it, may it be blessed…'),
               ),
             ),
             if (_ctrl.text.trim().isEmpty)
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(10)),
-                child: const Text('Bir şey yazmazsan şu dua gönderilir:\n"$_defaultDua"',
+                child: Text(t('Bir şey yazmazsan şu dua gönderilir:\n"$_defaultDua"', 'If you leave it empty, this dua is sent:\n"$_defaultDua"'),
                     style: TextStyle(fontSize: 12, color: AppColors.emerald)),
               ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(t('Vazgeç', 'Cancel'))),
         FilledButton(
           // Boş bırakılırsa gönderilecek dua önizlemede yazar
           onPressed: () => Navigator.pop(context, _ctrl.text.trim().isEmpty ? _defaultDua : _ctrl.text),
-          child: Text(_ctrl.text.trim().isEmpty ? 'Hazır duayı gönder 🤲' : 'Yazdığımı gönder 🤲'),
+          child: Text(_ctrl.text.trim().isEmpty ? t('Hazır duayı gönder 🤲', 'Send the ready-made dua 🤲') : t('Yazdığımı gönder 🤲', 'Send what I wrote 🤲')),
         ),
       ],
     );
