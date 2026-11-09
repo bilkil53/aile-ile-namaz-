@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'config.dart';
+import 'lang.dart';
 import 'privacy.dart';
 import 'ui_test_mode.dart';
 
@@ -120,7 +121,7 @@ class CrashReport {
     var st = stack?.toString() ?? '';
     if (st.length > 1200) st = st.substring(0, 1200);
     _show(
-      title: 'Bir hata oluştu',
+      title: t('Bir hata oluştu', 'An error occurred'),
       reason: reason,
       detail: 'Hata: ${text.length > 600 ? text.substring(0, 600) : text}\nBellek: $ram MB\n\n$st',
     );

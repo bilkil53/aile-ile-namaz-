@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:aile_ile_namaz/main.dart' as app;
 
@@ -36,17 +37,24 @@ Future<void> settle(WidgetTester t, [int frames = 8]) async {
 
 /// Uygulamanın kendi hata penceresi açıldıysa test o adımda net bir sebeple durur.
 void noErrorDialog(String where) {
-  expect(find.text('Bir hata oluştu'), findsNothing, reason: '$where: uygulamada hata penceresi açıldı');
+  expect(find.text(L('Bir hata oluştu', 'An error occurred')), findsNothing, reason: '$where: uygulamada hata penceresi açıldı');
 }
+
+/// CI testi iki kez çalıştırır: --dart-define=TEST_LANG=tr ve =en
+const lang = String.fromEnvironment('TEST_LANG', defaultValue: 'tr');
+const en = lang == 'en';
+String L(String tr, String english) => en ? english : tr;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Misafir akışı: hoş geldin → gezinti → işaretleme engeli → 4 sekme', (t) async {
+  testWidgets('Misafir akışı ($lang): hoş geldin → gezinti → işaretleme engeli → 4 sekme', (t) async {
+    // Uygulama dili test diline sabitlenir (telefon dili ne olursa olsun)
+    SharedPreferences.setMockInitialValues({'lang': lang});
     await app.main();
 
     // 1) Hoş geldin penceresi → "Giriş Yapmadan Devam Et" (alttaki buton)
-    final guestBtn = find.text('Giriş Yapmadan Devam Et');
+    final guestBtn = find.text(L('Giriş Yapmadan Devam Et', 'Continue Without Signing In'));
     await pumpUntil(t, guestBtn);
     await t.ensureVisible(guestBtn.last);
     await settle(t, 3);
@@ -54,7 +62,7 @@ void main() {
     await settle(t);
 
     // 2) Açıklama penceresi → "Gezintiye Başla"
-    final start = find.text('Gezintiye Başla');
+    final start = find.text(L('Gezintiye Başla', 'Start Browsing'));
     await pumpUntil(t, start);
     await t.tap(start);
     await settle(t, 12);
@@ -65,24 +73,24 @@ void main() {
     final todayList = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down);
     await pumpUntil(t, todayList);
     // Yalnızca vakit kartındaki "Sabah" (üstteki özet kartında da geçebilir)
-    final sabah = find.ancestor(of: find.text('Sabah'), matching: find.byType(InkWell));
+    final sabah = find.ancestor(of: find.text(L('Sabah', 'Fajr')), matching: find.byType(InkWell));
     // Not: .first boşken hata verir; kaydırma sırasında süzgeçsiz bulucu verilir
     await t.scrollUntilVisible(sabah, 200, scrollable: todayList.first, maxScrolls: 30);
     await t.ensureVisible(sabah.first);
     await settle(t, 4);
     noErrorDialog('Bugün ekranı');
     await t.tap(sabah.first);
-    final loginDlg = find.text('Google Girişi Gerekir');
-    final notYet = find.textContaining('girecek');
+    final loginDlg = find.text(L('Google Girişi Gerekir', 'Google Sign-in Required'));
+    final notYet = find.textContaining(L('girecek', 'starts at'));
     final seen = await pumpUntilAny(t, [loginDlg, notYet]);
     if (seen == loginDlg) {
-      await t.tap(find.text('Gezinmeye Devam'));
+      await t.tap(find.text(L('Gezinmeye Devam', 'Keep Browsing')));
       await settle(t);
       expect(loginDlg, findsNothing);
     }
 
     // 4) Dört sekmenin hepsi açılıyor ve çökmüyor
-    for (final tab in ['Aile Havuzu', 'Kaza', 'Karne', 'Bugün']) {
+    for (final tab in en ? ['Family', 'Kaza', 'Report', 'Today'] : ['Aile Havuzu', 'Kaza', 'Karne', 'Bugün']) {
       final f = find.descendant(of: find.byType(BottomNavigationBar), matching: find.text(tab));
       await pumpUntil(t, f);
       await t.tap(f);

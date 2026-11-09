@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data.dart';
+import '../lang.dart';
 import '../member_icon.dart';
 import '../models.dart';
 import '../theme.dart';
@@ -79,7 +80,7 @@ class _KazaScreenState extends State<KazaScreen> {
   (int, int) _of(String t) => _data[t] ?? (0, 0);
 
   Future<void> _set(String type, int owed, int completed, {bool announce = false}) async {
-    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
+    if (isGuest) return showLoginRequired(context, t('Kaza kaydı tutmak', 'keep kaza records'));
     final before = _of(type);
     setState(() => _data = {..._data, type: (owed, completed)});
     try {
@@ -91,7 +92,7 @@ class _KazaScreenState extends State<KazaScreen> {
   }
 
   Future<void> _bulkAdd() async {
-    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
+    if (isGuest) return showLoginRequired(context, t('Kaza kaydı tutmak', 'keep kaza records'));
     final days = await showDialog<int>(context: context, builder: (_) => const _BulkDialog());
     if (days == null || days <= 0 || days > 36500) return;
     for (final (t, _, _, _) in _types) {
@@ -103,7 +104,7 @@ class _KazaScreenState extends State<KazaScreen> {
 
   /// Kaza kayıtlarını sıfırla: yanlışlıkla olmasın diye iki kez onay ister.
   Future<void> _reset() async {
-    if (isGuest) return showLoginRequired(context, 'Kaza kayıtlarını sıfırlamak');
+    if (isGuest) return showLoginRequired(context, t('Kaza kayıtlarını sıfırlamak', 'reset kaza records'));
     final first = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(

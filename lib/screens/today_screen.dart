@@ -119,15 +119,15 @@ class _TodayScreenState extends State<TodayScreen> {
 
   void _onRejected() {
     if (!mounted || isGuest) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('⚠️ Bir kayıt sunucu tarafından kabul edilmedi ve buluta gönderilmedi. Kontrol edip tekrar işaretle.'),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(t('⚠️ Bir kayıt sunucu tarafından kabul edilmedi ve buluta gönderilmedi. Kontrol edip tekrar işaretle.', '⚠️ A record was rejected by the server and not saved to the cloud. Please check and mark it again.')),
       duration: Duration(seconds: 5),
     ));
     unawaited(_load()); // ekran buluttaki son duruma döner
   }
 
   Future<void> _toggle(String key) async {
-    if (isGuest) return showLoginRequired(context, 'Vakit işaretlemek');
+    if (isGuest) return showLoginRequired(context, t('Vakit işaretlemek', 'mark prayers'));
     final map = _current;
     final next = _next(map[key] ?? PrayerStatus.none);
     final before = Map<String, PrayerStatus>.from(map);
@@ -155,7 +155,7 @@ class _TodayScreenState extends State<TodayScreen> {
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kaydedilemedi. İnternet bağlantını kontrol et.')),
+        SnackBar(content: Text(t('Kaydedilemedi. İnternet bağlantını kontrol et.', 'Could not save. Check your internet connection.'))),
       );
     }
   }
@@ -163,7 +163,7 @@ class _TodayScreenState extends State<TodayScreen> {
   /// Cuma günü öğle kartı "Cuma Namazı 🕌" olarak görünür.
   String _prayerName(String key) =>
       key == 'dhuhr' && !_showYesterday && DateTime.now().weekday == DateTime.friday
-          ? 'Cuma Namazı 🕌'
+          ? t('Cuma Namazı 🕌', 'Friday Prayer 🕌')
           : prayerLabels[key]!;
 
   bool _arrived(String key) {
@@ -223,7 +223,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.emerald, letterSpacing: 0.8),
               ),
               Text(
-                _name.isEmpty ? 'Selamün aleyküm' : 'Selamün aleyküm,\n$_name',
+                _name.isEmpty ? t('Selamün aleyküm', 'Assalamu alaikum') : t('Selamün aleyküm,\n$_name', 'Assalamu alaikum,\n$_name'),
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary, height: 1.25),
               ),
               const SizedBox(height: 2),
@@ -274,8 +274,8 @@ class _TodayScreenState extends State<TodayScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(children: [
-        seg('← Dün', _showYesterday, () => setState(() => _showYesterday = true)),
-        seg('Bugün', !_showYesterday, () => setState(() => _showYesterday = false)),
+        seg(t('← Dün', '← Yesterday'), _showYesterday, () => setState(() => _showYesterday = true)),
+        seg(t('Bugün', 'Today'), !_showYesterday, () => setState(() => _showYesterday = false)),
       ]),
     );
   }
@@ -286,8 +286,8 @@ class _TodayScreenState extends State<TodayScreen> {
           color: AppColors.goldContainer,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Text(
-          'Dünkü namazlarını görüntülüyorsun. Unuttuğun veya kıldığın vakitleri işaretleyebilirsin.',
+        child: Text(
+          t('Dünkü namazlarını görüntülüyorsun. Unuttuğun veya kıldığın vakitleri işaretleyebilirsin.', 'You are viewing yesterday\'s prayers. You can mark the ones you forgot or prayed.'),
           style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
         ),
       );
@@ -308,10 +308,10 @@ class _TodayScreenState extends State<TodayScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [
+          Row(children: [
             Icon(Icons.notifications, size: 14, color: Colors.white),
             SizedBox(width: 5),
-            Text('SIRADAKİ VAKİT',
+            Text(t('SIRADAKİ VAKİT', 'NEXT PRAYER'),
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1)),
           ]),
           const SizedBox(height: 10),
@@ -322,7 +322,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(n.name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-                    Text(h > 0 ? '$h sa $m dk sonra' : '$m dk sonra',
+                    Text(h > 0 ? t('$h sa $m dk sonra', 'in $h h $m min') : t('$m dk sonra', 'in $m min'),
                         style: TextStyle(fontSize: 13, color: white85, fontWeight: FontWeight.w500)),
                   ],
                 ),
@@ -353,9 +353,13 @@ class _TodayScreenState extends State<TodayScreen> {
           const SizedBox(height: 10),
           Text(
             t.fromDiyanet
-                ? 'Diyanet İşleri Başkanlığı hesaplama yöntemiyle, bulunduğun konuma göre vakitler.'
-                : '≈ Yaklaşık vakit: internet olmadığı için cihazda hesaplandı, birkaç dakika sapabilir. '
-                    'İnternet gelince Diyanet vaktiyle düzeltilir.',
+                ? t('Diyanet İşleri Başkanlığı hesaplama yöntemiyle, bulunduğun konuma göre vakitler.', 'Prayer times for your location, using the Diyanet (Turkish Presidency of Religious Affairs) method.')
+                : t(
+                    '≈ Yaklaşık vakit: internet olmadığı için cihazda hesaplandı, birkaç dakika sapabilir. '
+                        'İnternet gelince Diyanet vaktiyle düzeltilir.',
+                    '≈ Approximate time: calculated on the phone because there is no internet; may be off by a few minutes. '
+                        'It is corrected with the Diyanet time once online.',
+                  ),
             style: TextStyle(fontSize: 11, color: white85, height: 1.35),
           ),
         ],
@@ -401,7 +405,7 @@ class _TodayScreenState extends State<TodayScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(_showYesterday ? 'Dünün takibi' : 'Bugünün takibi',
+            Text(_showYesterday ? t('Dünün takibi', 'Yesterday\'s tracking') : t('Bugünün takibi', 'Today\'s tracking'),
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
@@ -412,7 +416,7 @@ class _TodayScreenState extends State<TodayScreen> {
           ],
         ),
         const SizedBox(height: 2),
-        const Text('Niyetinle başla; küçük bir işaret sürdürülebilirliği güçlendirir.',
+        Text(t('Niyetinle başla; küçük bir işaret sürdürülebilirliği güçlendirir.', 'Start with your intention; a small mark helps you keep going.'),
             style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3)),
         const SizedBox(height: 8),
         Row(children: [
@@ -430,7 +434,7 @@ class _TodayScreenState extends State<TodayScreen> {
           ],
         ]),
         const SizedBox(height: 6),
-        Text(_canExcuse ? 'Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.' : 'Vakite dokundukça Kıldı → Kılmadı → Bekliyor sırasıyla ilerler.',
+        Text(_canExcuse ? t('Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Excused → Pending.') : t('Vakite dokundukça Kıldı → Kılmadı → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Pending.'),
             style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
       ],
     );
@@ -441,12 +445,12 @@ class _TodayScreenState extends State<TodayScreen> {
     final arrived = _arrived(key);
     final time = _times?.timeFor(key) ?? '';
     final (statusText, statusColor) = !arrived
-        ? ('Vakti henüz girmedi', Colors.white.withValues(alpha: 0.65))
+        ? (t('Vakti henüz girmedi', 'Not time yet'), Colors.white.withValues(alpha: 0.65))
         : switch (status) {
-            PrayerStatus.prayed => ('✓ Kılındı', AppColors.prayedMint),
-            PrayerStatus.missed => ('✕ Kılınmadı', AppColors.missedCoral),
-            PrayerStatus.excused => ('— Muaf', const Color(0xFFE5E7EB)),
-            PrayerStatus.none => ('Dokunarak işaretle', Colors.white.withValues(alpha: 0.75)),
+            PrayerStatus.prayed => (t('✓ Kılındı', '✓ Prayed'), AppColors.prayedMint),
+            PrayerStatus.missed => (t('✕ Kılınmadı', '✕ Missed'), AppColors.missedCoral),
+            PrayerStatus.excused => (t('— Muaf', '— Excused'), const Color(0xFFE5E7EB)),
+            PrayerStatus.none => (t('Dokunarak işaretle', 'Tap to mark'), Colors.white.withValues(alpha: 0.75)),
           };
     return Material(
       color: arrived ? AppColors.emerald : AppColors.emerald.withValues(alpha: 0.82),
@@ -459,7 +463,7 @@ class _TodayScreenState extends State<TodayScreen> {
             _toggle(key);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${_prayerName(key)} vakti $time\'de girecek.')),
+              SnackBar(content: Text(t('${_prayerName(key)} vakti $time\'de girecek.', '${_prayerName(key)} starts at $time.'))),
             );
           }
         },
@@ -518,7 +522,7 @@ class _TodayScreenState extends State<TodayScreen> {
     final day = _showYesterday ? _yesterdayStr() : todayStr();
     final pending = LocalStore.isPrayerPending(day, key);
     return Tooltip(
-      message: pending ? 'Telefonda bekliyor; internet gelince kendiliğinden buluta gider' : 'Buluta kaydedildi',
+      message: pending ? t('Telefonda bekliyor; internet gelince kendiliğinden buluta gider', 'Waiting on the phone; it goes to the cloud automatically when online') : t('Buluta kaydedildi', 'Saved to the cloud'),
       triggerMode: TooltipTriggerMode.tap,
       child: Padding(
         padding: const EdgeInsets.only(left: 6),
@@ -526,7 +530,7 @@ class _TodayScreenState extends State<TodayScreen> {
           pending ? Icons.schedule : Icons.cloud_done,
           size: 12,
           color: Colors.white.withValues(alpha: pending ? 0.6 : 0.85),
-          semanticLabel: pending ? 'Telefonda bekliyor' : 'Buluta kaydedildi',
+          semanticLabel: pending ? t('Telefonda bekliyor', 'Waiting on the phone') : t('Buluta kaydedildi', 'Saved to the cloud'),
         ),
       ),
     );

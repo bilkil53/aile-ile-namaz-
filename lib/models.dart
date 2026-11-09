@@ -1,3 +1,5 @@
+import 'lang.dart';
+
 enum PrayerStatus { none, prayed, missed, excused }
 
 extension PrayerStatusX on PrayerStatus {
@@ -33,7 +35,19 @@ extension PrayerStatusX on PrayerStatus {
 /// Veritabanındaki sütun adları (daily_prayers).
 const prayerKeys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
-const prayerLabels = {
+/// Vakit adları seçilen dilde (Türkçe / İngilizce).
+Map<String, String> get prayerLabels => Lang.isEn ? _prayerLabelsEn : _prayerLabelsTr;
+
+const _prayerLabelsEn = {
+  'fajr': 'Fajr',
+  'dhuhr': 'Dhuhr',
+  'asr': 'Asr',
+  'maghrib': 'Maghrib',
+  'isha': 'Isha',
+  'witr': 'Witr',
+};
+
+const _prayerLabelsTr = {
   'fajr': 'Sabah',
   'dhuhr': 'Öğle',
   'asr': 'İkindi',
