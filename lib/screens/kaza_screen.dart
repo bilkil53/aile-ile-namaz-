@@ -229,7 +229,7 @@ class _KazaScreenState extends State<KazaScreen> {
                         final k = _familyKaza[m.userId];
                         final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);
                         return Text(
-                          left == 0 ? t('Borç yok ✓', 'None left ✓') : t('Kalan $left · Kılınan ${k![1]}', 'Left $left · Done ${k![1]}'),
+                          left == 0 ? t('Borç yok ✓', 'None left ✓') : t('Kalan $left · Kılınan ${k![1]}', 'Left $left · Done ${k[1]}'),
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -284,8 +284,8 @@ class _KazaScreenState extends State<KazaScreen> {
         ]),
       );
 
-  Widget _row((String, String, String, String) t) {
-    final (type, label, _, rekat) = t;
+  Widget _row((String, String, String, String) row) {
+    final (type, label, _, rekat) = row;
     final (owed, done) = _of(type);
     final left = owed > done ? owed - done : 0;
     return Container(
