@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../config.dart';
+import '../lang.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -69,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static String _fmtDate(String? iso) {
     if (iso == null) return '';
     final d = DateTime.tryParse(iso)?.toLocal();
-    return d == null ? '' : DateFormat('d MMMM yyyy', 'tr').format(d);
+    return d == null ? '' : DateFormat('d MMMM yyyy', Lang.code).format(d);
   }
 
   /// Önbelleği temizle: telefondaki vakit önbelleği ve aile özeti silinir.
@@ -378,6 +379,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Dil seçimi: telefonun diline göre / Türkçe / English. Seçince ekranlar hemen yeni dille çizilir.
+  Future<void> _pickLang() async {
+    final cur = Lang.choice;
+    final picked = await showDialog<AppLang>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(t('Uygulama dili', 'App language'), style: const TextStyle(fontSize: 17)),
+        children: [
+          for (final l in AppLang.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, l),
+              child: Row(children: [
+                Icon(l == cur ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    color: AppColors.emerald, size: 20),
+                const SizedBox(width: 12),
+                Expanded(child: Text(Lang.label(l), style: const TextStyle(fontSize: 15))),
+              ]),
+            ),
+        ],
+      ),
+    );
+    if (picked == null || picked == cur) return;
+    await Lang.set(picked);
+    if (mounted) setState(() {});
+  }
+
   Widget _title(String t) => Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white));
 
   Widget _tapRow(String label, IconData icon, VoidCallback onTap, {String? sub, Widget? trailing, Color? color}) => InkWell(
@@ -499,6 +526,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: const TextStyle(color: AppColors.prayedMint, fontWeight: FontWeight.bold)),
               ),
             ]),
+            _divider(),
+            _tapRow(t('Dil', 'Language'), Icons.translate, _pickLang, sub: Lang.label(Lang.choice)),
             _divider(),
             InkWell(
               onTap: _showNotes,

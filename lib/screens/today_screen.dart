@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 
 import '../content/daily_content.dart';
 import '../data.dart';
+import '../lang.dart';
 import '../local_store.dart';
 import '../location.dart';
 import '../models.dart';
@@ -210,7 +211,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Widget _greeting() {
-    final date = DateFormat('d MMMM y, EEEE', 'tr').format(DateTime.now());
+    final date = DateFormat('d MMMM y, EEEE', Lang.code).format(DateTime.now());
     return Row(
       children: [
         Expanded(
