@@ -1,6 +1,6 @@
 # Güvenlik özeti (Supabase)
 
-Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamamı `supabase/migrations/` klasöründe (32 dosya). Her dosya sunucudaki kayıtla bayt bayt aynı (MD5 karşılaştırıldı).
+Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamamı `supabase/migrations/` klasöründe (33 dosya). Her dosya sunucudaki kayıtla bayt bayt aynı (MD5 karşılaştırıldı).
 
 ## 1. Temel ilkeler
 
@@ -66,11 +66,20 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 - `pool_events` INSERT sütun bazlı (yukarıdaki tablo).
 - Geri alınan canlı testle doğrulandı: anon reddedildi; giriş yapmış kullanıcının Pro akışı ve 6 sütunla ekleme çalışıyor; `created_at` ile ekleme ve UPDATE reddedildi.
 
+## Yapılan sıkılaştırma (migration 33, 9 Kasım 2026)
+
+- **Bildirim fonksiyonu (`push-family`) anahtar ister:** anahtar Vault'ta üretilir (repoda ve sohbette yoktur); tetikleyici ve tekrar deneme görevi `x-push-secret` başlığıyla gönderir, fonksiyon anahtarı yalnızca `service_role` ile `push_hook_secret()`'tan okur. Anahtarsız ya da yanlış anahtarlı çağrı 401 (fail-closed; canlıda doğrulandı). Fonksiyon `verify_jwt=false` ile dağıtılmalıdır (tetikleyici JWT göndermez).
+- **Telefon başına tek hesap:** `devices` tetikleyicisi aynı `fcm_token`'ı başka hesaplardan siler (aynı telefonda iki ailenin bildirimi karışmaz).
+- **Hata raporları anonim:** `crash_reports.user_id` kaldırıldı; istemci yalnızca veri sütunlarına yazabilir, `created_at` sunucuda atanır (30 günlük silme atlatılamaz); saatte 300 rapor üst sınırı.
+- **İç fonksiyonlar:** `pool_max_members` (search_path boş), `handle_new_user`, `refresh_kaza_summary`, `gen_invite_code` API rollerine kapalı.
+- **Veri azaltma:** `profiles.email`, `daily_prayers.note`, `daily_prayers.updated_at` kaldırıldı; e-posta yalnızca Supabase Auth'ta durur.
+- **İstemci (r80/r81):** telefondaki kişisel veriler tek hesaba bağlı (hesap değişince/çıkışta silinir), KVKK onayı hesap başına.
+
 ## 6. İstemci tarafı notlar
 
 - **APK imza kontrolü (`lib/integrity.dart`) bir güvenlik sınırı değildir.** İmza uyuşmazsa kullanıcı uyarılır ama uygulama engellenmez; değiştirilmiş bir APK bu kontrolü zaten atlayabilir. Bütün yetkilendirme sunucuda yapılır: RLS politikaları, sütun yetkileri ve `security definer` RPC'ler (bkz. bölüm 2–3, `supabase/tests/security_test.sql`). İstemciden gelen hiçbir bilgiye (imza, Pro durumu, rol) güvenilmez.
 - **Hata raporları:** `crash_reports`'a ve geliştirici mailine gitmeden önce hata metni ve yığın izi `scrubSensitive` ile temizlenir: e-posta, JWT/Bearer, `access_token`/`apikey`/`password` vb. değerleri, `?code=`, uuid, telefon, ortak depolamadaki dosya adları ve 40+ karakterli anahtar benzeri diziler. Hata kodları, satır numaraları ve sunucu adresi korunur. Telefondaki hata kaydı (`Log`) da aynı şekilde temizlenir. Kişi adı gibi serbest metinler otomatik tanınamaz; hata metinlerine ad yazılmamalı.
-- **Gezinti (misafir) modu yalnızca görüntüleme:** kayıt yapılmaz, giriş sonrası aktarım yoktur (`Repo.setPrayer`/`saveKaza` misafirde hiçbir şey yazmaz). Sunucuda da misafir (anon) hiçbir tabloya yazamaz. Eski aktarım fonksiyonu `merge_guest_kaza` ve `guest_merges` tablosu migration 32 ile kaldırıldı.
+- **Gezinti (misafir) modu yalnızca görüntüleme:** kayıt yapılmaz, giriş sonrası aktarım yoktur (`Repo.setPrayer`/`saveKaza` misafirde hiçbir şey yazmaz). Sunucuda da misafir (anon) yalnızca anonim hata raporu yazabilir; başka hiçbir tabloya yazamaz. Eski aktarım fonksiyonu `merge_guest_kaza` ve `guest_merges` tablosu migration 32 ile kaldırıldı.
 
 ## 7. Bilinen açık işler
 
