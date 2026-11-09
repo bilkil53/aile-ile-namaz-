@@ -1,4 +1,4 @@
-Düzeltme: bir işaret, gönderimin tam başka bir gönderimle çakıştığı anda telefonda "1 kayıt bekliyor" diye takılı kalabiliyordu; artık hemen gönderilir. Ayarlar'daki bekleyen kayıt sayısı ekran açıkken de güncel kalır.
+Düzeltme: bir işaret, gönderimin tam başka bir gönderimle çakıştığı anda telefonda "1 kayıt bekliyor" diye takılı kalabiliyordu; artık hemen gönderilir. Ayarlar'daki bekleyen kayıt sayısı ekran açıkken de güncel kalır. Ayarlar'daki durum yazısı sadeleşti: "✓ Tüm işaretlerin kaydedildi" ya da "⏳ 1 işaretin henüz gönderilmedi".
 
 ## 🌟 Kullanıcı için
 

@@ -182,8 +182,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     final left = LocalStore.pendingCount;
     _toast(left == 0
-        ? (sent > 0 ? '$sent bekleyen kayıt buluta gönderildi ☁️' : 'Tüm kayıtların bulutta ✓')
-        : '$left kayıt hâlâ bekliyor. İnternet bağlantını kontrol et.');
+        ? (sent > 0 ? '$sent işaretin gönderildi ✓' : 'Tüm işaretlerin zaten kaydedildi ✓')
+        : '$left işaretin henüz gönderilemedi. İnternet gelince kendiliğinden gider.');
   }
 
   Future<void> _gps() async {
@@ -411,8 +411,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         : (_syncing
             ? 'Gönderiliyor…'
             : (pending > 0
-                ? '⏳ $pending kayıt bekliyor · göndermek için dokun'
-                : 'Bulut senkronize ☁️${_lastSync.isEmpty ? '' : ' · Son: $_lastSync'}'));
+                ? '⏳ $pending işaretin henüz gönderilmedi · internet gelince kendiliğinden gider'
+                : '✓ Tüm işaretlerin kaydedildi${_lastSync.isEmpty ? '' : ' · Son: $_lastSync'}'));
     return Scaffold(
       appBar: AppBar(title: const Text('Ayarlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
       body: ListView(
