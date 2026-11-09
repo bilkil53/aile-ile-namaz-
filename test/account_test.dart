@@ -66,4 +66,20 @@ void main() {
     expect(AppSettings.prefs.containsKey('store.owner'), isFalse);
     expect(AppSettings.prefs.getString('cityName'), 'Ankara');
   });
+
+  test('Vaktin bekliyor / bulutta işareti kuyruğa göre değişir ve ekrana haber verilir', () async {
+    await start({'store.owner': 'A'});
+    var changes = 0;
+    void listener() => changes++;
+    LocalStore.queueChanged.addListener(listener);
+    addTearDown(() => LocalStore.queueChanged.removeListener(listener));
+    expect(LocalStore.isPrayerPending('2026-11-09', 'fajr'), isFalse);
+    final op = <String, dynamic>{'t': 'prayer', 'date': '2026-11-09', 'key': 'fajr', 'status': 'PRAYED'};
+    await LocalStore.enqueue(op);
+    expect(LocalStore.isPrayerPending('2026-11-09', 'fajr'), isTrue);
+    expect(LocalStore.isPrayerPending('2026-11-09', 'isha'), isFalse);
+    await LocalStore.removeOp(op);
+    expect(LocalStore.isPrayerPending('2026-11-09', 'fajr'), isFalse);
+    expect(changes, greaterThanOrEqualTo(2));
+  });
 }

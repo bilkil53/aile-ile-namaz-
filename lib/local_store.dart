@@ -82,6 +82,7 @@ class LocalStore {
     }
     unawaited(p.remove(_kOwner));
     clearGuest();
+    queueChanged.value++;
   }
 
   /// Eski sürümlerin kalıcı misafir bayraklarını ve test dönemi önbelleğini bir kez temizle.
@@ -153,8 +154,18 @@ class LocalStore {
     return (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
   }
 
-  static Future<void> saveQueue(List<Map<String, dynamic>> q) =>
-      AppSettings.prefs.setString('queue', jsonEncode(q));
+  /// Bekleyen kayıtlar değişince artar (ekrandaki ⏳ / ☁️✓ simgesi sessizce güncellensin).
+  static final queueChanged = ValueNotifier<int>(0);
+
+  static Future<void> saveQueue(List<Map<String, dynamic>> q) async {
+    final w = AppSettings.prefs.setString('queue', jsonEncode(q));
+    queueChanged.value++;
+    await w;
+  }
+
+  /// Bu vaktin işareti henüz buluta gönderilmedi mi (telefonda bekliyor mu)?
+  static bool isPrayerPending(String date, String key) =>
+      queue().any((o) => o['t'] == 'prayer' && o['date'] == date && o['key'] == key);
 
   static Future<void> enqueue(Map<String, dynamic> op) async {
     final q = queue();

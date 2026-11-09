@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 
 import '../content/daily_content.dart';
 import '../data.dart';
+import '../local_store.dart';
 import '../location.dart';
 import '../models.dart';
 import '../prayer_times.dart';
@@ -39,7 +40,7 @@ class _TodayScreenState extends State<TodayScreen> {
   void initState() {
     super.initState();
     LocationHelper.version.addListener(_onLocation);
-    Repo.offlineNotice.addListener(_onOffline);
+    LocalStore.queueChanged.addListener(_onQueue);
     Repo.rejectNotice.addListener(_onRejected);
     _load();
     // Geri sayım için dakikada bir yenile (saniyelik yenileme pil harcar).
@@ -57,7 +58,7 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void dispose() {
     LocationHelper.version.removeListener(_onLocation);
-    Repo.offlineNotice.removeListener(_onOffline);
+    LocalStore.queueChanged.removeListener(_onQueue);
     Repo.rejectNotice.removeListener(_onRejected);
     _ticker?.cancel();
     super.dispose();
@@ -110,7 +111,10 @@ class _TodayScreenState extends State<TodayScreen> {
 
   Map<String, PrayerStatus> get _current => _showYesterday ? _yesterday : _today;
 
-  void _onOffline() => _showOfflineNote();
+  /// Bekleyen kayıtlar değişti: vakitlerin ⏳ / ☁️✓ simgesi yenilenir (uyarı gösterilmez).
+  void _onQueue() {
+    if (mounted) setState(() {});
+  }
 
   void _onRejected() {
     if (!mounted || isGuest) return;
@@ -119,14 +123,6 @@ class _TodayScreenState extends State<TodayScreen> {
       duration: Duration(seconds: 5),
     ));
     unawaited(_load()); // ekran buluttaki son duruma döner
-  }
-
-  void _showOfflineNote() {
-    if (!mounted || isGuest) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('📱 Telefona kaydedildi. İnternet gelince otomatik buluta gönderilecek.'),
-      duration: Duration(seconds: 2),
-    ));
   }
 
   Future<void> _toggle(String key) async {
@@ -143,12 +139,11 @@ class _TodayScreenState extends State<TodayScreen> {
       }
     });
     try {
-      final synced = await Repo.setPrayer(
+      await Repo.setPrayer(
         key: key,
         status: next,
         date: _showYesterday ? _yesterdayStr() : null,
       );
-      if (!synced && !isGuest) _showOfflineNote();
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -488,12 +483,15 @@ class _TodayScreenState extends State<TodayScreen> {
                   children: [
                     Text(_prayerName(key),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                    Text(statusText,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: statusColor,
-                          fontWeight: arrived && status != PrayerStatus.none ? FontWeight.bold : FontWeight.normal,
-                        )),
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text(statusText,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: statusColor,
+                            fontWeight: arrived && status != PrayerStatus.none ? FontWeight.bold : FontWeight.normal,
+                          )),
+                      if (arrived && status != PrayerStatus.none && !isGuest) _syncMark(key),
+                    ]),
                   ],
                 ),
               ),
@@ -504,6 +502,26 @@ class _TodayScreenState extends State<TodayScreen> {
               arrived ? _statusCircle(status) : _lockCircle(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Sessiz senkron işareti: ⏳ telefonda bekliyor (internet gelince kendiliğinden gider) /
+  /// ☁️✓ buluta kaydedildi. Uyarı göstermez; dokununca kısa açıklama verir.
+  Widget _syncMark(String key) {
+    final day = _showYesterday ? _yesterdayStr() : todayStr();
+    final pending = LocalStore.isPrayerPending(day, key);
+    return Tooltip(
+      message: pending ? 'Telefonda bekliyor; internet gelince kendiliğinden buluta gider' : 'Buluta kaydedildi',
+      triggerMode: TooltipTriggerMode.tap,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 6),
+        child: Icon(
+          pending ? Icons.schedule : Icons.cloud_done,
+          size: 12,
+          color: Colors.white.withValues(alpha: pending ? 0.6 : 0.85),
+          semanticLabel: pending ? 'Telefonda bekliyor' : 'Buluta kaydedildi',
         ),
       ),
     );

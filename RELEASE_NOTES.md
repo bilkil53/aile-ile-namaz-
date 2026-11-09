@@ -1,4 +1,4 @@
-Namaz Demo — Gizlilik ve güvenilirlik: aynı telefonda başka hesapla giriş yapılınca önceki hesabın kayıtları yeni hesaba yazılmaz ve görünmez; çıkışta telefondaki hesap verisi silinir, gönderilmemiş kayıt varsa uyarı verilir; KVKK onayı her hesaba ayrı sorulur. Kaza reddinde sayı doğru değere döner; güncelleme kontrolü takılmaz. Test Pro kodu: 1.
+Namaz Demo — Daha sakin ekran: internet yokken "telefona kaydedildi" uyarısı artık çıkmaz; her vaktin yanındaki küçük simge durumu sessizce gösterir (⏳ telefonda bekliyor, internet gelince kendiliğinden gider · ☁️ buluta kaydedildi). Uyarı yalnızca senin bir şey yapman gerektiğinde çıkar. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
