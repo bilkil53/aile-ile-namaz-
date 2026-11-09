@@ -507,6 +507,24 @@ jobs:
           fi
           echo 'Google Test Lab: her iki telefonda da geçti ✓'
 
+      # Test Lab deposu her testte dolar: 7 günden eski test klasörleri (APK, video, ekran görüntüsü)
+      # her yayından sonra silinir. Temizlik başarısız olursa yayın durmaz, yalnızca uyarı verilir.
+      - name: Test Lab deposunu temizle (7 günden eski raporlar)
+        if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && env.GOOGLE_APPLICATION_CREDENTIALS != ''
+        continue-on-error: true
+        run: |
+          B=$(grep -oE 'gs://test-lab-[a-z0-9-]+' testlab.txt 2>/dev/null | head -1)
+          B=${B:-gs://test-lab-f0cq92dkn1676-m5y4ycp8z2w6s}
+          LIMIT=$(date -u -d '7 days ago' +%Y-%m-%d)
+          n=0
+          for d in $(gcloud storage ls "$B/"); do
+            day=$(basename "$d" | cut -c1-10)
+            case "$day" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;; *) continue ;; esac
+            if [[ "$day" < "$LIMIT" ]]; then gcloud storage rm -r --quiet "$d" && n=$((n+1)); fi
+          done
+          echo "Test Lab deposu: $LIMIT öncesine ait $n eski test klasörü silindi"
+          echo "Test Lab deposu: $n eski rapor silindi (son 7 gün saklanıyor)" >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/upload-artifact@v4
         with:
           name: aile-ile-namaz-apk
