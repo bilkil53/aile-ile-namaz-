@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart' show DateFormat;
 
+import 'lang.dart';
 import 'dini_gunler.dart';
 import 'models.dart';
 
@@ -13,7 +14,8 @@ class KarneBadge {
   const KarneBadge(this.id, this.emoji, this.title, this.desc, this.value, this.target,
       {this.tiers, this.seasonal = false});
 
-  static const tierNames = ['Bronz', 'Gümüş', 'Altın', 'Elmas'];
+  static List<String> get tierNames =>
+      [t('Bronz', 'Bronze'), t('Gümüş', 'Silver'), t('Altın', 'Gold'), t('Elmas', 'Diamond')];
 
   /// Ulaşılan seviye sayısı (seviyesiz rozette 0 ya da 1).
   int get level {
@@ -135,21 +137,21 @@ class KarneBadges {
     final weekPct = wt == 0 ? 0 : (wp * 100 / wt).round();
     final bestFull = _best(fullDay);
     final out = <KarneBadge>[
-      KarneBadge('fajr_week', '🌅', 'Sabah Namazı Muhafızı', 'Son 7 günün en az 5\'inde sabah namazı', fajrWeek, 5),
-      KarneBadge('fivefive', '🏆', '5\'te 5 Sadakati', 'Bir günün 5 vaktini eksiksiz kıl', bestFull >= 1 ? 1 : 0, 1),
-      KarneBadge('streak', '🔥', 'Namaz Serisi', 'Üst üste 5 vakit: 7 / 30 / 100 / 365 gün', bestFull, 7,
+      KarneBadge('fajr_week', '🌅', t('Sabah Namazı Muhafızı', 'Fajr Guardian'), t('Son 7 günün en az 5\'inde sabah namazı', 'Fajr on at least 5 of the last 7 days'), fajrWeek, 5),
+      KarneBadge('fivefive', '🏆', t('5\'te 5 Sadakati', '5 out of 5'), t('Bir günün 5 vaktini eksiksiz kıl', 'Pray all 5 prayers of a day'), bestFull >= 1 ? 1 : 0, 1),
+      KarneBadge('streak', '🔥', t('Namaz Serisi', 'Prayer Streak'), t('Üst üste 5 vakit: 7 / 30 / 100 / 365 gün', 'All 5 prayers in a row: 7 / 30 / 100 / 365 days'), bestFull, 7,
           tiers: const [7, 30, 100, 365]),
-      KarneBadge('fajr40', '☀️', 'Sabah Serisi', 'Üst üste sabah namazı: 7 / 21 / 40 gün',
+      KarneBadge('fajr40', '☀️', t('Sabah Serisi', 'Fajr Streak'), t('Üst üste sabah namazı: 7 / 21 / 40 gün', 'Fajr in a row: 7 / 21 / 40 days'),
           _best((d) => _st(d, 'fajr') == PrayerStatus.prayed), 7,
           tiers: const [7, 21, 40]),
-      KarneBadge('isha', '🌌', 'Yatsı Nöbetçisi', '14 gün kesintisiz yatsı namazı', _best((d) => _ok(d, 'isha') && _st(d, 'isha') != PrayerStatus.none), 14),
-      KarneBadge('friday', '🕌', 'Cuma Sadığı', '4 Cuma üst üste Cuma namazı', _bestFridays(), 4),
-      KarneBadge('steady', '⭐', 'İstikrar Yıldızı', 'Haftalık başarı %80 ve üzeri', weekPct, 80),
-      KarneBadge('comeback', '🌱', 'Yeniden Başlangıç', 'Ara verdikten sonra 7 gün üst üste 5 vakit', _comeback() ? 1 : 0, 1),
-      KarneBadge('kaza', '📿', 'Kaza Avcısı', 'Eda edilen kaza: 10 / 100 / 500 / 1000', kazaDone, 10,
+      KarneBadge('isha', '🌌', t('Yatsı Nöbetçisi', 'Isha Watch'), t('14 gün kesintisiz yatsı namazı', 'Isha for 14 days without a break'), _best((d) => _ok(d, 'isha') && _st(d, 'isha') != PrayerStatus.none), 14),
+      KarneBadge('friday', '🕌', t('Cuma Sadığı', 'Faithful on Fridays'), t('4 Cuma üst üste Cuma namazı', 'Friday prayer 4 Fridays in a row'), _bestFridays(), 4),
+      KarneBadge('steady', '⭐', t('İstikrar Yıldızı', 'Consistency Star'), t('Haftalık başarı %80 ve üzeri', 'Weekly success 80% or higher'), weekPct, 80),
+      KarneBadge('comeback', '🌱', t('Yeniden Başlangıç', 'Fresh Start'), t('Ara verdikten sonra 7 gün üst üste 5 vakit', 'All 5 prayers for 7 days in a row after a break'), _comeback() ? 1 : 0, 1),
+      KarneBadge('kaza', '📿', t('Kaza Avcısı', 'Kaza Hunter'), t('Eda edilen kaza: 10 / 100 / 500 / 1000', 'Kaza made up: 10 / 100 / 500 / 1000'), kazaDone, 10,
           tiers: const [10, 100, 500, 1000]),
       if (kazaOwed > 0)
-        KarneBadge('kaza_done', '🤲', 'Borçsuz Kul', 'Kaza borcunu tamamen bitir', kazaDone >= kazaOwed ? 1 : 0, 1),
+        KarneBadge('kaza_done', '🤲', t('Borçsuz Kul', 'Debt-free Servant'), t('Kaza borcunu tamamen bitir', 'Finish all your kaza prayers'), kazaDone >= kazaOwed ? 1 : 0, 1),
     ];
 
     // ---- Mübarek gün rozetleri: yalnızca o dönem gelince görünür ----
@@ -167,8 +169,8 @@ class KarneBadges {
         if (fullDay(d)) full++;
       }
       final days = end0.difference(ram).inDays + 1;
-      out.add(KarneBadge('ramazan_${ram.year}', '🌙', 'Ramazan Rozeti',
-          'Ramazan boyunca her gün 5 vakit ($total/$days gün geçti)', full, days, seasonal: true));
+      out.add(KarneBadge('ramazan_${ram.year}', '🌙', t('Ramazan Rozeti', 'Ramadan Badge'),
+          t('Ramazan boyunca her gün 5 vakit ($total/$days gün geçti)', 'All 5 prayers every day of Ramadan ($total/$days days passed)'), full, days, seasonal: true));
     }
     final kandils = DiniGunler.events
         .where((e) => const {'regaib', 'mirac', 'berat', 'mevlid', 'kadir'}.contains(e.gun.key) &&
@@ -177,7 +179,7 @@ class KarneBadges {
         .toList();
     if (kandils.isNotEmpty) {
       final got = kandils.where((e) => fullDay(e.date)).length;
-      out.add(KarneBadge('kandil', '🕯️', 'Kandil Gecesi', 'Bir kandil gününde 5 vakit (${kandils.last.gun.name})', got, 1,
+      out.add(KarneBadge('kandil', '🕯️', t('Kandil Gecesi', 'Kandil Night'), t('Bir kandil gününde 5 vakit (${kandils.last.gun.name})', 'All 5 prayers on a Kandil day (${kandils.last.gun.name})'), got, 1,
           seasonal: true));
     }
     final bayramlar = DiniGunler.events
@@ -185,7 +187,7 @@ class KarneBadges {
         .toList();
     if (bayramlar.isNotEmpty) {
       final got = bayramlar.where((e) => _st(e.date, 'fajr') == PrayerStatus.prayed).length;
-      out.add(KarneBadge('bayram', '🎉', 'Bayram Sabahı', 'Bayram günü sabah namazı', got, 1, seasonal: true));
+      out.add(KarneBadge('bayram', '🎉', t('Bayram Sabahı', 'Eid Morning'), t('Bayram günü sabah namazı', 'Fajr on the day of Eid'), got, 1, seasonal: true));
     }
     final uc = _latest('uc_aylar');
     if (uc != null) {
@@ -195,9 +197,9 @@ class KarneBadges {
           .firstOrNull;
       final end0 = arefe ?? uc.add(const Duration(days: 88));
       final end = end0.isAfter(today) ? today : end0;
-      final (p, t) = _score(uc, end);
-      final pct = t == 0 ? 0 : (p * 100 / t).round();
-      out.add(KarneBadge('uc_aylar_${uc.year}', '🌿', 'Üç Aylar Yolcusu', 'Üç aylar boyunca başarı %90 ve üzeri', pct, 90,
+      final (p, tot) = _score(uc, end);
+      final pct = tot == 0 ? 0 : (p * 100 / tot).round();
+      out.add(KarneBadge('uc_aylar_${uc.year}', '🌿', t('Üç Aylar Yolcusu', 'Three Holy Months Traveller'), t('Üç aylar boyunca başarı %90 ve üzeri', '90% or higher success during the three holy months'), pct, 90,
           seasonal: true));
     }
     return out;

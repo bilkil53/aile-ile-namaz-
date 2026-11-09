@@ -1,3 +1,4 @@
+import 'lang.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,7 +10,10 @@ import 'settings.dart';
 /// her yıl otomatik alınır; Diyanet'in yayımladığı dini günler listesiyle aynıdır.
 class DiniGun {
   final String key;
-  final String name;
+  final String nameTr;
+
+  /// Seçilen dilde ad (İngilizcede yerleşik karşılığı).
+  String get name => Lang.isEn ? (_enNames[key] ?? nameTr) : nameTr;
   final String emoji;
   final bool bayram;
 
@@ -26,11 +30,34 @@ class DiniGun {
   final bool regaib;
 
   /// Bildirimde ve kartta gösterilecek açıklama (kendi cümlelerimizle).
-  final String meaning;
+  final String meaningTr;
 
-  const DiniGun(this.key, this.name, this.emoji, this.hDay, this.hMonth, this.meaning,
+  /// Seçilen dilde açıklama (İngilizcesi onaylanana kadar Türkçe kalır).
+  String get meaning => Lang.isEn ? (_enMeanings[key] ?? meaningTr) : meaningTr;
+
+  const DiniGun(this.key, this.nameTr, this.emoji, this.hDay, this.hMonth, this.meaningTr,
       {this.eveBefore = false, this.dayBefore = false, this.bayram = false, this.days = 1, this.regaib = false});
 }
+
+/// Mübarek gün adlarının İngilizcesi (İslami terimlerin yerleşik karşılıkları).
+const _enNames = {
+  'hicri_yilbasi': 'Islamic New Year',
+  'asure': 'Day of Ashura',
+  'mevlid': 'Mawlid (Kandil)',
+  'uc_aylar': 'Start of the Three Holy Months',
+  'regaib': 'Raghaib Kandil',
+  'mirac': "Mi'raj Kandil",
+  'berat': "Bara'ah Kandil",
+  'ramazan': 'Start of Ramadan',
+  'kadir': 'Laylat al-Qadr',
+  'ramazan_arefe': 'Eve of Eid al-Fitr',
+  'ramazan_bayrami': 'Eid al-Fitr',
+  'kurban_arefe': 'Day of Arafah',
+  'kurban_bayrami': 'Eid al-Adha',
+};
+
+/// Açıklamaların İngilizcesi: dini metin olduğu için kullanıcı onayından sonra doldurulacak.
+const Map<String, String> _enMeanings = {};
 
 const diniGunler = <DiniGun>[
   DiniGun('hicri_yilbasi', 'Hicri Yılbaşı', '🌙', 1, 1,
