@@ -489,10 +489,16 @@ class _KarneScreenState extends State<KarneScreen> {
         child: Row(children: [
           Text(emoji, style: const TextStyle(fontSize: 26)),
           const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-          ]),
+          // Uzun etiket (ör. İngilizce) taşmasın: alt satıra geçer
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            ]),
+          ),
         ]),
       );
 
