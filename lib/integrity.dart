@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -31,23 +33,25 @@ class Integrity {
   static const _expected = String.fromEnvironment('EXPECTED_SIG');
   static const _store = String.fromEnvironment('STORE', defaultValue: 'github');
   static const _officialUrl = 'https://github.com/bilkil53/aile-ile-namaz-/releases';
-  static bool _checked = false;
+  static Future<void>? _run;
 
   /// Saf karar (birim testleriyle sınanır).
   static IntegrityVerdict verdict({required String? signature, required String expected, required String store}) {
     if (store == 'play') return IntegrityVerdict.skip;
     final valid = expected.toLowerCase().split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
     if (valid.isEmpty) return IntegrityVerdict.skip;
-    final sig = signature?.toLowerCase().trim() ?? '';
-    if (sig.isEmpty) return IntegrityVerdict.block; // okunamadı: sessizce geçilmez
-    return valid.contains(sig) ? IntegrityVerdict.ok : IntegrityVerdict.block;
+    // Telefon imza geçmişindeki bütün sertifikaları virgülle verir; biri tutarsa yeterli
+    final got = (signature ?? '').toLowerCase().split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+    if (got.isEmpty) return IntegrityVerdict.block; // okunamadı: sessizce geçilmez
+    return got.any(valid.contains) ? IntegrityVerdict.ok : IntegrityVerdict.block;
   }
 
   /// Açılışta bir kez çalışır. İmza tutmazsa ya da okunamazsa kapatılamayan bir pencere gösterir
   /// ve bu fonksiyon geri dönmez (uygulamanın geri kalanı başlamaz).
-  static Future<void> check(BuildContext context) async {
-    if (_checked) return;
-    _checked = true;
+  /// Engelliyse dönen Future hiç tamamlanmaz: sonradan kurulan başka bir ekran da aynı yerde bekler.
+  static Future<void> check(BuildContext context) => _run ??= _check(context);
+
+  static Future<void> _check(BuildContext context) async {
     String? sig;
     try {
       sig = await _ch.invokeMethod<String>('signatureSha256');
@@ -55,7 +59,7 @@ class Integrity {
       sig = null; // kanal yok / hata: okunamadı sayılır
     }
     if (verdict(signature: sig, expected: _expected, store: _store) != IntegrityVerdict.block) return;
-    if (!context.mounted) return;
+    if (!context.mounted) return Completer<void>().future; // engelli: açılış işleri başlamaz
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -82,5 +86,6 @@ class Integrity {
         ),
       ),
     );
+    return Completer<void>().future; // pencere kapanmaz; açılış işleri hiç başlamaz
   }
 }
