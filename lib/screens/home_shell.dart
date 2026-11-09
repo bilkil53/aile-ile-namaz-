@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../cuma_reminder.dart';
+import '../lang.dart';
 import '../data.dart';
 import '../integrity.dart';
 import '../pro.dart';
@@ -104,19 +105,25 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           icon: const Icon(Icons.lock_outline, color: AppColors.emerald, size: 32),
-          title: const Text('Telefon kilitliyken bildirimler', style: TextStyle(fontSize: 17)),
-          content: const Text(
-            'Aileden biri namaz kılınca veya dua gönderince bildirim gelir.\n\n'
-            'Telefon kilitliyken bildirimin yazısı kilit ekranında görünsün mü? '
-            '"Gizle" dersen sadece "yeni bildirim" görünür, yazı kilidi açınca okunur.\n\n'
-            'Bunu sonra Ayarlar\'dan değiştirebilirsin.',
+          title: Text(t('Telefon kilitliyken bildirimler', 'Notifications on the lock screen'), style: const TextStyle(fontSize: 17)),
+          content: Text(
+            t(
+              'Aileden biri namaz kılınca veya dua gönderince bildirim gelir.\n\n'
+                  'Telefon kilitliyken bildirimin yazısı kilit ekranında görünsün mü? '
+                  '"Gizle" dersen sadece "yeni bildirim" görünür, yazı kilidi açınca okunur.\n\n'
+                  'Bunu sonra Ayarlar\'dan değiştirebilirsin.',
+              'You get a notification when a family member prays or sends a dua.\n\n'
+                  'Should the notification text be visible on the lock screen? '
+                  'If you choose "Hide", only "new notification" is shown; the text is readable after unlocking.\n\n'
+                  'You can change this later in Settings.',
+            ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Gizle')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Gizle', 'Hide'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Göster'),
+              child: Text(t('Göster', 'Show')),
             ),
           ],
         ),
@@ -179,14 +186,21 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                 (type == 'DUA' && !AppSettings.notifyDua)) {
               return;
             }
-            final who = _names[r['sender_id']] ?? 'Aile ferdin';
+            final who = _names[r['sender_id']] ?? t('Aile ferdin', 'A family member');
             final prayer = prayerLabels[(r['prayer'] as String?)?.toLowerCase()] ?? '';
             final (title, body) = switch (r['event_type']) {
-              'PRAYED' => ('$who namazını kıldı 🤲', '$prayer namazını kıldı. Allah kabul etsin.'),
-              'KAZA' => ('$who kaza namazı kıldı', 'Bir kaza namazı eda etti.'),
-              'DUA' => (r['target_id'] == myId ? '$who sana dua gönderdi 🤲' : '$who aileye dua gönderdi 🤲',
+              'PRAYED' => (t('$who namazını kıldı 🤲', '$who prayed 🤲'),
+                  t('$prayer namazını kıldı. Allah kabul etsin.', 'Prayed $prayer. May Allah accept it.')),
+              'KAZA' => (t('$who kaza namazı kıldı', '$who made up a missed prayer'),
+                  t('Bir kaza namazı eda etti.', 'Completed one kaza prayer.')),
+              'DUA' => (
+                  r['target_id'] == myId
+                      ? t('$who sana dua gönderdi 🤲', '$who sent you a dua 🤲')
+                      : t('$who aileye dua gönderdi 🤲', '$who sent the family a dua 🤲'),
                   (r['message'] as String?) ?? ''),
-              'MEMBER_JOINED' => ('Aile havuzuna katılım 🤝', '${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.'),
+              'MEMBER_JOINED' => (t('Aile havuzuna katılım 🤝', 'New family member 🤝'),
+                  t('${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.',
+                      '${r['message'] ?? 'A new member'} joined the family circle.')),
               'PRO_REQUEST' => ('$who Pro istiyor 🌟', 'Aile Pro\'sunu alırsan havuzdaki herkes Pro olur.'),
               _ => ('', ''),
             };
@@ -197,12 +211,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         .subscribe();
   }
 
-  static const _subtitles = [
-    'Vakitler & Günlük İbadet',
-    'Aile Havuzu (İbadet Halkası)',
-    'Kaza Namazı Yönetimi',
-    'İbadet Karnesi & İstatistik',
-  ];
+  static List<String> get _subtitles => [
+        t('Vakitler & Günlük İbadet', 'Prayer Times & Daily Worship'),
+        t('Aile Havuzu (İbadet Halkası)', 'Family Circle (Worship Circle)'),
+        t('Kaza Namazı Yönetimi', 'Missed (Kaza) Prayers'),
+        t('İbadet Karnesi & İstatistik', 'Worship Report & Stats'),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -302,11 +316,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             selectedFontSize: 11,
             unselectedFontSize: 11,
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Bugün'),
-              BottomNavigationBarItem(icon: Icon(Icons.diversity_1_outlined), activeIcon: Icon(Icons.diversity_1), label: 'Aile Havuzu'),
-              BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), activeIcon: Icon(Icons.calendar_month), label: 'Kaza'),
-              BottomNavigationBarItem(icon: Icon(Icons.emoji_events_outlined), activeIcon: Icon(Icons.emoji_events), label: 'Karne'),
+            items: [
+              BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: t('Bugün', 'Today')),
+              BottomNavigationBarItem(icon: Icon(Icons.diversity_1_outlined), activeIcon: Icon(Icons.diversity_1), label: t('Aile Havuzu', 'Family')),
+              BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), activeIcon: Icon(Icons.calendar_month), label: t('Kaza', 'Kaza')),
+              BottomNavigationBarItem(icon: Icon(Icons.emoji_events_outlined), activeIcon: Icon(Icons.emoji_events), label: t('Karne', 'Report')),
             ],
           ),
         ),

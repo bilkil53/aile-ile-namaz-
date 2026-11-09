@@ -408,7 +408,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Ekran testi — GitHub emülatörü (Android 11, misafir akışı + 4 sekme)
+      - name: Ekran testi — GitHub emülatörü (Android 11, Türkçe ve İngilizce, misafir akışı + 4 sekme)
         timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -419,7 +419,7 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
-          script: bash -c 'set -o pipefail; flutter test integration_test/app_test.dart --dart-define=UI_TEST=true -d emulator-5554 --reporter expanded 2>&1 | tee ui-test.txt'
+          script: bash -c 'set -o pipefail; for L in tr en; do echo "=== Ekran testi dili $L ==="; flutter test integration_test/app_test.dart --dart-define=UI_TEST=true --dart-define=TEST_LANG=$L -d emulator-5554 --reporter expanded 2>&1 | tee -a ui-test.txt || exit 1; done'
 
       - name: Ekran testi sonucu (özet)
         if: always()

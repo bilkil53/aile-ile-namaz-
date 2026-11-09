@@ -1,0 +1,37 @@
+name: Hızlı kontrol (analiz + birim testleri, yayın yok)
+
+# Yalnızca check/* dallarına gönderilince çalışır: büyük değişikliklerde (ör. çeviri) derlemeyi
+# beklemeden kodun hatasız olduğu birkaç dakikada görülür. Hiçbir zaman yayın yapmaz.
+on:
+  push:
+    branches: ['check/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quick-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - run: flutter pub get
+      - name: Kod analizi
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos > analyze.txt 2>&1
+          rc=$?
+          cat analyze.txt
+          grep -E '^\s*(error|warning) •' analyze.txt | head -40 | while IFS= read -r l; do echo "::error::${l}"; done
+          exit $rc
+      - name: Birim testleri
+        run: flutter test

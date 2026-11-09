@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../content/daily_content.dart';
 import '../data.dart';
+import '../lang.dart';
 import '../local_store.dart';
 import '../member_icon.dart';
 import '../models.dart';
@@ -416,7 +417,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   /// "Bağlantıyı Teyit Et": sunucuya sorup havuz / istek durumunu bildirir.
   Future<void> _verifyLink() async {
-    if (isGuest) return _needLogin('Aile bağlantısını sorgulamak');
+    if (isGuest) return _needLogin(t('Aile bağlantısını sorgulamak', 'look up a family connection'));
     setState(() => _checkingLink = true);
     final before = _members.length;
     await _load();
@@ -514,7 +515,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (_demoLock('Aile havuzuna katılma')) return;
     final v = input.trim();
     if (v.isEmpty) return;
-    if (isGuest) return _needLogin('Bir aile havuzuna katılmak');
+    if (isGuest) return _needLogin(t('Bir aile havuzuna katılmak', 'join a family circle'));
     try {
       // Unvanı ve simgeyi onaylarken Aile Reisi belirler.
       final ok = await Repo.requestJoin(v, 'Aile Ferdi', '👥');
@@ -575,7 +576,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   String get _myRole => _members.where((m) => m.userId == myId).firstOrNull?.roleTitle ?? 'Aile Ferdi';
 
   Future<void> _sendDua({Member? to}) async {
-    if (isGuest) return _needLogin('Dua göndermek');
+    if (isGuest) return _needLogin(t('Dua göndermek', 'send a prayer (dua)'));
     if (_demoLock('Dua gönderme')) return;
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || text.trim().isEmpty || _pool == null) return;
@@ -589,7 +590,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   Future<void> _memberAction(Member m, String action) async {
-    if (isGuest) return _needLogin('Üye yönetimi');
+    if (isGuest) return _needLogin(t('Üye yönetimi', 'manage members'));
     if (_demoLock('Üye yönetimi')) return;
     final pool = _pool;
     if (pool == null) return;
@@ -1061,7 +1062,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             IconButton(
               tooltip: 'Paylaş',
               onPressed: () async {
-                if (isGuest) return _needLogin('Davet kodu oluşturmak');
+                if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
                 if (_demoLock('Davet kodu')) return;
                 await Share.share(
                   '🕌 Aile ile Namaz uygulamasında aile havuzumuza katıl!\n\n'
@@ -1076,7 +1077,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             IconButton(
               tooltip: 'Kopyala',
               onPressed: () async {
-                if (isGuest) return _needLogin('Davet kodu oluşturmak');
+                if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
                 if (_demoLock('Davet kodu')) return;
                 await Clipboard.setData(ClipboardData(text: pool.displayCode));
                 _toast('Kod kopyalandı: ${pool.displayCode}');
@@ -1086,7 +1087,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             IconButton(
               tooltip: 'Yeni kod',
               onPressed: () async {
-                if (isGuest) return _needLogin('Davet kodu oluşturmak');
+                if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
                 if (_demoLock('Davet kodu')) return;
                 if (await _confirm('Eski kod geçersiz olacak. Yeni kod üretilsin mi?') != true) return;
                 try {

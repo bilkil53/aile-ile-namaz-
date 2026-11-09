@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'settings.dart';
 
 /// Uygulama dili: telefonun diline göre (varsayılan), Türkçe ya da İngilizce.
-/// Telefon dili Türkçe değilse uygulama İngilizce açılır.
+/// Telefon dili İngilizce ise İngilizce, diğer her durumda Türkçe açılır.
 enum AppLang { system, tr, en }
 
 class Lang {
@@ -33,7 +33,7 @@ class Lang {
         AppLang.system => systemCode,
       };
 
-  static String get systemCode => PlatformDispatcher.instance.locale.languageCode == 'tr' ? 'tr' : 'en';
+  static String get systemCode => PlatformDispatcher.instance.locale.languageCode == 'en' ? 'en' : 'tr';
 
   static bool get isEn => code == 'en';
 

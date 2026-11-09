@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
+import '../lang.dart';
 import '../kvkk.dart';
 import '../local_store.dart';
 import '../theme.dart';
@@ -80,7 +81,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('Giriş yapılamadı. Lütfen tekrar deneyin.')));
+              .showSnackBar(SnackBar(content: Text(t('Giriş yapılamadı. Lütfen tekrar deneyin.', 'Sign-in failed. Please try again.'))));
         }
       }
     } finally {
@@ -115,20 +116,20 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
           decoration: const BoxDecoration(color: AppColors.goldContainer, shape: BoxShape.circle),
           child: const Icon(Icons.phone_android, color: AppColors.gold, size: 28),
         ),
-        title: const Text('Giriş Yapmadan Devam Et', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-        content: const Column(mainAxisSize: MainAxisSize.min, children: [
-          _Bullet('👀', 'Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.'),
-          _Bullet('🔒', 'Gezinti yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz.'),
-          _Bullet('👨‍👩‍👧', 'Aile Havuzunda gerçek bağlantı ve aile bildirimleri için giriş gerekir.'),
-          _Bullet('☁️', 'Kayıt tutmak için Google ile giriş yap; kayıtların hesabında güvende kalır.'),
+        title: Text(t('Giriş Yapmadan Devam Et', 'Continue Without Signing In'), style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          _Bullet('👀', t('Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.', 'You can freely browse the app and try every screen.')),
+          _Bullet('🔒', t('Gezinti yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz.', 'Browsing is view-only: nothing is marked or saved.')),
+          _Bullet('👨‍👩‍👧', t('Aile Havuzunda gerçek bağlantı ve aile bildirimleri için giriş gerekir.', 'Connecting with your family and family notifications require signing in.')),
+          _Bullet('☁️', t('Kayıt tutmak için Google ile giriş yap; kayıtların hesabında güvende kalır.', 'Sign in with Google to keep records; they stay safe in your account.')),
         ]),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Google ile Giriş Yap')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Google ile Giriş Yap', 'Sign in with Google'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Gezintiye Başla'),
+            child: Text(t('Gezintiye Başla', 'Start Browsing')),
           ),
         ],
       ),
@@ -162,37 +163,37 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 6),
-          const Text('Birlikte namaz kılın, kaza borçlarınızı takip edin ve ortak ibadet havuzunda buluşun 🤲',
+          Text(t('Birlikte namaz kılın, kaza borçlarınızı takip edin ve ortak ibadet havuzunda buluşun 🤲', 'Pray together, track your missed (kaza) prayers and meet in a shared worship circle 🤲'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.35)),
           const SizedBox(height: 12),
-          const _Feature(
+          _Feature(
             icon: Icons.home,
             bg: AppColors.emeraldContainer,
             fg: AppColors.emerald,
-            title: 'Bugün Sekmesi (Vakitler & Kıble)',
-            text: 'Diyanet uyumlu vakitler, 5 vakit namaz takibi ve canlı kıble pusulası.',
+            title: t('Bugün Sekmesi (Vakitler & Kıble)', 'Today Tab (Prayer Times & Qibla)'),
+            text: t('Diyanet uyumlu vakitler, 5 vakit namaz takibi ve canlı kıble pusulası.', 'Diyanet-compatible prayer times, 5 daily prayer tracking and a live qibla compass.'),
           ),
-          const _Feature(
+          _Feature(
             icon: Icons.groups,
             bg: Color(0xFFE0F2FE),
             fg: Color(0xFF0369A1),
-            title: 'Aile Havuzu (İbadet Halkası)',
-            text: 'Eşiniz ve çocuklarınızla tek davet kodu ile bağlanın; namaz durumlarını birlikte görün.',
+            title: t('Aile Havuzu (İbadet Halkası)', 'Family Circle (Worship Circle)'),
+            text: t('Eşiniz ve çocuklarınızla tek davet kodu ile bağlanın; namaz durumlarını birlikte görün.', 'Connect with your spouse and children using one invite code and see each other\'s prayers.'),
           ),
-          const _Feature(
+          _Feature(
             icon: Icons.calendar_month,
             bg: Color(0xFFFFEDD5),
             fg: Color(0xFFEA580C),
-            title: 'Kaza (Mahremiyet Korumalı)',
-            text: 'Kaza borçlarınızı tutun; ailenizin kaza durumunu sadece özet olarak görün.',
+            title: t('Kaza (Mahremiyet Korumalı)', 'Kaza (Privacy Protected)'),
+            text: t('Kaza borçlarınızı tutun; ailenizin kaza durumunu sadece özet olarak görün.', 'Track your missed prayers; see your family\'s kaza status only as a summary.'),
           ),
-          const _Feature(
+          _Feature(
             icon: Icons.emoji_events,
             bg: Color(0xFFF3E8FF),
             fg: Color(0xFF7E22CE),
-            title: 'Karne (İstatistik & Motivasyon)',
-            text: 'Haftalık başarı oranınız, manevi rozetler ve günün hadisi.',
+            title: t('Karne (İstatistik & Motivasyon)', 'Report Card (Stats & Motivation)'),
+            text: t('Haftalık başarı oranınız, manevi rozetler ve günün hadisi.', 'Your weekly success rate, spiritual badges and the hadith of the day.'),
           ),
           const SizedBox(height: 8),
           // KVKK açık rızası: işaretlenmeden giriş yapılamaz
@@ -223,11 +224,11 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
                           height: 1.35,
                           color: _consentWarn ? AppColors.missed : AppColors.textSecondary)),
                 ),
-                const InkWell(
+                InkWell(
                   onTap: Kvkk.openText,
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Text('Aydınlatma metnini oku',
+                    child: Text(t('Aydınlatma metnini oku', 'Read the privacy notice'),
                         style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -239,9 +240,9 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
             ),
           ]),
           if (_consentWarn)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(bottom: 6),
-              child: Text('Google ile giriş için onay kutusunu işaretle.',
+              child: Text(t('Google ile giriş için onay kutusunu işaretle.', 'Tick the consent box to sign in with Google.'),
                   style: TextStyle(fontSize: 11, color: AppColors.missed, fontWeight: FontWeight.bold)),
             ),
           const SizedBox(height: 6),
@@ -267,12 +268,12 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
                             style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold, color: Color(0xFF4285F4))),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Google ile Hızlı Giriş Yap',
+                      Text(t('Google ile Hızlı Giriş Yap', 'Quick Sign-in with Google'),
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                       SizedBox(height: 2),
-                      Text('Kayıtların buluta yedeklenir, ailenle eşitlenir',
+                      Text(t('Kayıtların buluta yedeklenir, ailenle eşitlenir', 'Your records are backed up and synced with your family'),
                           style: TextStyle(fontSize: 11, color: Colors.white70)),
                     ]),
                   ),
@@ -284,7 +285,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
           const SizedBox(height: 6),
           TextButton(
             onPressed: _busy ? null : _guest,
-            child: const Text('Giriş Yapmadan Devam Et',
+            child: Text(t('Giriş Yapmadan Devam Et', 'Continue Without Signing In'),
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
           ),
         ]),

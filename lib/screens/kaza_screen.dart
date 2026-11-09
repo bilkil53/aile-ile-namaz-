@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data.dart';
+import '../lang.dart';
 import '../member_icon.dart';
 import '../models.dart';
 import '../pro.dart';
@@ -85,7 +86,7 @@ class _KazaScreenState extends State<KazaScreen> {
   String _n(int v) => Pro.isDemo ? '–' : '$v';
 
   Future<void> _set(String type, int owed, int completed, {bool announce = false}) async {
-    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
+    if (isGuest) return showLoginRequired(context, t('Kaza kaydı tutmak', 'keep kaza records'));
     if (Pro.isDemo) {
       showProRequired(context, feature: 'Kaza takibi');
       return;
@@ -101,7 +102,7 @@ class _KazaScreenState extends State<KazaScreen> {
   }
 
   Future<void> _bulkAdd() async {
-    if (isGuest) return showLoginRequired(context, 'Kaza kaydı tutmak');
+    if (isGuest) return showLoginRequired(context, t('Kaza kaydı tutmak', 'keep kaza records'));
     if (Pro.isDemo) {
       showProRequired(context, feature: 'Kaza takibi');
       return;
@@ -117,7 +118,7 @@ class _KazaScreenState extends State<KazaScreen> {
 
   /// Kaza kayıtlarını sıfırla: yanlışlıkla olmasın diye iki kez onay ister.
   Future<void> _reset() async {
-    if (isGuest) return showLoginRequired(context, 'Kaza kayıtlarını sıfırlamak');
+    if (isGuest) return showLoginRequired(context, t('Kaza kayıtlarını sıfırlamak', 'reset kaza records'));
     if (Pro.isDemo) {
       showProRequired(context, feature: 'Kaza takibi');
       return;
