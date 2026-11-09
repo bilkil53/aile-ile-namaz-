@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../lang.dart';
 import '../data.dart';
 import '../dini_gunler.dart';
 import '../theme.dart';
@@ -31,18 +32,18 @@ class _DiniGunCardState extends State<DiniGunCard> {
   }
 
   Future<void> _sendFamily(String text) async {
-    if (isGuest) return _toast('Aileye göndermek için Google ile giriş yap.');
+    if (isGuest) return _toast(t('Aileye göndermek için Google ile giriş yap.', 'Sign in with Google to send it to your family.'));
     setState(() => _sending = true);
     try {
       final pools = await Repo.myPools().timeout(const Duration(seconds: 6));
       if (pools.isEmpty) {
-        _toast('Henüz bir aile havuzunda değilsin.');
+        _toast(t('Henüz bir aile havuzunda değilsin.', 'You are not in a family circle yet.'));
       } else {
         await Repo.sendDua(pools.first.id, text).timeout(const Duration(seconds: 8));
-        _toast('Aileye gönderildi 🤲');
+        _toast(t('Aileye gönderildi 🤲', 'Sent to your family 🤲'));
       }
     } catch (_) {
-      _toast('Gönderilemedi. Biraz sonra tekrar dene.');
+      _toast(t('Gönderilemedi. Biraz sonra tekrar dene.', 'Could not send. Try again a bit later.'));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -59,8 +60,11 @@ class _DiniGunCardState extends State<DiniGunCard> {
   }
 
   Widget _bayram(DiniGun g, int dayNo) {
-    final msg = '${g.emoji} ${g.name}nız mübarek olsun! Allah nice bayramlara sağlık, huzur ve '
-        'birlik içinde ulaştırsın. 🤲';
+    final msg = t(
+        '${g.emoji} ${g.name}nız mübarek olsun! Allah nice bayramlara sağlık, huzur ve '
+            'birlik içinde ulaştırsın. 🤲',
+        '${g.emoji} ${g.name} Mubarak! May Allah let us reach many more Eids in health, peace '
+            'and togetherness. 🤲');
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -78,9 +82,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${g.name}nız mübarek olsun',
+                Text(t('${g.name}nız mübarek olsun', '${g.name} Mubarak'),
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                Text('Bayramın $dayNo. günü · ${g.days} gün sürer',
+                Text(t('Bayramın $dayNo. günü · ${g.days} gün sürer', 'Day $dayNo of Eid · lasts ${g.days} days'),
                     style: const TextStyle(fontSize: 12, color: AppColors.prayedMint)),
               ]),
             ),
@@ -98,7 +102,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                 ),
                 onPressed: () => Share.share(msg, subject: g.name),
                 icon: const Icon(Icons.share, size: 16),
-                label: const Text('Bayramlaş', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: Text(t('Bayramlaş', 'Send Eid greetings'), style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(width: 8),
@@ -111,7 +115,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                 ),
                 onPressed: _sending ? null : () => _sendFamily(msg),
                 icon: const Icon(Icons.groups, size: 16),
-                label: Text(_sending ? 'Gönderiliyor…' : 'Aileye gönder'),
+                label: Text(_sending ? t('Gönderiliyor…', 'Sending…') : t('Aileye gönder', 'Send to family')),
               ),
             ),
           ]),
@@ -121,7 +125,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
   }
 
   Widget _special(DiniGun g) {
-    final title = g.eveBefore ? 'Bu akşam ${g.name}' : 'Bugün ${g.name}';
+    final title = g.eveBefore ? t('Bu akşam ${g.name}', 'Tonight: ${g.name}') : t('Bugün ${g.name}', 'Today: ${g.name}');
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
