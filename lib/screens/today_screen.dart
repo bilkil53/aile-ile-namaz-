@@ -484,12 +484,16 @@ class _TodayScreenState extends State<TodayScreen> {
                     Text(_prayerName(key),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                     Row(mainAxisSize: MainAxisSize.min, children: [
-                      Text(statusText,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: statusColor,
-                            fontWeight: arrived && status != PrayerStatus.none ? FontWeight.bold : FontWeight.normal,
-                          )),
+                      Flexible(
+                        child: Text(statusText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: statusColor,
+                              fontWeight: arrived && status != PrayerStatus.none ? FontWeight.bold : FontWeight.normal,
+                            )),
+                      ),
                       if (arrived && status != PrayerStatus.none && !isGuest) _syncMark(key),
                     ]),
                   ],
