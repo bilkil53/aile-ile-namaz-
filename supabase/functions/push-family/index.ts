@@ -20,6 +20,28 @@ const POSSESSIVE: Record<string, string> = {
 const PRAYERS: Record<string, string> = {
   FAJR: "Sabah", DHUHR: "Öğle", ASR: "İkindi", MAGHRIB: "Akşam", ISHA: "Yatsı", WITR: "Vitir",
 };
+const PRAYERS_EN: Record<string, string> = {
+  FAJR: "Fajr", DHUHR: "Dhuhr", ASR: "Asr", MAGHRIB: "Maghrib", ISHA: "Isha", WITR: "Witr",
+};
+
+// Ünvan ve hitapların İngilizcesi (uygulamadaki lib/models.dart _kinEn ile aynı). Alıcının cihaz dili
+// 'en' ise bildirim İngilizce gider; veritabanında ünvanlar hep Türkçe saklanır.
+const KIN_EN: Record<string, string> = {
+  "Aile Reisi": "Head of Family", "Baba": "Father", "Anne": "Mother", "Aile Ferdi": "Family Member",
+  "Eşi": "Spouse", "Oğlu": "Son", "Kızı": "Daughter", "Annesi": "Mother", "Babası": "Father",
+  "Kardeşi": "Sibling", "Torunu": "Grandchild", "Gelini": "Daughter-in-law", "Damadı": "Son-in-law",
+  "Dedesi": "Grandfather", "Ninesi": "Grandmother",
+  "Eşin": "Your spouse", "Oğlun": "Your son", "Kızın": "Your daughter", "Annen": "Your mother",
+  "Baban": "Your father", "Kardeşin": "Your sibling", "Torunun": "Your grandchild",
+  "Gelinin": "Your daughter-in-law", "Damadın": "Your son-in-law", "Deden": "Your grandfather",
+  "Ninen": "Your grandmother", "Ebeveynin": "Your parent", "Çocuğun": "Your child",
+  "Büyüğün": "Your grandparent", "Kayınpederin": "Your father-in-law", "Kayınvaliden": "Your mother-in-law",
+  "Kayınbüyüğün": "Your parent-in-law", "Amcan": "Your uncle", "Halan": "Your aunt", "Dayın": "Your uncle",
+  "Teyzen": "Your aunt", "Amcan / Halan": "Your uncle / aunt", "Dayın / Teyzen": "Your uncle / aunt",
+  "Yengen": "Your sister-in-law", "Enişten": "Your brother-in-law", "Yeğenin": "Your niece / nephew",
+  "Aile ferdin": "A family member",
+};
+const kin = (tr: string, en: boolean) => (en ? KIN_EN[tr] ?? tr : tr);
 
 
 // Akrabalık hitabı: ünvanlar reise göre saklanır; her alıcı göndereni KENDİSİNE göre görür.
@@ -29,9 +51,9 @@ const FEMALE = new Set(["Anne", "Kızı", "Annesi", "Ninesi", "Gelini"]);
 const MALE = new Set(["Aile Reisi", "Baba", "Oğlu", "Babası", "Dedesi", "Damadı"]);
 const genderOf = (m: M) => m.gender ?? (FEMALE.has(m.role_title) ? "f" : MALE.has(m.role_title) ? "m" : null);
 
-function kinLabel(viewer: M, target: M, reis: M | undefined): string {
+function kinLabel(viewer: M, target: M, reis: M | undefined, en = false): string {
   const t = target.role_title || "Aile ferdin";
-  if (reis && viewer.user_id === reis.user_id) return POSSESSIVE[t] ?? t;
+  if (reis && viewer.user_id === reis.user_id) return kin(POSSESSIVE[t] ?? t, en);
   const reisG = reis ? genderOf(reis) : null;
   let tg = genderOf(target);
   if (!tg && t === "Eşi" && reisG) tg = reisG === "m" ? "f" : "m";
@@ -45,7 +67,7 @@ function kinLabel(viewer: M, target: M, reis: M | undefined): string {
       "Gelini": pick("Kayınpederin", "Kayınvaliden", "Kayınbüyüğün"), "Damadı": pick("Kayınpederin", "Kayınvaliden", "Kayınbüyüğün"),
       "Dedesi": "Torunun", "Ninesi": "Torunun",
     };
-    return r[v] ? `${r[v]} (${t})` : t;
+    return r[v] ? `${kin(r[v], en)} (${kin(t, en)})` : kin(t, en);
   }
   const reisMale = reisG === "m";
   const table: Record<string, Record<string, string>> = {
@@ -59,8 +81,11 @@ function kinLabel(viewer: M, target: M, reis: M | undefined): string {
   };
   table["Kızı"] = table["Oğlu"]; table["Babası"] = table["Annesi"]; table["Damadı"] = table["Gelini"];
   const rel = table[v]?.[t];
-  if (rel) return rel;
-  return POSSESSIVE[t] && t !== "Aile Ferdi" ? `Aile Reisinin ${t}` : t;
+  if (rel) return kin(rel, en);
+  if (POSSESSIVE[t] && t !== "Aile Ferdi") {
+    return en ? `Head of family's ${kin(t, true).toLowerCase()}` : `Aile Reisinin ${t}`;
+  }
+  return kin(t, en);
 }
 
 function b64url(data: ArrayBuffer | string): string {
@@ -103,7 +128,18 @@ async function accessToken(sa: { client_email: string; private_key: string }): P
   return cachedToken.value;
 }
 
-function text(type: string, who: string, prayer: string | null, message: string, toMe = false): [string, string] | null {
+function text(type: string, who: string, prayer: string | null, message: string, toMe = false, en = false): [string, string] | null {
+  if (en) {
+    const p = prayer ? PRAYERS_EN[prayer.toUpperCase()] ?? "" : "";
+    switch (type) {
+      case "PRAYED": return [`${who} prayed 🤲`, `Prayed ${p}. May Allah accept it.`];
+      case "KAZA": return [`${who} made up a missed prayer 📿`, "Completed one kaza prayer. May Allah accept it."];
+      case "DUA": return [toMe ? `${who} sent you a dua 🤲` : `${who} sent the family a dua 🤲`, message || "May Allah accept our worship."];
+      case "MEMBER_JOINED": return ["New family member 🤝", `${message || who} joined the family circle.`];
+      case "PRO_REQUEST": return [`${who} wants Pro 🌟`, "If you get Family Pro, everyone in the circle becomes Pro."];
+      default: return null;
+    }
+  }
   const p = prayer ? PRAYERS[prayer.toUpperCase()] ?? "" : "";
   switch (type) {
     case "PRAYED": return [`${who} namazını kıldı 🤲`, `${p} namazını kıldı. Allah kabul etsin.`];
@@ -203,7 +239,7 @@ Deno.serve(async (req) => {
     const prefCol = ev.event_type === "PRAYED" ? "notify_prayer"
       : ev.event_type === "KAZA" ? "notify_kaza"
       : ev.event_type === "DUA" ? "notify_dua" : null;
-    let q = db.from("devices").select("user_id, fcm_token, lock_screen").in("user_id", recipients);
+    let q = db.from("devices").select("user_id, fcm_token, lock_screen, lang").in("user_id", recipients);
     if (prefCol) q = q.eq(prefCol, true);
     const { data: rawDevices } = await q;
     const seen = new Set<string>();
@@ -223,8 +259,9 @@ Deno.serve(async (req) => {
     await Promise.all(devices.map(async (d) => {
       // Alıcıya göre akrabalık hitabı: reis "Kızın", kızı "Baban (Aile Reisi)" / "Annen" …
       const viewer = (members ?? []).find((m) => m.user_id === d.user_id) as M | undefined;
-      const who = icon + withName(sender && viewer ? kinLabel(viewer, sender as M, reis) : (sender?.role_title || "Aile ferdin"));
-      const t = text(ev.event_type, who, ev.prayer, ev.message ?? "", !!ev.target_id);
+      const en = d.lang === "en"; // alıcının uygulama dili (bilinmiyorsa Türkçe)
+      const who = icon + withName(sender && viewer ? kinLabel(viewer, sender as M, reis, en) : kin(sender?.role_title || "Aile ferdin", en));
+      const t = text(ev.event_type, who, ev.prayer, ev.message ?? "", !!ev.target_id, en);
       if (!t) return;
       const send = () => fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
         method: "POST",

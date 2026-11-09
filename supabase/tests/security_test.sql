@@ -97,6 +97,22 @@ begin
     reset role;
   end if;
 
+  -- 6) Cihaz dili: yalnızca 'tr' / 'en' kaydedilir; verilmezse Türkçe (eski sürümler)
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    insert into public.devices(user_id, fcm_token, platform, lang)
+      values (u, 'ci-dil-testi-gecersiz-0000000000000000001', 'android', 'de');
+    fails := fails || 'cihaz_dili_gecersiz_kabul; ';
+  exception when check_violation then passed := passed + 1;
+  end;
+  insert into public.devices(user_id, fcm_token, platform)
+    values (u, 'ci-dil-testi-varsayilan-00000000000000002', 'android');
+  if (select lang from public.devices where fcm_token = 'ci-dil-testi-varsayilan-00000000000000002') <> 'tr' then
+    fails := fails || 'cihaz_dili_varsayilan_tr_degil; ';
+  else passed := passed + 1; end if;
+  reset role;
+
   if fails = '' then
     raise exception 'SONUC: OK % test gecti (geri alindi). Atlanan: %. UYARI: %', passed,
       coalesce(nullif(skipped, ''), 'yok'), coalesce(nullif(uyari, ''), 'yok');

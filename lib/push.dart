@@ -137,6 +137,7 @@ class Push {
         'notify_kaza': AppSettings.notifyKaza,
         'notify_dua': AppSettings.notifyDua,
         'lock_screen': AppSettings.lockScreen,
+        'lang': Lang.code, // aile bildirimleri bu cihaza bu dilde gelir (sunucu seçer)
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id,fcm_token');
     } catch (e) {
