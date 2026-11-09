@@ -253,15 +253,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Gönderilmemiş kayıt var'),
-          content: Text('$left kayıt henüz buluta gönderilemedi (internet yok olabilir). '
-              'Çıkış yaparsan bu kayıtlar telefondan silinir.\n\nİnternet gelince otomatik gönderilmesi için '
-              'şimdilik çıkış yapmaman önerilir.'),
+          content: Text('$left kayıt henüz buluta gönderilemedi (internet yok olabilir).\n\n'
+              'Çıkış yaparsan bu kayıtlar kaybolmaz: bu telefonda senin adına saklanır '
+              '(${LocalStore.parkDays} gün), aynı hesapla tekrar giriş yapınca otomatik gönderilir. '
+              'Bu telefonda başka biri giriş yaparsa senin kayıtlarını göremez.'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Yine de çıkış yap'),
+              child: const Text('Çıkış yap'),
             ),
           ],
         ),

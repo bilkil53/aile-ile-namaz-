@@ -293,6 +293,26 @@ jobs:
             exit "$rc"
           fi
 
+      - name: Sunucu güvenlik testi (canlı veritabanında, sonunda her şey geri alınır)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL gizli ayarı tanımlı değil: sunucu güvenlik testi atlandı. Tanımlanınca her derlemede zorunlu çalışır."
+            echo '## Sunucu güvenlik testi: atlandı (SUPABASE_DB_URL yok)' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          out=$(psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/tests/security_test.sql 2>&1 || true)
+          res=$(echo "$out" | grep -oE 'SONUC: .*' | head -1)
+          echo "$res"
+          { echo '## Sunucu güvenlik testi'; echo '```'; echo "${res:-sonuç okunamadı}"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          uy=$(echo "$res" | sed -n 's/.*UYARI: //p')
+          if [ -n "$uy" ] && [ "$uy" != "yok" ]; then echo "::warning::Sunucu güvenlik testi uyarısı: $uy"; fi
+          case "$res" in
+            "SONUC: OK"*) ;;
+            *) echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı; derleme durduruldu."; exit 1 ;;
+          esac
+
       - name: Derleme numarası (r1, r2, r3 … yalnızca resmi yayınlara göre artar)
         env:
           GH_TOKEN: ${{ github.token }}

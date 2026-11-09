@@ -1,13 +1,14 @@
 -- Sunucu güvenlik ve kural testleri (canlı veritabanında, GERİ ALINARAK çalışır).
 -- Çalıştırma: Supabase SQL Editor'e yapıştır ya da execute_sql ile çalıştır.
 -- Blok her durumda sonunda hata fırlatır: tüm değişiklikler geri alınır, veri kalmaz.
+-- CI: GitHub'da SUPABASE_DB_URL gizli ayarı tanımlıysa her derlemede çalışır; "SONUC: OK" yoksa yayın durur.
 --   Mesaj "SONUC: OK" ile başlıyorsa tüm testler geçti.
 --   "SONUC: HATA" ile başlıyorsa başarısız testler listelenir.
 -- Gereken: en az bir havuz üyesi (pool_members). Erkek üye yoksa o test atlanır.
 do $$
 declare
   u uuid; p uuid; male uuid;
-  fails text := ''; passed int := 0; skipped text := '';
+  fails text := ''; passed int := 0; skipped text := ''; uyari text := '';
   n int;
 begin
   select m.user_id, m.pool_id into u, p from public.pool_members m limit 1;
@@ -49,6 +50,12 @@ begin
   exception when insufficient_privilege then passed := passed + 1; end;
   begin perform public.push_hook_secret(); fails := fails || 'auth_bildirim_anahtari_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
+  -- Bilinen açık (demo test paneli için bilerek açık): giriş yapmış herkes deneme süresini
+  -- sıfırlayıp Pro'yu kaldırabiliyor. Ücretli Pro'dan önce kapatılmalı; her çalışmada uyarı verilir.
+  begin perform public.test_restart_trial(); uyari := uyari || 'test_restart_trial giris yapan herkese ACIK; ';
+  exception when insufficient_privilege then null; end;
+  begin perform public.test_remove_pro(); uyari := uyari || 'test_remove_pro giris yapan herkese ACIK; ';
+  exception when insufficient_privilege then null; end;
 
   -- 3) pool_events: yalnızca izinli 6 sütun; tarih yazılamaz; değiştirme/silme yok
   begin insert into public.pool_events(pool_id, sender_id, event_type, message) values (p, u, 'DUA', 'test');
@@ -91,8 +98,10 @@ begin
   end if;
 
   if fails = '' then
-    raise exception 'SONUC: OK % test gecti (geri alindi). Atlanan: %', passed, coalesce(nullif(skipped, ''), 'yok');
+    raise exception 'SONUC: OK % test gecti (geri alindi). Atlanan: %. UYARI: %', passed,
+      coalesce(nullif(skipped, ''), 'yok'), coalesce(nullif(uyari, ''), 'yok');
   else
-    raise exception 'SONUC: HATA % gecti; basarisiz: % Atlanan: %', passed, fails, coalesce(nullif(skipped, ''), 'yok');
+    raise exception 'SONUC: HATA % gecti; basarisiz: % Atlanan: %. UYARI: %', passed, fails,
+      coalesce(nullif(skipped, ''), 'yok'), coalesce(nullif(uyari, ''), 'yok');
   end if;
 end $$;

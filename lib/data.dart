@@ -579,13 +579,17 @@ class Repo {
 
   /// Hesabımı ve bütün verilerimi kalıcı olarak siler.
   static Future<void> deleteMyAccount() async {
+    final uid = myId;
     await supa.rpc('delete_my_account');
-    await signOut();
+    await signOut(keepPending: false);
+    LocalStore.dropParked(uid);
   }
 
   /// Oturumu kapatır ve bu hesabın telefondaki kişisel verilerini siler (aynı telefonda başka hesap
   /// açılınca önceki hesabın kaydı ona yazılmasın / görünmesin).
-  static Future<void> signOut() async {
+  /// [keepPending]: gönderilmemiş kayıtlar bu hesap adına telefonda saklanır, aynı hesapla tekrar
+  /// girince gönderilir (hesap silmede false).
+  static Future<void> signOut({bool keepPending = true}) async {
     // Süren gönderim önce durdurulur (en fazla 5 sn beklenir), sonra telefondaki veri silinir
     _stopSync = true;
     try {
@@ -593,6 +597,7 @@ class Repo {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
       resetUserCache();
+      if (keepPending) LocalStore.parkPending(myId);
       LocalStore.wipeUserData();
       await supa.auth.signOut();
     } finally {

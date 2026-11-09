@@ -1,4 +1,4 @@
-Namaz Demo — Daha sakin ekran: internet yokken "telefona kaydedildi" uyarısı artık çıkmaz; her vaktin yanındaki küçük simge durumu sessizce gösterir (⏳ telefonda bekliyor, internet gelince kendiliğinden gider · ☁️ buluta kaydedildi). Uyarı yalnızca senin bir şey yapman gerektiğinde çıkar. Test Pro kodu: 1.
+Namaz Demo — Kayıtların kaybolmaz: çıkış yaptığında ya da telefonda başka biri giriş yaptığında, henüz gönderilmemiş işaretlerin silinmez; telefonda senin adına saklanır ve aynı hesapla tekrar girince otomatik gönderilir (başka hesap bunları göremez). Daha sakin ekran: internet yokken uyarı çıkmaz, vaktin yanındaki küçük simge durumu gösterir (⏳ bekliyor · ☁️ bulutta). Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
