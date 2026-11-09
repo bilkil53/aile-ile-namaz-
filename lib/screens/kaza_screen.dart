@@ -23,14 +23,14 @@ class KazaScreen extends StatefulWidget {
 
 class _KazaScreenState extends State<KazaScreen> {
   // (tip, ad, emoji, farz rekat)
-  static const _types = [
-    ('FAJR', 'Sabah Namazı', '🌅', 'Farz: 2 Rekat'),
-    ('DHUHR', 'Öğle Namazı', '☀️', 'Farz: 4 Rekat'),
-    ('ASR', 'İkindi Namazı', '⛅', 'Farz: 4 Rekat'),
-    ('MAGHRIB', 'Akşam Namazı', '🌇', 'Farz: 3 Rekat'),
-    ('ISHA', 'Yatsı Namazı', '🌌', 'Farz: 4 Rekat'),
-    ('WITR', 'Vitir Namazı', '⭐', 'Vacip: 3 Rekat'),
-  ];
+  static List<(String, String, String, String)> get _types => [
+        ('FAJR', t('Sabah Namazı', 'Fajr Prayer'), '🌅', t('Farz: 2 Rekat', 'Fard: 2 Rakats')),
+        ('DHUHR', t('Öğle Namazı', 'Dhuhr Prayer'), '☀️', t('Farz: 4 Rekat', 'Fard: 4 Rakats')),
+        ('ASR', t('İkindi Namazı', 'Asr Prayer'), '⛅', t('Farz: 4 Rekat', 'Fard: 4 Rakats')),
+        ('MAGHRIB', t('Akşam Namazı', 'Maghrib Prayer'), '🌇', t('Farz: 3 Rekat', 'Fard: 3 Rakats')),
+        ('ISHA', t('Yatsı Namazı', 'Isha Prayer'), '🌌', t('Farz: 4 Rekat', 'Fard: 4 Rakats')),
+        ('WITR', t('Vitir Namazı', 'Witr Prayer'), '⭐', t('Vacip: 3 Rekat', 'Wajib: 3 Rakats')),
+      ];
 
   Map<String, (int, int)> _data = {};
   List<Member> _family = [];
@@ -69,7 +69,7 @@ class _KazaScreenState extends State<KazaScreen> {
         }
       }
     } catch (_) {
-      _toast('Kaza bilgisi yüklenemedi.');
+      _toast(t('Kaza bilgisi yüklenemedi.', 'Could not load kaza info.'));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -113,7 +113,7 @@ class _KazaScreenState extends State<KazaScreen> {
       final (o, c) = _of(t);
       await _set(t, o + days, c);
     }
-    _toast(days % 365 == 0 ? 'Her vakte ${days ~/ 365} yıllık ($days gün) kaza eklendi.' : 'Her vakte $days gün eklendi.');
+    _toast(days % 365 == 0 ? t('Her vakte ${days ~/ 365} yıllık ($days gün) kaza eklendi.', 'Added ${days ~/ 365} years ($days days) of kaza to each prayer.') : t('Her vakte $days gün eklendi.', 'Added $days days to each prayer.'));
   }
 
   /// Kaza kayıtlarını sıfırla: yanlışlıkla olmasın diye iki kez onay ister.
@@ -128,14 +128,14 @@ class _KazaScreenState extends State<KazaScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         icon: const Icon(Icons.restart_alt, color: AppColors.missed, size: 32),
-        title: const Text('Kaza kayıtları sıfırlansın mı?'),
-        content: const Text('Bütün vakitlerdeki kaza borcun ve kılınan kaza sayıların 0 olacak.'),
+        title: Text(t('Kaza kayıtları sıfırlansın mı?', 'Reset kaza records?')),
+        content: Text(t('Bütün vakitlerdeki kaza borcun ve kılınan kaza sayıların 0 olacak.', 'Your kaza debt and completed kaza counts for all prayers will be set to 0.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Devam'),
+            child: Text(t('Devam', 'Continue')),
           ),
         ],
       ),
@@ -147,23 +147,23 @@ class _KazaScreenState extends State<KazaScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text('Son onay'),
+          title: Text(t('Son onay', 'Final confirmation')),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Bu işlem geri alınamaz. Onaylamak için aşağıya SIFIRLA yaz.'),
+            Text(t('Bu işlem geri alınamaz. Onaylamak için aşağıya SIFIRLA yaz.', 'This cannot be undone. Type RESET below to confirm.')),
             const SizedBox(height: 10),
             TextField(
               controller: ctrl,
               textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'SIFIRLA'),
+              decoration: InputDecoration(border: OutlineInputBorder(), hintText: t('SIFIRLA', 'RESET')),
               onChanged: (_) => setD(() {}),
             ),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.missed),
-              onPressed: ctrl.text.trim().toUpperCase() == 'SIFIRLA' ? () => Navigator.pop(ctx, true) : null,
-              child: const Text('Sıfırla'),
+              onPressed: ctrl.text.trim().toUpperCase() == t('SIFIRLA', 'RESET') ? () => Navigator.pop(ctx, true) : null,
+              child: Text(t('Sıfırla', 'Reset')),
             ),
           ],
         ),
@@ -174,7 +174,7 @@ class _KazaScreenState extends State<KazaScreen> {
     for (final (t, _, _, _) in _types) {
       await _set(t, 0, 0);
     }
-    _toast('Kaza kayıtların sıfırlandı.');
+    _toast(t('Kaza kayıtların sıfırlandı.', 'Your kaza records were reset.'));
   }
 
   void _proRebuild() {
@@ -252,15 +252,15 @@ class _KazaScreenState extends State<KazaScreen> {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const Text('📿 Kaza Namazı Takibi',
+              Text(t('📿 Kaza Namazı Takibi', '📿 Kaza Prayer Tracking'),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text('Kılamadığın vakitleri kaydet, kıldıkça düş.',
+              Text(t('Kılamadığın vakitleri kaydet, kıldıkça düş.', 'Record the prayers you missed and reduce them as you make them up.'),
                   style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
               const SizedBox(height: 14),
               Row(children: [
-                Expanded(child: _tile('Kalan Kaza Borcu', _n(remaining), AppColors.goldContainer, const Color(0xFF78350F))),
+                Expanded(child: _tile(t('Kalan Kaza Borcu', 'Kaza Remaining'), _n(remaining), AppColors.goldContainer, const Color(0xFF78350F))),
                 const SizedBox(width: 10),
-                Expanded(child: _tile('Kılınan Kaza', _n(done), AppColors.prayedMint, AppColors.emeraldDark)),
+                Expanded(child: _tile(t('Kılınan Kaza', 'Kaza Completed'), _n(done), AppColors.prayedMint, AppColors.emeraldDark)),
               ]),
               const SizedBox(height: 12),
               ClipRRect(
@@ -273,7 +273,7 @@ class _KazaScreenState extends State<KazaScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(demo ? 'Pro ile kaza borcunu kaydet, kıldıkça düş.' : owed == 0 ? 'Kayıtlı kaza borcun yok.' : '%${(ratio * 100).round()} tamamlandı · Toplam $owed vakit',
+              Text(demo ? t('Pro ile kaza borcunu kaydet, kıldıkça düş.', 'Record your kaza prayers with Pro and reduce them as you make them up.') : owed == 0 ? t('Kayıtlı kaza borcun yok.', 'You have no recorded kaza prayers.') : t('%${(ratio * 100).round()} tamamlandı · Toplam $owed vakit', '${(ratio * 100).round()}% done · $owed prayers in total'),
                   style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
             ]),
           ),
@@ -287,7 +287,7 @@ class _KazaScreenState extends State<KazaScreen> {
                 border: Border.all(color: AppColors.cardBorder),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('👨‍👩‍👧 Aile Fertleri Kaza Durumu (Detaysız)',
+                Text(t('👨‍👩‍👧 Aile Fertleri Kaza Durumu (Detaysız)', '👨‍👩‍👧 Family Kaza Status (Summary only)'),
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 const SizedBox(height: 8),
                 for (final m in _family)
@@ -301,7 +301,7 @@ class _KazaScreenState extends State<KazaScreen> {
                         final k = _familyKaza[m.userId];
                         final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);
                         return Text(
-                          demo ? '–' : left == 0 ? 'Borç yok ✓' : 'Kalan $left · Kılınan ${k![1]}',
+                          demo ? '–' : left == 0 ? t('Borç yok ✓', 'None left ✓') : t('Kalan $left · Kılınan ${k![1]}', 'Left $left · Done ${k[1]}'),
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -314,11 +314,11 @@ class _KazaScreenState extends State<KazaScreen> {
             ),
           ],
           const SizedBox(height: 10),
-          const Row(children: [
+          Row(children: [
             Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted),
             SizedBox(width: 6),
             Expanded(
-              child: Text('Hangi vakti kaza ettiğin sadece sende görünür; ailen yalnızca toplamı görür.',
+              child: Text(t('Hangi vakti kaza ettiğin sadece sende görünür; ailen yalnızca toplamı görür.', 'Which prayers you missed is visible only to you; your family only sees the total.'),
                   style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
             ),
           ]),
@@ -331,14 +331,14 @@ class _KazaScreenState extends State<KazaScreen> {
             ),
             onPressed: _bulkAdd,
             icon: const Icon(Icons.playlist_add),
-            label: const Text('Toplu Ekle (yıl veya gün)'),
+            label: Text(t('Toplu Ekle (yıl veya gün)', 'Bulk Add (years or days)')),
           ),
           const SizedBox(height: 12),
           for (final t in _types) ...[_row(t), const SizedBox(height: 10)],
           const SizedBox(height: 8),
           DangerBox(
-            title: 'Kaza kayıtlarını sıfırla',
-            subtitle: 'Tüm kaza borcu ve kılınan sayıları sıfırlanır',
+            title: t('Kaza kayıtlarını sıfırla', 'Reset kaza records'),
+            subtitle: t('Tüm kaza borcu ve kılınan sayıları sıfırlanır', 'All kaza debt and completed counts are reset'),
             icon: Icons.restart_alt,
             onTap: _reset,
           ),
@@ -380,21 +380,21 @@ class _KazaScreenState extends State<KazaScreen> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              Text('$rekat | Kılınan: ${_n(done)}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(t('$rekat | Kılınan: ${_n(done)}', '$rekat | Done: ${_n(done)}'), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             ]),
           ),
           IconButton(
-            tooltip: 'Borcu azalt',
+            tooltip: t('Borcu azalt', 'Decrease'),
             visualDensity: VisualDensity.compact,
             onPressed: (Pro.isDemo || owed > done) ? () => _set(type, owed - 1, done) : null,
             icon: const Icon(Icons.remove_circle_outline, color: AppColors.emerald),
           ),
           Column(children: [
             Text(_n(left), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const Text('Borç', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+            Text(t('Borç', 'Left'), style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
           ]),
           IconButton(
-            tooltip: 'Borç ekle',
+            tooltip: t('Borç ekle', 'Add'),
             visualDensity: VisualDensity.compact,
             onPressed: () => _set(type, owed + 1, done),
             icon: const Icon(Icons.add_circle_outline, color: AppColors.emerald),
@@ -409,13 +409,13 @@ class _KazaScreenState extends State<KazaScreen> {
                 ),
                 onPressed: () => _set(type, owed, done + 1, announce: true),
                 icon: const Icon(Icons.check_circle, size: 18),
-                label: const Text('Kaza Kıldım', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: Text(t('Kaza Kıldım', 'I Made Up a Kaza'), style: TextStyle(fontWeight: FontWeight.bold)),
               )
             : Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
-                child: const Text('Kaza Borcu Yok (Elhamdülillah) 🤲',
+                child: Text(t('Kaza Borcu Yok (Elhamdülillah) 🤲', 'No Kaza Left (Alhamdulillah) 🤲'),
                     style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
               ),
       ]),
@@ -448,13 +448,13 @@ class _BulkDialogState extends State<_BulkDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text('Toplu Kaza Borcu Ekle'),
+      title: Text(t('Toplu Kaza Borcu Ekle', 'Bulk Add Kaza')),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(value: true, label: Text('Yıl'), icon: Icon(Icons.calendar_today, size: 16)),
-              ButtonSegment(value: false, label: Text('Gün'), icon: Icon(Icons.today, size: 16)),
+            segments: [
+              ButtonSegment(value: true, label: Text(t('Yıl', 'Years')), icon: Icon(Icons.calendar_today, size: 16)),
+              ButtonSegment(value: false, label: Text(t('Gün', 'Days')), icon: Icon(Icons.today, size: 16)),
             ],
             selected: {_years},
             onSelectionChanged: (v) => setState(() {
@@ -464,12 +464,12 @@ class _BulkDialogState extends State<_BulkDialog> {
           ),
           const SizedBox(height: 12),
           if (_years) ...[
-            const Text('Hızlı ekle:', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            Text(t('Hızlı ekle:', 'Quick add:'), style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             const SizedBox(height: 6),
             Wrap(spacing: 6, runSpacing: 6, children: [
               for (final y in [1, 2, 3, 5, 10, 15, 20])
                 ActionChip(
-                  label: Text('$y Yıl'),
+                  label: Text(t('$y Yıl', '$y yr')),
                   onPressed: () => Navigator.pop(context, y * 365),
                 ),
             ]),
@@ -480,8 +480,8 @@ class _BulkDialogState extends State<_BulkDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
-              labelText: _years ? 'Yıl sayısı' : 'Gün sayısı',
-              hintText: _years ? 'örn. 7' : 'örn. 365',
+              labelText: _years ? t('Yıl sayısı', 'Number of years') : t('Gün sayısı', 'Number of days'),
+              hintText: _years ? t('örn. 7', 'e.g. 7') : t('örn. 365', 'e.g. 365'),
               border: const OutlineInputBorder(),
             ),
             onChanged: (_) => setState(() {}),
@@ -489,18 +489,18 @@ class _BulkDialogState extends State<_BulkDialog> {
           const SizedBox(height: 8),
           Text(
             _value > 0
-                ? 'Her vakte (vitir dahil) $_days gün eklenecek · toplam ${_days * 6} vakit.'
-                : (_years ? '1 yıl = 365 gün olarak hesaplanır.' : 'Her vakte (vitir dahil) bu sayı eklenir.'),
+                ? t('Her vakte (vitir dahil) $_days gün eklenecek · toplam ${_days * 6} vakit.', '$_days days will be added to each prayer (incl. witr) · ${_days * 6} prayers in total.')
+                : (_years ? t('1 yıl = 365 gün olarak hesaplanır.', '1 year is counted as 365 days.') : t('Her vakte (vitir dahil) bu sayı eklenir.', 'This number is added to each prayer (incl. witr).')),
             style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
           ),
         ]),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Vazgeç')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(t('Vazgeç', 'Cancel'))),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
           onPressed: _value > 0 ? () => Navigator.pop(context, _days) : null,
-          child: const Text('Ekle'),
+          child: Text(t('Ekle', 'Add')),
         ),
       ],
     );
