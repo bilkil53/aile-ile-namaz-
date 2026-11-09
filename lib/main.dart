@@ -14,6 +14,7 @@ import 'push.dart';
 import 'settings.dart';
 import 'screens/home_shell.dart';
 import 'theme.dart';
+import 'ui_test_mode.dart';
 import 'update_checker.dart';
 
 Future<void> main() async {
@@ -84,7 +85,7 @@ class _AuthGateState extends State<AuthGate> {
       if (mounted) setState(() => _waited = true);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) UpdateChecker.check(context);
+      if (mounted && !kUiTest) UpdateChecker.check(context);
       CrashReport.checkLastExit();
     });
   }

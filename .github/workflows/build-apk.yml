@@ -400,6 +400,26 @@ jobs:
           done
           ls -la aile-ile-namaz*.apk
 
+      # ── TEST ORTAMI 1: GitHub emülatörü ── gerçek uygulama bir Android emülatöründe açılır,
+      # misafir akışı parmakla dokunur gibi denenir. Başarısızsa yayın yapılmaz (her dalda).
+      - name: Emülatör için donanım hızlandırma (KVM)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Ekran testi — GitHub emülatörü (Android 11, misafir akışı + 4 sekme)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          script: bash -c 'set -o pipefail; flutter test integration_test/app_test.dart --dart-define=UI_TEST=true -d emulator-5554 --reporter expanded 2>&1 | tee ui-test.txt'
+
       - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
         run: |
           python3 - <<'PY'
@@ -415,6 +435,65 @@ jobs:
             --dart-define=STORE=play --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
           cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
           (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
+
+      # ── TEST ORTAMI 2: Google Firebase Test Lab ── yayınlanacak APK'nın kendisi Google'ın
+      # 1 gerçek telefonunda ve 1 sanal telefonunda robotla gezilir. Kota sınırlı olduğu için
+      # yalnızca yayın dallarında (main, demo). Anahtar yoksa veya test geçmezse yayın yapılmaz.
+      - name: Test Lab anahtarı var mı
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        env:
+          KEY: ${{ secrets.FIREBASE_TESTLAB_KEY }}
+        run: |
+          [ -n "$KEY" ] || { echo '::error::FIREBASE_TESTLAB_KEY yok: Google Test Lab testi yapılamaz, yayın durduruldu.'; exit 1; }
+          echo 'Test Lab anahtarı hazır'
+
+      - uses: google-github-actions/auth@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        with:
+          credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+
+      - name: Ekran testi — Google Test Lab (1 gerçek + 1 sanal telefon, robot gezinti)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        run: |
+          gcloud config set project aile-ile-namaz-d437f >/dev/null
+          # Şu an kullanılabilen bir gerçek telefon seç (Android 14 → 13 → 12 sırasıyla)
+          gcloud firebase test android models list --filter='form=PHYSICAL' --format=json > models.json
+          PHYS=$(python3 - <<'PY'
+          import json
+          ms = json.load(open('models.json'))
+          for v in ('34', '33', '35', '32', '31'):
+              for m in ms:
+                  if v in (m.get('supportedVersionIds') or []):
+                      print(f"model={m['id']},version={v}"); raise SystemExit
+          PY
+          )
+          [ -n "$PHYS" ] || { echo '::error::Test Lab: uygun gerçek telefon bulunamadı'; exit 1; }
+          echo "Gerçek telefon: $PHYS · Sanal telefon: MediumPhone.arm, Android 14"
+          run() {
+            gcloud firebase test android run --type robo --app aile-ile-namaz.apk \
+              --device "$PHYS" --device model=MediumPhone.arm,version=34 \
+              --timeout 5m --client-details matrixLabel="r${BUILD_NO}-${GITHUB_REF_NAME}" 2>&1 | tee testlab.txt
+            return ${PIPESTATUS[0]}
+          }
+          set +e
+          run; code=$?
+          # 15 = sonuç belirsiz, 20 = Google tarafında altyapı hatası → bir kez daha dene
+          if [ "$code" = 15 ] || [ "$code" = 20 ]; then echo '::warning::Test Lab belirsiz/altyapı hatası, tekrar deneniyor'; run; code=$?; fi
+          {
+            echo '## Google Test Lab'
+            echo '```'
+            tail -n 30 testlab.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::Google Test Lab testi geçmedi (kod $code). Ayrıntı: yukarıdaki sonuç bağlantısı."
+            grep -iE 'denied|permission|forbidden' testlab.txt | head -3 | while IFS= read -r l; do echo "::error::${l}"; done
+            exit 1
+          fi
+          echo 'Google Test Lab: her iki telefonda da geçti ✓'
 
       - uses: actions/upload-artifact@v4
         with:

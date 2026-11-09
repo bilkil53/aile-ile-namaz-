@@ -16,6 +16,7 @@ import '../notifications.dart';
 import '../push.dart';
 
 import '../theme.dart';
+import '../ui_test_mode.dart';
 import 'karne_screen.dart';
 import 'kaza_screen.dart';
 import 'login_screen.dart';
@@ -71,8 +72,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         if (mounted) await _firstRunQuestions();
       }
       // Konum otomatik (GPS) → vakitler → hatırlatmalar
-      await LocationHelper.autoUpdate();
-      await Notifications.requestPermission();
+      if (!kUiTest) {
+        await LocationHelper.autoUpdate();
+        await Notifications.requestPermission();
+      }
       // Eksik bildirim ayarı (izin, kesin alarm, pil tasarrufu) varsa bir kez göster
       if (!isGuest && !Pro.isDemo && mounted) await NotifyHealth.maybeShowOnce(context); // ücretsizde bildirim yok
       await Notifications.reschedule();
