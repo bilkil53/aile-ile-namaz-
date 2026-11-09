@@ -1602,7 +1602,7 @@ class _DuaDialogState extends State<_DuaDialog> {
                   leading: Text(g.emoji, style: const TextStyle(fontSize: 17)),
                   title: Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                   subtitle: Text(g.text, style: const TextStyle(fontSize: 12)),
-                  onTap: () => Navigator.pop(context, g.text),
+                  onTap: () => Navigator.pop(context, g.textTr), // alıcı kendi dilinde görür
                 ),
               ),
             const SizedBox(height: 8),

@@ -28,6 +28,10 @@ class Greeting {
   String get title => tc(_title);
   String get category => tc(_category);
   String get text => tc(_text);
+
+  /// Aileye gönderilen metin her zaman Türkçedir; alıcı kendi dilinde görür ([familyMessageText]).
+  String get textTr => _text;
+  String get textEn => contentEn[_text] ?? _text;
 }
 
 const ayetler = <DailyQuote>[

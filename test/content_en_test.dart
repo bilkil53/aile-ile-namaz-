@@ -1,6 +1,7 @@
 import 'package:aile_ile_namaz/content/approaching_quotes.dart';
 import 'package:aile_ile_namaz/content/content_en.dart';
 import 'package:aile_ile_namaz/content/daily_content.dart';
+import 'package:aile_ile_namaz/cuma_reminder.dart';
 import 'package:aile_ile_namaz/dini_gunler.dart';
 import 'package:aile_ile_namaz/lang.dart';
 import 'package:aile_ile_namaz/settings.dart';
@@ -34,6 +35,15 @@ void main() {
     final missing = <String>[
       for (final g in greetings)
         for (final s in [g.title, g.category, g.text])
+          if (!contentEn.containsKey(s)) s,
+    ];
+    expect(missing, isEmpty);
+  });
+
+  test('Cuma hatırlatma hadislerinin İngilizcesi var', () {
+    final missing = <String>[
+      for (final (h, k) in CumaReminder.textsForTest)
+        for (final s in [h, k])
           if (!contentEn.containsKey(s)) s,
     ];
     expect(missing, isEmpty);

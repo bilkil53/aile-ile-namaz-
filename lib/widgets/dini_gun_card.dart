@@ -3,6 +3,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../lang.dart';
 import '../data.dart';
+import '../content/family_message.dart';
 import '../dini_gunler.dart';
 import '../theme.dart';
 
@@ -60,11 +61,8 @@ class _DiniGunCardState extends State<DiniGunCard> {
   }
 
   Widget _bayram(DiniGun g, int dayNo) {
-    final msg = t(
-        '${g.emoji} ${g.name}nız mübarek olsun! Allah nice bayramlara sağlık, huzur ve '
-            'birlik içinde ulaştırsın. 🤲',
-        '${g.emoji} ${g.name} Mubarak! May Allah let us reach many more Eids in health, peace '
-            'and togetherness. 🤲');
+    // Ekranda ve paylaşımda seçilen dilde; aileye her zaman Türkçesi gider, alıcı kendi dilinde görür
+    final msg = t(bayramMessageTr(g), bayramMessageEn(g));
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -113,7 +111,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.6)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: _sending ? null : () => _sendFamily(msg),
+                onPressed: _sending ? null : () => _sendFamily(bayramMessageTr(g)),
                 icon: const Icon(Icons.groups, size: 16),
                 label: Text(_sending ? t('Gönderiliyor…', 'Sending…') : t('Aileye gönder', 'Send to family')),
               ),

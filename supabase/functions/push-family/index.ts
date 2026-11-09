@@ -128,13 +128,26 @@ async function accessToken(sa: { client_email: string; private_key: string }): P
   return cachedToken.value;
 }
 
+// Hazır aile mesajlarının İngilizcesi (uygulamadaki familyMessagesEn ile aynı; test denetler).
+// Uygulama bunları her zaman Türkçe gönderir; İngilizce cihaza bu karşılık gider.
+const GREET_EN: Record<string, string> = {
+  "Allah kabul etsin, kıldığın namazlar kalbine nur, ömrüne huzur ve bereket olsun kardeşim.": "May Allah accept it; may your prayers be light for your heart and peace and blessing for your life, my dear.",
+  "Rabbim kıldığın namazları, ettiğin duaları dergâh-ı izzetinde en güzel şekilde makbul eylesin.": "May my Lord accept your prayers and supplications in His exalted presence in the most beautiful way.",
+  "Namaz dinin direğidir. Birlikte hayırda yarışarak istikrarımızı koruduğumuz için Elhamdülillah!": "Prayer is the pillar of the religion. Alhamdulillah that we keep our consistency by competing together in good deeds!",
+  "Rabbim sana ve ailene afiyet, kalbine inşirah, hanene bereket ihsan eylesin.": "May my Lord grant you and your family well-being, ease to your heart and blessing to your home.",
+  "Kaza namazlarını eritmeye devam; Rabbim azmini, gayretini ve sevabını kat kat artırsın.": "Keep making up your missed prayers; may my Lord multiply your resolve, your effort and your reward.",
+  "Günün farzlarını tamamlayarak huzurla geceye kavuşturan Yüce Allah'a hamdolsun.": "Praise be to Allah the Exalted, who let us complete the day's obligatory prayers and reach the night in peace.",
+  "🎉 Ramazan Bayramınız mübarek olsun! Allah nice bayramlara sağlık, huzur ve birlik içinde ulaştırsın. 🤲": "🎉 Eid al-Fitr Mubarak! May Allah let us reach many more Eids in health, peace and togetherness. 🤲",
+  "🐑 Kurban Bayramınız mübarek olsun! Allah nice bayramlara sağlık, huzur ve birlik içinde ulaştırsın. 🤲": "🐑 Eid al-Adha Mubarak! May Allah let us reach many more Eids in health, peace and togetherness. 🤲",
+};
+
 function text(type: string, who: string, prayer: string | null, message: string, toMe = false, en = false): [string, string] | null {
   if (en) {
     const p = prayer ? PRAYERS_EN[prayer.toUpperCase()] ?? "" : "";
     switch (type) {
       case "PRAYED": return [`${who} prayed 🤲`, `Prayed ${p}. May Allah accept it.`];
       case "KAZA": return [`${who} made up a missed prayer 📿`, "Completed one kaza prayer. May Allah accept it."];
-      case "DUA": return [toMe ? `${who} sent you a dua 🤲` : `${who} sent the family a dua 🤲`, message || "May Allah accept our worship."];
+      case "DUA": return [toMe ? `${who} sent you a dua 🤲` : `${who} sent the family a dua 🤲`, (message && GREET_EN[message]) || message || "May Allah accept our worship."];
       case "MEMBER_JOINED": return ["New family member 🤝", `${message ? kin(message, true) : who} joined the family circle.`];
       case "PRO_REQUEST": return [`${who} wants Pro 🌟`, "If you get Family Pro, everyone in the circle becomes Pro."];
       default: return null;

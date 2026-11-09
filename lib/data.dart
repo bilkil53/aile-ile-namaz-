@@ -291,6 +291,18 @@ class Repo {
   }
 
   static final Map<String, Timer> _writeTimers = {};
+
+  /// Bekleme süresi (20 sn) dolmamış, birazdan gönderilecek namaz işareti sayısı (Ayarlar'daki
+  /// "Verilerin" kutusu bunları "telefonda bekliyor" saymaz).
+  static int scheduledPrayers() => LocalStore.queue()
+      .where((o) => o['t'] == 'prayer' && _writeTimers.containsKey('${o['date']}|${o['key']}'))
+      .length;
+
+  /// "Son gönderim" saatini yazar; arada çıkış/hesap değişimi olduysa yazmaz (başka hesaba geçmesin).
+  static Future<void> _markSynced(String type, String uid) async {
+    if (_stopSync || isGuest || myId != uid) return;
+    await LocalStore.markSynced(type);
+  }
   static final Map<String, Timer> _announceTimers = {};
   static final Set<String> _pendingAnnounce = {};
   static final Map<String, String> _announced = {};
@@ -420,8 +432,10 @@ class Repo {
         } else if (o['t'] == 'kaza') {
           await _sendLatestKaza(o['type'] as String);
         }
+        // Önce "son gönderim" saati (yalnızca hâlâ aynı hesapsa), sonra kuyruktan silme:
+        // silme ekranı yeniler, yenilenen ekran güncel saati görür.
+        if (o['t'] == 'prayer') await _markSynced('prayer', uid);
         await LocalStore.removeOp(o);
-        if (o['t'] == 'prayer') unawaited(LocalStore.markSynced('prayer'));
         i++;
         sent++;
         offline = false;
@@ -533,12 +547,13 @@ class Repo {
   /// siler. Bu sırada yeni bir değişiklik geldiyse o kuyrukta kalır ve ayrıca gönderilir.
   static Future<void> _sendLatestKaza(String type) {
     Future<void> run() async {
+      final uid = myId;
       final op = latestKazaOp(LocalStore.queue(), type);
       if (op == null) return;
       await _upsertKaza(type, (op['o'] as num).toInt(), (op['c'] as num).toInt())
           .timeout(const Duration(seconds: 10));
+      await _markSynced('kaza', uid);
       await LocalStore.removeOp(op);
-      unawaited(LocalStore.markSynced('kaza'));
     }
 
     final r = _kazaChain.then((_) => run());

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:intl/intl.dart' show DateFormat;
 
 import 'content/content_en.dart';
@@ -17,6 +18,10 @@ import 'settings.dart';
 class CumaReminder {
   static const _kGender = 'cuma.myGender';
   static const _kSent = 'cuma.sent'; // bildirimi giden Cuma tarihleri
+
+  /// Testler için (her metnin İngilizcesi var mı).
+  @visibleForTesting
+  static List<(String, String)> get textsForTest => _texts;
 
   static const _texts = [
     (

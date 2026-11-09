@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../content/family_message.dart';
 import '../cuma_reminder.dart';
 import '../lang.dart';
 import '../data.dart';
@@ -198,7 +199,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                       ? t('$who sana dua gönderdi 🤲', '$who sent you a dua 🤲')
                       : t('$who aileye dua gönderdi 🤲', '$who sent the family a dua 🤲'),
                   ((r['message'] as String?) ?? '').isNotEmpty
-                      ? r['message'] as String
+                      ? familyMessageText(r['message'] as String)
                       : t('Allah ibadetlerimizi kabul etsin.', 'May Allah accept our worship.')),
               'MEMBER_JOINED' => (t('Aile havuzuna katılım 🤝', 'New family member 🤝'),
                   t('${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.',
