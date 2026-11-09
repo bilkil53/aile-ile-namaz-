@@ -79,11 +79,13 @@ class _QiblaCardState extends State<QiblaCard> {
     final diff = heading == null ? null : ((qibla - heading + 540) % 360) - 180;
     final aligned = diff != null && diff.abs() < 5;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
+    // Material: ListTile dokunma efekti kartın üstünde görünsün (Container arka planı onu gizliyordu)
+    return Material(
+      color: AppColors.white,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
+        side: const BorderSide(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
