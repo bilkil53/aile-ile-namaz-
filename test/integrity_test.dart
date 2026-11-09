@@ -12,6 +12,12 @@ void main() {
       expect(Integrity.verdict(signature: b, expected: '$a,$b', store: 'github'), IntegrityVerdict.ok);
     });
 
+    test('Anahtar yenilendiyse imza geçmişindeki herhangi bir sertifika yeterli', () {
+      expect(Integrity.verdict(signature: '$b,$a', expected: a, store: 'github'), IntegrityVerdict.ok);
+      expect(Integrity.verdict(signature: '$a, $b', expected: b, store: 'github'), IntegrityVerdict.ok);
+      expect(Integrity.verdict(signature: '$b,', expected: a, store: 'github'), IntegrityVerdict.block);
+    });
+
     test('İmza tutmazsa açılmaz', () {
       expect(Integrity.verdict(signature: b, expected: a, store: 'github'), IntegrityVerdict.block);
     });

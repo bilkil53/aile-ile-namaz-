@@ -23,8 +23,10 @@ import java.security.MessageDigest
 class MainActivity : FlutterActivity() {
     private fun crashFile() = File(filesDir, "last_crash.txt")
 
-    /// Uygulamayı imzalayan sertifikanın SHA-256 parmak izi (küçük harf, iki nokta yok).
-    /// keytool'un verdiği SHA256 ile aynıdır. APK değiştirilip yeniden imzalanırsa değişir.
+    /// Uygulamayı imzalayan sertifikaların SHA-256 parmak izleri (küçük harf, iki nokta yok, virgülle).
+    /// keytool'un verdiği SHA256 ile aynıdır. İmza geçmişindeki (anahtar yenileme) bütün sertifikalar
+    /// döner: anahtar ileride yenilenirse kontrol herkesi kilitlemesin. Yeniden imzalanmış bir kopyanın
+    /// geçmişinde bizim anahtarımız olmaz.
     private fun signatureSha256(): String? {
         return try {
             val pm = packageManager
@@ -37,8 +39,9 @@ class MainActivity : FlutterActivity() {
                 pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES).signatures
             } ?: return null
             if (certs.isEmpty()) return null
-            val md = MessageDigest.getInstance("SHA-256").digest(certs[0].toByteArray())
-            md.joinToString("") { "%02x".format(it) }
+            certs.joinToString(",") { c ->
+                MessageDigest.getInstance("SHA-256").digest(c.toByteArray()).joinToString("") { "%02x".format(it) }
+            }
         } catch (t: Throwable) { null }
     }
 
