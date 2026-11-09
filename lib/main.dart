@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
 import 'crash_report.dart';
 import 'data.dart';
+import 'lang.dart';
 import 'local_store.dart';
 import 'notifications.dart';
 import 'pro.dart';
@@ -21,6 +23,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([
     initializeDateFormatting('tr'),
+    initializeDateFormatting('en'),
     AppSettings.init(),
   ]);
   await LocalStore.cleanupLegacy();
@@ -41,13 +44,44 @@ Future<void> main() async {
   runApp(const App());
 }
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  @override
+  void initState() {
+    super.initState();
+    Lang.changed.addListener(_relocalize);
+  }
+
+  @override
+  void dispose() {
+    Lang.changed.removeListener(_relocalize);
+    super.dispose();
+  }
+
+  /// Dil değişince açık ekranların hepsi yeni dille yeniden çizilir (ekran durumları korunur).
+  void _relocalize() {
+    if (!mounted) return;
+    setState(() {});
+    void rebuild(Element e) {
+      e.markNeedsBuild();
+      e.visitChildren(rebuild);
+    }
+    (context as Element).visitChildren(rebuild);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Aile İle Namaz',
+      locale: Locale(Lang.code),
+      supportedLocales: const [Locale('tr'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       navigatorKey: CrashReport.navigatorKey,
       // Telefonun büyük yazı ayarı uygulamayı büyütmesin (ekranlar ve pencereler taşmasın)
       builder: (context, child) {

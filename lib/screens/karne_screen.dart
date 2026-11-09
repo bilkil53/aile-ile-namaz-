@@ -3,6 +3,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../data.dart';
+import '../lang.dart';
 import '../dini_gunler.dart';
 import '../pro.dart';
 import '../karne_badges.dart';
@@ -439,7 +440,7 @@ class _KarneScreenState extends State<KarneScreen> {
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('🗓 ${DateFormat('MMMM y', 'tr').format(now)}',
+      Text('🗓 ${DateFormat('MMMM y', Lang.code).format(now)}',
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
       const SizedBox(height: 10),
       Row(children: [
