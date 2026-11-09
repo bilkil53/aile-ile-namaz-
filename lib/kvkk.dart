@@ -13,7 +13,9 @@ import 'theme.dart';
 class Kvkk {
   // Rıza HESAP başına tutulur: aynı telefonda ikinci bir hesap açılınca ona da sorulur.
   static const _kUsers = 'kvkk.users'; // rıza vermiş hesaplar (bu telefonda)
-  static const _kPending = 'kvkk.pending'; // giriş ekranında verildi, hesap henüz belli değil
+  // Giriş ekranında verildi, hesap henüz belli değil. Yalnızca bellekte: giriş iptal olursa ya da
+  // uygulama kapanırsa kalmaz, bir sonraki (belki başka kişinin) girişine geçmez.
+  static bool _pending = false;
   static String _kSynced(String uid) => 'kvkk.synced.$uid';
   static const _kLegacyGiven = 'kvkk.consent', _kLegacySynced = 'kvkk.synced';
   static const url = 'https://bilkil53.github.io/aile-ile-namaz-/privacy.html#kvkk';
@@ -28,14 +30,14 @@ class Kvkk {
   /// Bu hesap rıza verdi mi? Giriş yokken: giriş ekranında kutu işaretlendi mi.
   static bool get given {
     final uid = _uid;
-    final pending = AppSettings.prefs.getBool(_kPending) ?? false;
+    final pending = _pending;
     return uid == null ? pending : (_users.contains(uid) || pending);
   }
 
   static Future<void> give() async {
     final uid = _uid;
     if (uid == null) {
-      await AppSettings.prefs.setBool(_kPending, true);
+      _pending = true;
     } else {
       await _addUser(uid);
     }
@@ -53,10 +55,11 @@ class Kvkk {
     if (uid == null) return;
     final p = AppSettings.prefs;
     final legacy = p.getBool(_kLegacyGiven) ?? false;
-    if ((p.getBool(_kPending) ?? false) || legacy) {
+    if (_pending || legacy) {
       await _addUser(uid);
       if (legacy && (p.getBool(_kLegacySynced) ?? false)) await p.setBool(_kSynced(uid), true);
-      await p.remove(_kPending);
+      _pending = false;
+      await p.remove('kvkk.pending'); // önceki derlemede diske yazılmış olabilir
       await p.remove(_kLegacyGiven);
       await p.remove(_kLegacySynced);
     }

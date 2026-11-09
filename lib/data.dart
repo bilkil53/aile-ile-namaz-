@@ -309,6 +309,10 @@ class Repo {
   /// Gönderilemeyen kalırsa 20 saniyede bir arka planda tekrar dener.
   /// Elle "şimdi gönder": syncNow ile aynı kilidi kullanır. Dönüş: gönderilen kayıt sayısı.
   static Future<int> syncNowCount() async {
+    // Başka bir gönderim sürüyorsa önce o biter (yoksa "0 gönderildi" görünürdü)
+    for (var t = 0; _syncing && t < 150; t++) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
     final before = LocalStore.pendingCount;
     await syncNow();
     final after = LocalStore.pendingCount;
@@ -316,6 +320,7 @@ class Repo {
   }
 
   static Future<void> syncNow() async {
+    if (_stopSync) return;
     if (isGuest || _syncing) return;
     _syncing = true;
     try {
@@ -380,13 +385,19 @@ class Repo {
     }
   }
 
+  /// Çıkış sırasında true: süren gönderim bir sonraki kayıtta durur (başka hesaba yazılmasın).
+  static bool _stopSync = false;
+
   static Future<int> flushQueue() async {
-    if (isGuest) return 0;
+    if (isGuest || _stopSync) return 0;
+    // Gönderim başladığı andaki hesap: arada çıkış/hesap değişimi olursa döngü durur
+    final uid = myId;
     final q = LocalStore.queue();
     if (q.isEmpty) offline = false;
     var sent = 0;
     var i = 0;
     while (i < q.length) {
+      if (_stopSync || isGuest || myId != uid) break;
       final o = q[i];
       // 5 saniyelik bekleme süresi dolmamış işaretler henüz gönderilmez
       if (o['t'] == 'prayer' && _writeTimers.containsKey('${o['date']}|${o['key']}')) {
@@ -396,7 +407,7 @@ class Repo {
       try {
         if (o['t'] == 'prayer') {
           await supa.from('daily_prayers').upsert(
-            {'user_id': myId, 'prayer_date': o['date'], o['key'] as String: o['status']},
+            {'user_id': uid, 'prayer_date': o['date'], o['key'] as String: o['status']},
             onConflict: 'user_id,prayer_date',
           ).timeout(const Duration(seconds: 10));
         } else if (o['t'] == 'kaza') {
@@ -408,6 +419,7 @@ class Repo {
         offline = false;
       } catch (e) {
         Log.warn('senkron', e);
+        if (_stopSync || isGuest || myId != uid) break; // çıkış sırasında gelen hata ret sayılmaz
         var rejected = classifySyncError(e) == SyncFailure.rejected;
         if (isAuthError(e)) {
           // Yetki hatası: oturum düşmüş olabilir. Yalnızca oturum geçerliyken sayılır (süresi dolmuş
@@ -499,8 +511,10 @@ class Repo {
   /// Reddedilen kaza değişikliğinden sonra telefondaki sayıyı buluttaki değere döndürür
   /// (bulut okunamazsa dokunulmaz; bir sonraki açılışta düzelir).
   static Future<void> _restoreKazaFromCloud(String type) async {
+    final uid = myId;
     try {
       final cloud = await myKaza().timeout(const Duration(seconds: 10));
+      if (_stopSync || myId != uid) return; // arada çıkış yapıldı: başka hesabın önbelleğine yazma
       final (o, c) = cloud[type] ?? (0, 0);
       await LocalStore.saveKaza(type, o, c);
     } catch (_) {}
@@ -588,9 +602,18 @@ class Repo {
   /// Oturumu kapatır ve bu hesabın telefondaki kişisel verilerini siler (aynı telefonda başka hesap
   /// açılınca önceki hesabın kaydı ona yazılmasın / görünmesin).
   static Future<void> signOut() async {
-    resetUserCache();
-    LocalStore.wipeUserData();
-    await supa.auth.signOut();
+    // Süren gönderim önce durdurulur (en fazla 5 sn beklenir), sonra telefondaki veri silinir
+    _stopSync = true;
+    try {
+      for (var t = 0; _syncing && t < 50; t++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      resetUserCache();
+      LocalStore.wipeUserData();
+      await supa.auth.signOut();
+    } finally {
+      _stopSync = false;
+    }
   }
 
   /// Bellekteki hesaba bağlı önbellek ve zamanlayıcıları sıfırlar (hesap değişince / çıkışta).

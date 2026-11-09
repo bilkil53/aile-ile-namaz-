@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'log.dart';
 import 'models.dart';
 import 'sync_logic.dart';
 import 'settings.dart';
@@ -63,7 +64,11 @@ class LocalStore {
     final p = AppSettings.prefs;
     final owner = p.getString(_kOwner);
     if (owner == uid) return false;
-    if (owner != null) wipeUserData();
+    if (owner != null) {
+      final left = pendingCount;
+      if (left > 0) Log.warn('hesap', 'önceki hesabın $left gönderilmemiş kaydı silindi (başka hesap girdi)');
+      wipeUserData();
+    }
     unawaited(p.setString(_kOwner, uid));
     return owner != null;
   }
