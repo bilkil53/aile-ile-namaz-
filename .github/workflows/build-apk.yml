@@ -405,6 +405,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Ekran testi — GitHub emülatörü (Android 11, misafir akışı + 4 sekme)
+        timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
@@ -415,6 +416,12 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
           script: bash -c 'set -o pipefail; flutter test integration_test/app_test.dart --dart-define=UI_TEST=true -d emulator-5554 --reporter expanded 2>&1 | tee ui-test.txt'
+
+      - name: Ekran testi sonucu (özet)
+        if: always()
+        run: |
+          [ -f ui-test.txt ] || exit 0
+          { echo '## GitHub emülatör ekran testi'; echo '```'; grep -vE '^(INFO|WARNING) ' ui-test.txt | tail -n 60; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
         run: |
@@ -453,17 +460,22 @@ jobs:
 
       - name: Ekran testi — Google Test Lab (1 gerçek + 1 sanal telefon, robot gezinti)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        timeout-minutes: 45
         run: |
           gcloud config set project aile-ile-namaz-d437f >/dev/null
-          # Şu an kullanılabilen bir gerçek telefon seç (Android 14 → 13 → 12 sırasıyla)
-          gcloud firebase test android models list --filter='form=PHYSICAL' --format=json > models.json
+          # Kapasitesi yüksek (kuyrukta bekletmeyen) bir gerçek TELEFON seç: Android 14 → 13 → 15 → 12
+          gcloud firebase test android models list --filter='form=PHYSICAL AND formFactor=PHONE' --format=json > models.json
           PHYS=$(python3 - <<'PY'
           import json
           ms = json.load(open('models.json'))
-          for v in ('34', '33', '35', '32', '31'):
-              for m in ms:
-                  if v in (m.get('supportedVersionIds') or []):
-                      print(f"model={m['id']},version={v}"); raise SystemExit
+          def high(m, v):
+              return any(p.get('versionId') == v and p.get('deviceCapacity') == 'DEVICE_CAPACITY_HIGH'
+                         for p in (m.get('perVersionInfo') or []))
+          for strict in (True, False):
+              for v in ('34', '33', '35', '32', '31'):
+                  for m in ms:
+                      if v in (m.get('supportedVersionIds') or []) and (high(m, v) or not strict):
+                          print(f"model={m['id']},version={v}"); raise SystemExit
           PY
           )
           [ -n "$PHYS" ] || { echo '::error::Test Lab: uygun gerçek telefon bulunamadı'; exit 1; }
@@ -471,7 +483,7 @@ jobs:
           run() {
             gcloud firebase test android run --type robo --app aile-ile-namaz.apk \
               --device "$PHYS" --device model=MediumPhone.arm,version=34 \
-              --timeout 5m --client-details matrixLabel="r${BUILD_NO}-${GITHUB_REF_NAME}" 2>&1 | tee testlab.txt
+              --timeout 5m --no-auto-google-login --client-details matrixLabel="r${BUILD_NO}-${GITHUB_REF_NAME}" 2>&1 | tee testlab.txt
             return ${PIPESTATUS[0]}
           }
           set +e
