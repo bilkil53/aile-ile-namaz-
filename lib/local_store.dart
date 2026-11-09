@@ -65,13 +65,87 @@ class LocalStore {
     final owner = p.getString(_kOwner);
     if (owner == uid) return false;
     if (owner != null) {
-      final left = pendingCount;
-      if (left > 0) Log.warn('hesap', 'önceki hesabın $left gönderilmemiş kaydı silindi (başka hesap girdi)');
+      // Önceki hesabın gönderilmemiş kayıtları silinmez: o hesap adına saklanır (bu hesap göremez,
+      // onun adına gönderemez); önceki hesap bu telefonda tekrar girince geri yüklenir.
+      parkPending(owner);
       wipeUserData();
     }
     unawaited(p.setString(_kOwner, uid));
+    final back = restoreParked(uid);
+    if (back > 0) Log.warn('hesap', 'saklanan $back gönderilmemiş kayıt geri yüklendi');
     return owner != null;
   }
+
+  // ---- Saklanan (park edilmiş) gönderilmemiş kayıtlar: hesap başına, en fazla 30 gün ----
+  static const _kParked = 'parked.v1';
+  static const parkDays = 30;
+
+  static Map<String, dynamic> _parked() {
+    try {
+      final raw = AppSettings.prefs.getString(_kParked);
+      return raw == null ? {} : Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static void _saveParked(Map<String, dynamic> m) {
+    final p = AppSettings.prefs;
+    unawaited(m.isEmpty ? p.remove(_kParked) : p.setString(_kParked, jsonEncode(m)));
+  }
+
+  /// Bu hesabın gönderilmemiş kayıtlarını telefonda ayrı saklar (çıkışta / hesap değişiminde).
+  static void parkPending(String uid, {DateTime? now}) {
+    final q = queue();
+    if (q.isEmpty || uid.isEmpty || uid == 'local') return;
+    final m = _parked();
+    final old = (m[uid] as Map?)?['queue'] as List? ?? const [];
+    // Aynı vakit/kaza için en yeni kayıt kalır
+    final merged = <Map<String, dynamic>>[
+      for (final o in old.cast<Map>()) Map<String, dynamic>.from(o),
+    ];
+    for (final o in q) {
+      merged.removeWhere((x) => _sameTarget(x, o));
+      merged.add(o);
+    }
+    m[uid] = {'at': (now ?? DateTime.now()).toUtc().toIso8601String(), 'queue': merged};
+    _saveParked(m);
+  }
+
+  static bool _sameTarget(Map<String, dynamic> a, Map<String, dynamic> b) =>
+      a['t'] == b['t'] &&
+      ((a['t'] == 'prayer' && a['date'] == b['date'] && a['key'] == b['key']) ||
+          (a['t'] == 'kaza' && a['type'] == b['type']));
+
+  /// Bu hesap için saklanan kayıtları kuyruğa geri koyar (30 günden eskiler atılır). Dönüş: kaç kayıt.
+  static int restoreParked(String uid, {DateTime? now}) {
+    final m = _parked();
+    final t = now ?? DateTime.now();
+    m.removeWhere((_, v) {
+      final at = DateTime.tryParse(((v as Map?)?['at'] as String?) ?? '');
+      return at == null || t.difference(at).inDays >= parkDays;
+    });
+    final entry = m.remove(uid) as Map?;
+    _saveParked(m);
+    final items = (entry?['queue'] as List?)?.cast<Map>() ?? const [];
+    if (items.isEmpty) return 0;
+    final q = queue();
+    for (final o in items) {
+      final op = Map<String, dynamic>.from(o)..remove('a');
+      if (q.any((x) => _sameTarget(x, op))) continue; // telefondaki daha yeni kayıt kalır
+      q.add(op);
+    }
+    unawaited(saveQueue(q));
+    return items.length;
+  }
+
+  /// Hesap silinince o hesabın saklanan kayıtları da silinir.
+  static void dropParked(String uid) {
+    final m = _parked();
+    if (m.remove(uid) != null) _saveParked(m);
+  }
+
+  static int parkedCount(String uid) => (((_parked()[uid] as Map?)?['queue'] as List?) ?? const []).length;
 
   /// Hesaba ait telefondaki bütün kişisel verileri siler (çıkışta, hesap silmede, hesap değişince).
   /// Bellekteki önbellek hemen güncellenir; diske yazma arka planda tamamlanır.

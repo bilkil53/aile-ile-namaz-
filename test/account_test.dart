@@ -82,4 +82,51 @@ void main() {
     expect(LocalStore.isPrayerPending('2026-11-09', 'fajr'), isFalse);
     expect(changes, greaterThanOrEqualTo(2));
   });
+
+  group('Gönderilmemiş kayıtlar kaybolmaz (hesap adına saklanır)', () {
+    test('Hesap değişince A kayıtları saklanır, B göremez; A dönünce geri gelir', () async {
+      await start({...userData, 'store.owner': 'A'});
+      expect(LocalStore.bindUser('B'), isTrue);
+      expect(LocalStore.pendingCount, 0); // B, A'nın kaydını göremez / gönderemez
+      expect(LocalStore.parkedCount('A'), 1);
+      expect(LocalStore.parkedCount('B'), 0);
+      LocalStore.wipeUserData(); // B çıkış yaptı
+      expect(LocalStore.parkedCount('A'), 1); // çıkış temizliği saklananı silmez
+      LocalStore.bindUser('A');
+      expect(LocalStore.pendingCount, 1); // A geri geldi: kayıt gönderilmek üzere kuyrukta
+      expect(LocalStore.queue().single['key'], 'fajr');
+      expect(LocalStore.parkedCount('A'), 0);
+    });
+
+    test('30 günden eski saklanan kayıtlar atılır', () async {
+      await start({...userData, 'store.owner': 'A'});
+      LocalStore.parkPending('A', now: DateTime.now().subtract(const Duration(days: 31)));
+      LocalStore.wipeUserData();
+      expect(LocalStore.restoreParked('A'), 0);
+      expect(LocalStore.pendingCount, 0);
+    });
+
+    test('Telefondaki daha yeni kayıt saklanan eskisini ezmez', () async {
+      await start({...userData, 'store.owner': 'A'});
+      LocalStore.parkPending('A');
+      await AppSettings.prefs.setString('queue', '[{"t":"prayer","date":"2026-11-08","key":"fajr","status":"MISSED"}]');
+      LocalStore.restoreParked('A');
+      expect(LocalStore.queue().single['status'], 'MISSED');
+    });
+
+    test('Hesap silinince saklanan kayıtlar da silinir', () async {
+      await start({...userData, 'store.owner': 'A'});
+      LocalStore.parkPending('A');
+      LocalStore.dropParked('A');
+      expect(LocalStore.parkedCount('A'), 0);
+    });
+
+    test('Giriş yokken (local) ya da boş kuyrukta saklama yapılmaz', () async {
+      await start({'store.owner': 'A'});
+      LocalStore.parkPending('A');
+      LocalStore.parkPending('local');
+      expect(LocalStore.parkedCount('A'), 0);
+      expect(LocalStore.parkedCount('local'), 0);
+    });
+  });
 }

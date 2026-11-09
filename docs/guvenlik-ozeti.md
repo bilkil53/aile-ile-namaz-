@@ -75,6 +75,20 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 - **Veri azaltma:** `profiles.email`, `daily_prayers.note`, `daily_prayers.updated_at` kaldırıldı; e-posta yalnızca Supabase Auth'ta durur.
 - **İstemci (r80/r81):** telefondaki kişisel veriler tek hesaba bağlı (hesap değişince/çıkışta silinir), KVKK onayı hesap başına.
 
+## Gönderilmemiş kayıtlar ve hesap değişimi
+
+- Çıkışta ya da aynı telefonda başka hesap girince, önceki hesabın gönderilmemiş kayıtları **silinmez**: o hesap adına telefonda ayrı saklanır (`parked.v1`, en fazla 30 gün). Diğer hesap bunları göremez ve onun adına gönderemez; aynı hesap tekrar girince kuyruğa geri yüklenir ve otomatik gönderilir. Hesap silinirse saklananlar da silinir. Çıkışta bekleyen kayıt varsa kullanıcıya bu bilgi gösterilir.
+
+## Sunucu güvenlik testi CI'da
+
+- `.github/workflows/build-apk.yml` "Sunucu güvenlik testi" adımı, GitHub gizli ayarı `SUPABASE_DB_URL` tanımlıysa `security_test.sql`'i çalıştırır; "SONUC: OK" yoksa derleme durur. Tanımlı değilse uyarı verip atlar.
+- **Kurulum (proje sahibi yapar, şifre içerir):** Supabase → Project Settings → Database → Connection string → *Session pooler* (5432) adresini kopyalayın, şifreyi yerleştirin; GitHub → Settings → Secrets and variables → Actions → *New repository secret*: ad `SUPABASE_DB_URL`.
+- Test her çalışmada **UYARI** olarak bilinen açığı da raporlar: `test_restart_trial` ve `test_remove_pro` giriş yapmış herkese açık (demo test paneli için bilerek; ücretli Pro'dan önce kapatılacak).
+
+## İmza kontrolü neden yalnızca uyarı
+
+- `lib/integrity.dart` bilerek engellemez: (1) değiştirilmiş bir APK bu kontrolü de kaldırabilir, engellemek güvenlik sağlamaz; (2) Google Play'e çıkınca Play kendi anahtarıyla yeniden imzalar, beklenen imza tutmazsa gerçek kullanıcılar kilitlenir; (3) yetki kontrolü zaten sunucuda (RLS, sütun yetkileri, RPC'ler; 20 kontrollük test). Gerçek cihaz/uygulama doğrulaması gerekirse Play'e çıkışta **Play Integrity API** + sunucu tarafı doğrulama eklenmeli.
+
 ## 6. İstemci tarafı notlar
 
 - **APK imza kontrolü (`lib/integrity.dart`) bir güvenlik sınırı değildir.** İmza uyuşmazsa kullanıcı uyarılır ama uygulama engellenmez; değiştirilmiş bir APK bu kontrolü zaten atlayabilir. Bütün yetkilendirme sunucuda yapılır: RLS politikaları, sütun yetkileri ve `security definer` RPC'ler (bkz. bölüm 2–3, `supabase/tests/security_test.sql`). İstemciden gelen hiçbir bilgiye (imza, Pro durumu, rol) güvenilmez.
