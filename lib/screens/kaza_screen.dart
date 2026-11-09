@@ -356,8 +356,8 @@ class _KazaScreenState extends State<KazaScreen> {
         ]),
       );
 
-  Widget _row((String, String, String, String) t) {
-    final (type, label, _, rekat) = t;
+  Widget _row((String, String, String, String) row) {
+    final (type, label, _, rekat) = row;
     final (owed, done) = _of(type);
     final left = owed > done ? owed - done : 0;
     return Container(
