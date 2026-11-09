@@ -361,13 +361,15 @@ class Repo {
       _ => null,
     };
     if (type == null || _announced[id] == type) return true;
+    // Zaman aşımı: bağlantı yarı açık kalırsa gönderim sonsuza dek beklemesin (beklerse bütün
+    // senkron durur ve bekleyen kayıtlar gitmez)
     Future<void> send() async {
-      final pools = await myPoolIds();
+      final pools = await myPoolIds().timeout(const Duration(seconds: 10));
       if (pools.isEmpty) return;
       await supa.from('pool_events').insert([
         for (final p in pools)
           {'pool_id': p, 'sender_id': myId, 'event_type': type, 'prayer': key.toUpperCase()},
-      ]);
+      ]).timeout(const Duration(seconds: 10));
     }
 
     try {
