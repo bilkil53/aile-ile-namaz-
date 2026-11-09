@@ -462,13 +462,21 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
 
-      - name: Ekran testi — Google Test Lab (1 gerçek + 1 sanal telefon, robot gezinti)
+      # Günlük ücretsiz hak (Spark): 5 gerçek + 10 sanal telefon testi.
+      # Stabil: gerçek telefon (Türkçe) + sanal telefon (İngilizce) · Demo: yalnız sanal telefon (Türkçe)
+      - name: Ekran testi — Google Test Lab (stabil 2 telefon TR+EN, demo 1 sanal TR; robot gezinti)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
         timeout-minutes: 45
         run: |
           gcloud config set project aile-ile-namaz-d437f >/dev/null
+          VIRT_EN="model=MediumPhone.arm,version=34,locale=en,orientation=portrait"
+          VIRT_TR="model=MediumPhone.arm,version=34,locale=tr,orientation=portrait"
+          if [ "$GITHUB_REF_NAME" = demo ]; then
+            DEVICES=(--device "$VIRT_TR")
+            echo "Demo: 1 sanal telefon (MediumPhone, Android 14, Türkçe)"
+          else
           # Kapasitesi yüksek (kuyrukta bekletmeyen) bir gerçek TELEFON seç: Android 14 → 13 → 15 → 12
-          gcloud firebase test android models list --filter='form=PHYSICAL AND formFactor=PHONE' --format=json > models.json
+            gcloud firebase test android models list --filter='form=PHYSICAL AND formFactor=PHONE' --format=json > models.json
           PHYS=$(python3 - <<'PY'
           import json
           ms = json.load(open('models.json'))
@@ -482,11 +490,13 @@ jobs:
                           print(f"model={m['id']},version={v}"); raise SystemExit
           PY
           )
-          [ -n "$PHYS" ] || { echo '::error::Test Lab: uygun gerçek telefon bulunamadı'; exit 1; }
-          echo "Gerçek telefon: $PHYS · Sanal telefon: MediumPhone.arm, Android 14"
+            [ -n "$PHYS" ] || { echo '::error::Test Lab: uygun gerçek telefon bulunamadı'; exit 1; }
+            DEVICES=(--device "$PHYS,locale=tr,orientation=portrait" --device "$VIRT_EN")
+            echo "Stabil: gerçek telefon $PHYS (Türkçe) · sanal telefon MediumPhone, Android 14 (İngilizce)"
+          fi
           run() {
             gcloud firebase test android run --type robo --app aile-ile-namaz.apk \
-              --device "$PHYS" --device model=MediumPhone.arm,version=34 \
+              "${DEVICES[@]}" \
               --timeout 5m --no-auto-google-login --client-details matrixLabel="r${BUILD_NO}-${GITHUB_REF_NAME}" 2>&1 | tee testlab.txt
             return ${PIPESTATUS[0]}
           }
@@ -505,7 +515,7 @@ jobs:
             grep -iE 'denied|permission|forbidden' testlab.txt | head -3 | while IFS= read -r l; do echo "::error::${l}"; done
             exit 1
           fi
-          echo 'Google Test Lab: her iki telefonda da geçti ✓'
+          echo 'Google Test Lab: tüm telefonlarda geçti ✓'
 
       # Test Lab deposu her testte dolar: 7 günden eski test klasörleri (APK, video, ekran görüntüsü)
       # her yayından sonra silinir. Temizlik başarısız olursa yayın durmaz, yalnızca uyarı verilir.
