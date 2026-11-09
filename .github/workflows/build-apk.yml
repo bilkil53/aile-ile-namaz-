@@ -347,6 +347,21 @@ jobs:
           echo "APP_VERSION=${{ env.APP_MAJOR }}.$minor" >> "$GITHUB_ENV"
           echo "Derleme numarası: $((last + 1))"
 
+      - name: İmza kontrolü hazır mı (fail-closed kontrol yanlışlıkla herkesi kilitlemesin)
+        run: |
+          f=$(find android/app/src/main -name 'MainActivity.kt' | head -1)
+          if ! grep -q '"signatureSha256"' "$f"; then
+            echo "::error::MainActivity imza okuyucusunu (signatureSha256) içermiyor: imza kontrolü herkesi kilitlerdi; derleme durduruldu."
+            exit 1
+          fi
+          if [ -z "$EXPECTED_SIG" ]; then
+            case "$GITHUB_REF_NAME" in
+              main|demo) echo "::error::Beklenen imza (EXPECTED_SIG) boş; $GITHUB_REF_NAME dalında yayın durduruldu."; exit 1 ;;
+              *) echo "::warning::EXPECTED_SIG boş; imza kontrolü bu derlemede yapılmayacak (yalnızca $GITHUB_REF_NAME)." ;;
+            esac
+          fi
+          echo "İmza kontrolü hazır: ${EXPECTED_SIG:0:12}…"
+
       - name: APK derle
         run: |
           set +e

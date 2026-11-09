@@ -197,7 +197,7 @@ lib/
   update_checker.dart  GitHub Releases'tan uygulama içi güncelleme (SHA-256 doğrulamalı)
   cuma_reminder.dart   Erkeklere peş peşe 3 Cuma uyarısı
   log.dart             Sessiz hataların kaydı (son hata)
-  integrity.dart       APK imza kontrolü (yalnızca uyarı; yetki kontrolü sunucuda RLS/RPC ile)
+  integrity.dart       APK imza kontrolü (tutmazsa uygulama açılmaz; Play sürümünde yok; yetki kontrolü sunucuda)
   kvkk.dart            KVKK aydınlatma ve açık rıza
   screens/             today, family, kaza, karne, settings, login (Hoş Geldiniz), home_shell, notify_health (Bildirim izinleri)
   widgets/             prayer_icon, qibla_card (pusula), dini_gun_card (bayram / kandil kartı)

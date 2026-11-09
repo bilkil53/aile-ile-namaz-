@@ -44,6 +44,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     Pro.changed.addListener(_onProChanged);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // İmza kontrolü her şeyden önce: tutmazsa uygulama açılmaz (fail-closed), aşağıdakiler başlamaz
+      if (mounted) await Integrity.check(context);
+      if (!mounted) return;
       if (isGuest && !LocalStore.guestMode) {
         final loggedIn = await showWelcome(context);
         if (loggedIn || !mounted) return; // giriş yapıldıysa yeni oturum ekranı açılır
@@ -67,7 +70,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         // Bir kez sorulan sorular hemen (internet beklemeden)
         if (mounted) await _firstRunQuestions();
       }
-      if (mounted) await Integrity.check(context);
       // Konum otomatik (GPS) → vakitler → hatırlatmalar
       await LocationHelper.autoUpdate();
       await Notifications.requestPermission();
