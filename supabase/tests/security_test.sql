@@ -16,6 +16,8 @@ begin
 
   -- 1) Misafir (anon): Pro, test ve iç fonksiyonlar çağrılamaz
   set local role anon;
+  begin perform public.redeem_pro_code('1'); fails := fails || 'anon_pro_kodu_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
   begin perform public.test_restart_trial(); fails := fails || 'anon_test_restart_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
   begin perform public.my_pro_status(); fails := fails || 'anon_my_pro_status_acik; ';
@@ -50,12 +52,26 @@ begin
   exception when insufficient_privilege then passed := passed + 1; end;
   begin perform public.push_hook_secret(); fails := fails || 'auth_bildirim_anahtari_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
-  -- Bilinen açık (demo test paneli için bilerek açık): giriş yapmış herkes deneme süresini
-  -- sıfırlayıp Pro'yu kaldırabiliyor. Ücretli Pro'dan önce kapatılmalı; her çalışmada uyarı verilir.
-  begin perform public.test_restart_trial(); uyari := uyari || 'test_restart_trial giris yapan herkese ACIK; ';
-  exception when insufficient_privilege then null; end;
-  begin perform public.test_remove_pro(); uyari := uyari || 'test_remove_pro giris yapan herkese ACIK; ';
-  exception when insufficient_privilege then null; end;
+  -- Test listesinde olmayan kullanıcı: Pro test işlemleri ve Pro kodu reddedilir
+  reset role;
+  delete from private.pro_testers where user_id = u; -- sonunda geri alınır
+  set local role authenticated;
+  begin perform public.test_restart_trial(); fails := fails || 'test_restart_trial_listesize_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.test_remove_pro(); fails := fails || 'test_remove_pro_listesize_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.expire_pro_test(); fails := fails || 'expire_pro_test_listesize_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.redeem_pro_code('1'); fails := fails || 'pro_kodu_listesize_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin if public.am_i_pro_tester() then fails := fails || 'am_i_pro_tester_yanlis_true; '; else passed := passed + 1; end if;
+  exception when others then fails := fails || 'am_i_pro_tester: ' || sqlerrm || '; '; end;
+  -- Test listesindeki kullanıcı: test işlemi çalışır
+  reset role;
+  insert into private.pro_testers(user_id) values (u);
+  set local role authenticated;
+  begin perform public.test_remove_pro(); passed := passed + 1;
+  exception when others then fails := fails || 'test_remove_pro_listedekine_kapali: ' || sqlerrm || '; '; end;
 
   -- 3) pool_events: yalnızca izinli 6 sütun; tarih yazılamaz; değiştirme/silme yok
   begin insert into public.pool_events(pool_id, sender_id, event_type, message) values (p, u, 'DUA', 'test');
