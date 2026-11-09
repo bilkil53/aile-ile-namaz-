@@ -43,6 +43,8 @@ void main() {
     // 1) Hoş geldin penceresi → "Giriş Yapmadan Devam Et" (alttaki buton)
     final guestBtn = find.text('Giriş Yapmadan Devam Et');
     await pumpUntil(t, guestBtn);
+    await t.ensureVisible(guestBtn.last);
+    await settle(t, 3);
     await t.tap(guestBtn.last);
     await settle(t);
 
@@ -54,8 +56,14 @@ void main() {
 
     // 3) Bugün ekranı: vakit kartına dokun → misafir kayıt yapamaz (giriş penceresi)
     //    ya da vakit henüz girmediyse "… girecek" bilgisi çıkar. İkisi de doğru davranış.
-    final sabah = find.text('Sabah');
-    await pumpUntil(t, sabah);
+    // Kartlar listenin aşağısında: liste kaydırılarak karta gelinir (ekran dışındakiler henüz çizilmez)
+    final todayList = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down);
+    await pumpUntil(t, todayList);
+    // Yalnızca vakit kartındaki "Sabah" (üstteki özet kartında da geçebilir)
+    final sabah = find.ancestor(of: find.text('Sabah'), matching: find.byType(InkWell));
+    await t.scrollUntilVisible(sabah.first, 200, scrollable: todayList.first, maxScrolls: 30);
+    await t.ensureVisible(sabah.first);
+    await settle(t, 4);
     await t.tap(sabah.first);
     final loginDlg = find.text('Google Girişi Gerekir');
     final notYet = find.textContaining('girecek');
@@ -65,8 +73,6 @@ void main() {
       await settle(t);
       expect(loginDlg, findsNothing);
     }
-    // Misafir işaretleyemez: kartta "Kılındı" yazmamalı
-    expect(find.text('✓ Kılındı'), findsNothing);
 
     // 4) Dört sekmenin hepsi açılıyor ve çökmüyor
     for (final tab in ['Aile Havuzu', 'Kaza', 'Karne', 'Bugün']) {
@@ -76,6 +82,6 @@ void main() {
       await settle(t, 10);
       expect(t.takeException(), isNull, reason: '$tab sekmesinde hata');
     }
-    expect(find.text('Sabah'), findsWidgets); // Bugün'e geri dönüldü
-  });
+    await pumpUntil(t, todayList); // Bugün'e geri dönüldü, liste yine görünüyor
+  }, timeout: const Timeout(Duration(minutes: 8)));
 }

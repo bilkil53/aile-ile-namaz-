@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'config.dart';
 import 'privacy.dart';
+import 'ui_test_mode.dart';
 
 /// Hata bildirimi:
 /// 1) Uygulama içinde beklenmedik hata olursa kullanıcıya sebebiyle birlikte popup çıkar,
@@ -201,7 +202,7 @@ class CrashReport {
 
   static Future<void> _send(String text, StackTrace? stack, {required bool fatal, int? ramMb, String? rawStack}) async {
     try {
-      if (_sentThisRun >= 5) return;
+      if (_sentThisRun >= 5 || kUiTest) return; // CI ekran testindeki hatalar canlı tabloya gitmesin
       _sentThisRun++;
       var st = scrubSensitive(rawStack ?? stack?.toString() ?? '');
       if (st.length > 7500) st = st.substring(0, 7500);
