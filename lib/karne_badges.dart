@@ -151,7 +151,7 @@ class KarneBadges {
       KarneBadge('kaza', '📿', t('Kaza Avcısı', 'Kaza Hunter'), t('Eda edilen kaza: 10 / 100 / 500 / 1000', 'Kaza made up: 10 / 100 / 500 / 1000'), kazaDone, 10,
           tiers: const [10, 100, 500, 1000]),
       if (kazaOwed > 0)
-        KarneBadge('kaza_done', '🤲', t('Borçsuz Kul', 'Debt-free Servant'), t('Kaza borcunu tamamen bitir', 'Finish all your kaza prayers'), kazaDone >= kazaOwed ? 1 : 0, 1),
+        KarneBadge('kaza_done', '🤲', t('Borçsuz Kul', 'All Kaza Made Up'), t('Kaza borcunu tamamen bitir', 'Finish all your kaza prayers'), kazaDone >= kazaOwed ? 1 : 0, 1),
     ];
 
     // ---- Mübarek gün rozetleri: yalnızca o dönem gelince görünür ----
@@ -199,7 +199,7 @@ class KarneBadges {
       final end = end0.isAfter(today) ? today : end0;
       final (p, tot) = _score(uc, end);
       final pct = tot == 0 ? 0 : (p * 100 / tot).round();
-      out.add(KarneBadge('uc_aylar_${uc.year}', '🌿', t('Üç Aylar Yolcusu', 'Three Holy Months Traveller'), t('Üç aylar boyunca başarı %90 ve üzeri', '90% or higher success during the three holy months'), pct, 90,
+      out.add(KarneBadge('uc_aylar_${uc.year}', '🌿', t('Üç Aylar Yolcusu', 'Three Holy Months Devotee'), t('Üç aylar boyunca başarı %90 ve üzeri', '90% or higher success during the three holy months'), pct, 90,
           seasonal: true));
     }
     return out;

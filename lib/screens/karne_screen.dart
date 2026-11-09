@@ -222,14 +222,14 @@ class _KarneScreenState extends State<KarneScreen> {
                 segments: [
                   ButtonSegment(value: _Period.week, label: Text(t('Bu hafta', 'This week'))),
                   ButtonSegment(value: _Period.month, label: Text(t('30 gün', '30 days'))),
-                  ButtonSegment(value: _Period.quarter, label: Text('3 ay')),
+                  ButtonSegment(value: _Period.quarter, label: Text(t('3 ay', '3 months'))),
                 ],
                 selected: {_period},
                 onSelectionChanged: (s) => setState(() => _period = s.first),
               ),
               const SizedBox(height: 14),
               Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text('%$pct', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text(t('%$pct', '$pct%'), style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(width: 10),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -446,7 +446,7 @@ class _KarneScreenState extends State<KarneScreen> {
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
       const SizedBox(height: 10),
       Row(children: [
-        for (final w in const ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'])
+        for (final w in Lang.isEn ? const ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] : const ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'])
           Expanded(
               child: Text(w,
                   textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppColors.textMuted))),

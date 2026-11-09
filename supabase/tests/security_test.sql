@@ -108,7 +108,7 @@ begin
   end;
   insert into public.devices(user_id, fcm_token, platform)
     values (u, 'ci-dil-testi-varsayilan-00000000000000002', 'android');
-  if (select lang from public.devices where fcm_token = 'ci-dil-testi-varsayilan-00000000000000002') <> 'tr' then
+  if (select lang from public.devices where fcm_token = 'ci-dil-testi-varsayilan-00000000000000002') is distinct from 'tr' then
     fails := fails || 'cihaz_dili_varsayilan_tr_degil; ';
   else passed := passed + 1; end if;
   reset role;

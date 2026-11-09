@@ -51,17 +51,28 @@ class App extends StatefulWidget {
   State<App> createState() => _AppState();
 }
 
-class _AppState extends State<App> {
+class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
     Lang.changed.addListener(_relocalize);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     Lang.changed.removeListener(_relocalize);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// "Telefonun diline göre" seçiliyken telefonun dili değişirse uygulama da hemen yeni dile geçer.
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (Lang.choice != AppLang.system) return;
+    Lang.changed.value++;
+    unawaited(Notifications.reschedule());
+    unawaited(Push.register());
   }
 
   /// Dil değişince açık ekranların hepsi yeni dille yeniden çizilir (ekran durumları korunur).

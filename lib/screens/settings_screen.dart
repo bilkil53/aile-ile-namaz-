@@ -109,7 +109,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
     unawaited(Notifications.reschedule());
-    unawaited(Push.register()); // durum yazısı yeni dilde
     _toast(n == 0 ? t('Önbellek zaten temiz ✓', 'Cache is already clean ✓') : t('Önbellek temizlendi ✓ ($n kayıt)', 'Cache cleared ✓ ($n items)'));
   }
 
@@ -475,8 +474,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (picked == null || picked == cur) return;
     await Lang.set(picked);
-    // Planlanmış hatırlatmalar ve bildirim kanalları yeni dille yeniden kurulur
+    // Planlanmış hatırlatmalar yeni dille yeniden kurulur; aile bildirimleri için cihaz dili sunucuya yazılır
     unawaited(Notifications.reschedule());
+    unawaited(Push.register());
     if (mounted) setState(() {});
   }
 
