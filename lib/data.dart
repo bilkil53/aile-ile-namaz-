@@ -310,10 +310,19 @@ class Repo {
     return before > after ? before - after : 0;
   }
 
+  /// Gönderim sürerken gelen istek kaybolmasın: mevcut tur bitince bir tur daha çalışır
+  /// (aksi halde 20 sn'lik zamanlayıcı tam o sırada dolarsa kayıt bir sonraki açılışa kadar beklerdi).
+  static bool _again = false;
+
   static Future<void> syncNow() async {
     if (_stopSync) return;
-    if (isGuest || _syncing) return;
+    if (isGuest) return;
+    if (_syncing) {
+      _again = true;
+      return;
+    }
     _syncing = true;
+    _again = false;
     try {
       await flushQueue();
       if (LocalStore.pendingCount > _writeTimers.length) {
@@ -331,6 +340,10 @@ class Repo {
       if (_pendingAnnounce.isNotEmpty) _ensureRetry();
     } finally {
       _syncing = false;
+      if (_again && !_stopSync) {
+        _again = false;
+        unawaited(syncNow());
+      }
     }
   }
 

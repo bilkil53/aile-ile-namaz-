@@ -47,13 +47,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
+    LocalStore.queueChanged.removeListener(_queueRebuild);
     Pro.changed.removeListener(_proRebuild);
     super.dispose();
+  }
+
+  /// Bekleyen kayıt sayısı değişince senkron satırı yenilenir (açıkken de güncel kalsın).
+  void _queueRebuild() {
+    if (mounted) setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
+    LocalStore.queueChanged.addListener(_queueRebuild);
     Pro.changed.addListener(_proRebuild);
     Notifications.exactAllowed().then((v) {
       if (mounted) setState(() => _exact = v);

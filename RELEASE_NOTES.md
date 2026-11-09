@@ -1,4 +1,4 @@
-Namaz Demo — Kayıtların kaybolmaz: çıkış yaptığında ya da telefonda başka biri giriş yaptığında, henüz gönderilmemiş işaretlerin silinmez; telefonda senin adına saklanır ve aynı hesapla tekrar girince otomatik gönderilir (başka hesap bunları göremez). Daha sakin ekran: internet yokken uyarı çıkmaz, vaktin yanındaki küçük simge durumu gösterir (⏳ bekliyor · ☁️ bulutta). Test Pro kodu: 1.
+Namaz Demo — Düzeltme: bir işaret, gönderimin tam başka bir gönderimle çakıştığı anda telefonda "1 kayıt bekliyor" diye takılı kalabiliyordu; artık hemen gönderilir. Ayarlar'daki bekleyen kayıt sayısı ekran açıkken de güncel kalır. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
