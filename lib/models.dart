@@ -112,7 +112,30 @@ const _possessive = {
 
 /// Aile Reisi bakıyorsa ünvan "senin …" biçiminde (Kızın, Oğlun) gösterilir;
 /// diğer üyeler ünvanı reise göre (Kızı, Oğlu) görür. Veritabanında hep reise göre saklanır.
-String titleFor(String role, {required bool viewerIsReis}) => viewerIsReis ? (_possessive[role] ?? role) : role;
+String titleFor(String role, {required bool viewerIsReis}) =>
+    roleText(viewerIsReis ? (_possessive[role] ?? role) : role);
+
+/// Ünvan ve akrabalık sözcüklerinin İngilizcesi. Veritabanında ünvanlar hep Türkçe saklanır;
+/// yalnızca ekranda gösterilirken çevrilir. Kullanıcının yazdığı özel ad olduğu gibi kalır.
+const _kinEn = {
+  // Reise göre ünvanlar (3. kişi)
+  'Aile Reisi': 'Head of Family', 'Baba': 'Father', 'Anne': 'Mother', 'Aile Ferdi': 'Family Member',
+  'Eşi': 'Spouse', 'Oğlu': 'Son', 'Kızı': 'Daughter', 'Annesi': 'Mother', 'Babası': 'Father',
+  'Kardeşi': 'Sibling', 'Torunu': 'Grandchild', 'Gelini': 'Daughter-in-law', 'Damadı': 'Son-in-law',
+  'Dedesi': 'Grandfather', 'Ninesi': 'Grandmother',
+  // Bakan kişiye göre hitaplar (2. kişi)
+  'Eşin': 'Your spouse', 'Oğlun': 'Your son', 'Kızın': 'Your daughter', 'Annen': 'Your mother',
+  'Baban': 'Your father', 'Kardeşin': 'Your sibling', 'Torunun': 'Your grandchild',
+  'Gelinin': 'Your daughter-in-law', 'Damadın': 'Your son-in-law', 'Deden': 'Your grandfather',
+  'Ninen': 'Your grandmother', 'Ebeveynin': 'Your parent', 'Çocuğun': 'Your child',
+  'Büyüğün': 'Your grandparent', 'Kayınpederin': 'Your father-in-law', 'Kayınvaliden': 'Your mother-in-law',
+  'Kayınbüyüğün': 'Your parent-in-law', 'Amcan': 'Your uncle', 'Halan': 'Your aunt', 'Dayın': 'Your uncle',
+  'Teyzen': 'Your aunt', 'Amcan / Halan': 'Your uncle / aunt', 'Dayın / Teyzen': 'Your uncle / aunt',
+  'Yengen': 'Your sister-in-law', 'Enişten': 'Your brother-in-law', 'Yeğenin': 'Your niece / nephew',
+};
+
+/// Ünvanı / hitabı seçilen dilde verir (bilinmeyen ad olduğu gibi döner).
+String roleText(String tr) => Lang.isEn ? (_kinEn[tr] ?? tr) : tr;
 
 /// Reisin seçebileceği simge grupları.
 const iconGroups = <String, List<String>>{
@@ -121,6 +144,17 @@ const iconGroups = <String, List<String>>{
   'Erkek / Kız / Çocuk': ['👦', girlScarf, girlPlain, '🧒'],
   'Diğer': ['🏡', '👤', '👥', '🌟', '🕌'],
 };
+
+/// Simge grubu başlığı seçilen dilde.
+String iconGroupText(String tr) => Lang.isEn
+    ? const {
+          'Kadın / Anne / Eş': 'Woman / Mother / Wife',
+          'Erkek / Baba / Eş': 'Man / Father / Husband',
+          'Erkek / Kız / Çocuk': 'Boy / Girl / Child',
+          'Diğer': 'Other',
+        }[tr] ??
+        tr
+    : tr;
 
 /// Simgeden cinsiyet: kadın/kız simgesi → 'f' (Muaf açılır), erkek simgesi → 'm', diğerleri → null.
 String? genderOfIcon(String icon) =>
@@ -276,7 +310,7 @@ String? genderOf(Member m) =>
 
 /// [viewer] ekranında [target] kişisinin hitabı. [reis] havuzun Aile Reisi.
 String kinLabel({required Member viewer, required Member target, required Member? reis}) {
-  if (viewer.userId == target.userId) return target.shownName;
+  if (viewer.userId == target.userId) return roleText(target.shownName);
   if (reis != null && viewer.userId == reis.userId) return titleFor(target.shownName, viewerIsReis: true);
   final reisG = reis == null ? null : genderOf(reis);
   var tg = genderOf(target);
@@ -296,13 +330,13 @@ String kinLabel({required Member viewer, required Member target, required Member
       'Dedesi' || 'Ninesi' => 'Torunun',
       _ => null,
     };
-    return rel == null ? target.shownName : '$rel (${target.shownName})';
+    return rel == null ? roleText(target.shownName) : '${roleText(rel)} (${roleText(target.shownName)})';
   }
 
-  final t = target.roleTitle;
+  final role = target.roleTitle;
   final reisMale = reisG == 'm';
   final String? rel = switch (v) {
-    'Eşi' => switch (t) {
+    'Eşi' => switch (role) {
         'Oğlu' => 'Oğlun',
         'Kızı' => 'Kızın',
         'Torunu' => 'Torunun',
@@ -312,7 +346,7 @@ String kinLabel({required Member viewer, required Member target, required Member
         'Babası' => 'Kayınpederin',
         _ => null,
       },
-    'Oğlu' || 'Kızı' => switch (t) {
+    'Oğlu' || 'Kızı' => switch (role) {
         'Eşi' => pick('Baban', 'Annen', 'Ebeveynin'),
         'Oğlu' || 'Kızı' => 'Kardeşin',
         'Annesi' => 'Ninen',
@@ -322,14 +356,14 @@ String kinLabel({required Member viewer, required Member target, required Member
         'Damadı' => 'Enişten',
         _ => null,
       },
-    'Annesi' || 'Babası' => switch (t) {
+    'Annesi' || 'Babası' => switch (role) {
         'Annesi' || 'Babası' => 'Eşin',
         'Eşi' => pick('Damadın', 'Gelinin', 'Gelinin'),
         'Oğlu' || 'Kızı' || 'Torunu' => 'Torunun',
         'Kardeşi' => pick('Oğlun', 'Kızın', 'Çocuğun'),
         _ => null,
       },
-    'Kardeşi' => switch (t) {
+    'Kardeşi' => switch (role) {
         'Annesi' => 'Annen',
         'Babası' => 'Baban',
         'Kardeşi' => 'Kardeşin',
@@ -337,20 +371,23 @@ String kinLabel({required Member viewer, required Member target, required Member
         'Eşi' => pick('Enişten', 'Yengen', 'Yengen'),
         _ => null,
       },
-    'Gelini' || 'Damadı' => switch (t) {
+    'Gelini' || 'Damadı' => switch (role) {
         'Eşi' => pick('Kayınpederin', 'Kayınvaliden', 'Kayınbüyüğün'),
         'Torunu' => pick('Oğlun', 'Kızın', 'Çocuğun'),
         _ => null,
       },
-    'Torunu' => switch (t) {
+    'Torunu' => switch (role) {
         'Eşi' => pick('Deden', 'Ninen', 'Büyüğün'),
         _ => null,
       },
     _ => null,
   };
-  if (rel != null) return rel;
+  if (rel != null) return roleText(rel);
   // İlişki çıkarılamıyorsa reise göre yaz: "Aile Reisinin Kızı"
-  return reisTitles.containsKey(t) && t != 'Aile Ferdi' ? 'Aile Reisinin $t' : target.shownName;
+  if (reisTitles.containsKey(role) && role != 'Aile Ferdi') {
+    return Lang.isEn ? "Head of family's ${roleText(role).toLowerCase()}" : 'Aile Reisinin $role';
+  }
+  return roleText(target.shownName);
 }
 
 /// Hitaba ilk adı ekler: "Kızın" → "Kızın Ayşe", "Baban (Aile Reisi)" → "Baban Erdinç (Aile Reisi)".
