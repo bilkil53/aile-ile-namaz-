@@ -397,13 +397,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return r == true;
   }
 
-  Future<bool?> _confirm(String text, {String yes = 'Evet'}) => showDialog<bool>(
+  Future<bool?> _confirm(String text, {String? yes}) => showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           content: Text(text),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(yes)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(yes ?? t('Evet', 'Yes'))),
           ],
         ),
       );
@@ -500,7 +500,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               initialTitle: m.roleTitle,
               initialIcon: m.icon,
               initialGender: m.gender,
-              confirm: 'Kaydet',
+              confirm: t('Kaydet', 'Save'),
             ),
           );
           if (res == null) return;
@@ -919,7 +919,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                     _toast(_err(e));
                   }
                 },
-                child: const Text('Reddet'),
+                child: Text(t('Reddet', 'Decline')),
               ),
             ]),
           ],
@@ -978,7 +978,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               icon: const Icon(Icons.share, color: Colors.white),
             ),
             IconButton(
-              tooltip: 'Kopyala',
+              tooltip: t('Kopyala', 'Copy'),
               onPressed: () async {
                 if (isGuest) return _needLogin(t('Davet kodu oluşturmak', 'create an invite code'));
                 await Clipboard.setData(ClipboardData(text: pool.displayCode));
@@ -1142,7 +1142,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                       width: colW,
                       child: Column(children: [
                         MemberIcon(m.icon, size: 18),
-                        Text(m.userId == myId ? 'Sen' : _label(m),
+                        Text(m.userId == myId ? t('Sen', 'You') : _label(m),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -1179,7 +1179,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final (label, bg, fg) = switch (s) {
       PrayerStatus.prayed => (t('Kıldı', 'Prayed'), Colors.white, AppColors.emerald),
       PrayerStatus.missed => (t('Kılmadı', 'Missed'), AppColors.missed, Colors.white),
-      PrayerStatus.excused => ('Muaf', Colors.white.withValues(alpha: 0.25), Colors.white),
+      PrayerStatus.excused => (t('Muaf', 'Excused'), Colors.white.withValues(alpha: 0.25), Colors.white),
       PrayerStatus.none => ('—', Colors.transparent, Colors.white.withValues(alpha: 0.45)),
     };
     return Container(
@@ -1396,7 +1396,7 @@ class _TitleDialogState extends State<_TitleDialog> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 4),
-            const Text('Simgesi', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(t('Simgesi', 'Icon'), style: const TextStyle(fontWeight: FontWeight.bold)),
             Text(t('Kadın ve kız simgelerinde "Muaf" seçeneği otomatik açılır.', 'For woman and girl icons the "Excused" option is enabled automatically.'),
                 style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
             for (final g in iconGroups.entries) ...[

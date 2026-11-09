@@ -87,7 +87,7 @@ class _KazaScreenState extends State<KazaScreen> {
       await Repo.saveKaza(type, owed, completed, announce: announce);
     } catch (_) {
       if (mounted) setState(() => _data = {..._data, type: before});
-      _toast('Kaydedilemedi.');
+      _toast(t('Kaydedilemedi.', 'Could not save.'));
     }
   }
 

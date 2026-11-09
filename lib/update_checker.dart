@@ -173,13 +173,13 @@ class UpdateChecker {
         builder: (ctx) => AlertDialog(
           title: Text(t('Yeni güncelleme var', 'New update available')),
           content: Text(
-            t('Aile ile Namaz için yeni bir güncelleme hazır.', 'A new update for Aile ile Namaz is ready.')
-            '${notes.isNotEmpty ? '\n\n$notes' : ''}',
+            t('Aile ile Namaz için yeni bir güncelleme hazır.', 'A new update for Aile ile Namaz is ready.') +
+                (notes.isNotEmpty ? '\n\n$notes' : ''),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Sonra'),
+              child: Text(t('Sonra', 'Later')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
