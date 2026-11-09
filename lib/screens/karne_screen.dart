@@ -86,11 +86,11 @@ class _KarneScreenState extends State<KarneScreen> {
       for (var i = 0; i < fresh.length && i < 3; i++) {
         final b = fresh[i];
         final name = b.levelName.isEmpty ? b.title : '${b.title} · ${b.levelName}';
-        await Notifications.showFamily(9100 + i, '🏅 Tebrikler! Yeni rozet: $name', '${b.emoji} ${b.desc}');
+        await Notifications.showFamily(9100 + i, t('🏅 Tebrikler! Yeni rozet: $name', '🏅 Congratulations! New badge: $name'), '${b.emoji} ${b.desc}');
       }
       if (fresh.isNotEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('🏅 Yeni rozet: ${fresh.first.title}${fresh.length > 1 ? ' (+${fresh.length - 1})' : ''}')));
+            SnackBar(content: Text(t('🏅 Yeni rozet: ', '🏅 New badge: ') + fresh.first.title + (fresh.length > 1 ? ' (+${fresh.length - 1})' : ''))));
       }
     } catch (_) {}
   }
@@ -121,12 +121,12 @@ class _KarneScreenState extends State<KarneScreen> {
   }
 
   (String, Color) _grade(int pct) => pct >= 90
-      ? ('Pekiyi', AppColors.emerald)
+      ? (t('Pekiyi', 'Excellent'), AppColors.emerald)
       : pct >= 75
-          ? ('İyi', const Color(0xFF2E7D32))
+          ? (t('İyi', 'Good'), const Color(0xFF2E7D32))
           : pct >= 50
-              ? ('Orta', AppColors.gold)
-              : ('Gayret et', AppColors.missed);
+              ? (t('Orta', 'Fair'), AppColors.gold)
+              : (t('Gayret et', 'Keep trying'), AppColors.missed);
 
   bool _fullDay(DateTime d) =>
       prayerKeys.every((k) => _st(d, k) == PrayerStatus.prayed || _st(d, k) == PrayerStatus.excused) &&
@@ -161,8 +161,8 @@ class _KarneScreenState extends State<KarneScreen> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     final days = _days;
-    final (p, t) = _score(days);
-    final pct = t == 0 ? 0 : (p * 100 / t).round();
+    final (p, tot) = _score(days);
+    final pct = tot == 0 ? 0 : (p * 100 / tot).round();
     final (grade, gradeColor) = _grade(pct);
     final perPrayer = {for (final k in prayerKeys) k: _score(days, k)};
     String? weakest;
@@ -195,7 +195,7 @@ class _KarneScreenState extends State<KarneScreen> {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('${_name.isNotEmpty ? _name : 'İbadet'} · Karnesi',
+              Text(_name.isNotEmpty ? t('$_name · Karnesi', "$_name's Report") : t('İbadet Karnesi', 'Worship Report'),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 10),
               SegmentedButton<_Period>(
@@ -206,9 +206,9 @@ class _KarneScreenState extends State<KarneScreen> {
                   selectedForegroundColor: AppColors.emerald,
                 ),
                 showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(value: _Period.week, label: Text('Bu hafta')),
-                  ButtonSegment(value: _Period.month, label: Text('30 gün')),
+                segments: [
+                  ButtonSegment(value: _Period.week, label: Text(t('Bu hafta', 'This week'))),
+                  ButtonSegment(value: _Period.month, label: Text(t('30 gün', '30 days'))),
                   ButtonSegment(value: _Period.quarter, label: Text('3 ay')),
                 ],
                 selected: {_period},
@@ -229,7 +229,7 @@ class _KarneScreenState extends State<KarneScreen> {
                 const Spacer(),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Text('$p / $t vakit',
+                  child: Text(t('$p / $tot vakit', '$p / $tot prayers'),
                       style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85))),
                 ),
               ]),
@@ -243,7 +243,7 @@ class _KarneScreenState extends State<KarneScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text('Muaf işaretlenen vakitler hesaba katılmaz.',
+              Text(t('Muaf işaretlenen vakitler hesaba katılmaz.', 'Prayers marked as excused are not counted.'),
                   style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
             ]),
           ),
@@ -251,7 +251,7 @@ class _KarneScreenState extends State<KarneScreen> {
 
           // ---------- Vakit vakit karne ----------
           _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('📋 Vakit Vakit Karne', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            Text(t('📋 Vakit Vakit Karne', '📋 Report by Prayer'), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             for (final k in prayerKeys)
               Builder(builder: (_) {
@@ -287,7 +287,8 @@ class _KarneScreenState extends State<KarneScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(12)),
                 child: Text(
-                  '💡 En çok aksattığın vakit: ${prayerLabels[weakest]} (%$weakPct). Bu vakte biraz daha özen gösterebilirsin.',
+                  t('💡 En çok aksattığın vakit: ${prayerLabels[weakest]} (%$weakPct). Bu vakte biraz daha özen gösterebilirsin.',
+                      '💡 The prayer you miss most: ${prayerLabels[weakest]} ($weakPct%). Try to pay a little more attention to it.'),
                   style: const TextStyle(fontSize: 12, color: Color(0xFF78350F)),
                 ),
               ),
@@ -297,9 +298,9 @@ class _KarneScreenState extends State<KarneScreen> {
 
           // ---------- Seri ----------
           Row(children: [
-            Expanded(child: _tile('🔥', '$curStreak gün', 'Şu anki seri')),
+            Expanded(child: _tile('🔥', t('$curStreak gün', '$curStreak days'), t('Şu anki seri', 'Current streak'))),
             const SizedBox(width: 10),
-            Expanded(child: _tile('🏅', '$bestStreak gün', 'En uzun seri (3 ay)')),
+            Expanded(child: _tile('🏅', t('$bestStreak gün', '$bestStreak days'), t('En uzun seri (3 ay)', 'Longest streak (3 months)'))),
           ]),
           const SizedBox(height: 14),
 
@@ -309,10 +310,10 @@ class _KarneScreenState extends State<KarneScreen> {
 
           // ---------- Kaza ilerlemesi ----------
           _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('📿 Kaza İlerlemen', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            Text(t('📿 Kaza İlerlemen', '📿 Your Kaza Progress'), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (owed == 0)
-              const Text('Kayıtlı kaza borcun yok.', style: TextStyle(color: AppColors.textSecondary))
+              Text(t('Kayıtlı kaza borcun yok.', 'You have no recorded kaza prayers.'), style: TextStyle(color: AppColors.textSecondary))
             else ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
@@ -320,18 +321,19 @@ class _KarneScreenState extends State<KarneScreen> {
                     value: kazaPct, minHeight: 10, color: AppColors.emerald, backgroundColor: AppColors.segmentInactive),
               ),
               const SizedBox(height: 6),
-              Text('$done / $owed eda edildi · %${(kazaPct * 100).round()} · kalan ${owed - done}',
+              Text(t('$done / $owed eda edildi · %${(kazaPct * 100).round()} · kalan ${owed - done}',
+                    '$done / $owed made up · ${(kazaPct * 100).round()}% · ${owed - done} left'),
                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             ],
           ])),
           const SizedBox(height: 14),
 
           // ---------- Kişisel rozetler ----------
-          const Text('🏅 Manevi Rozetler',
+          Text(t('🏅 Manevi Rozetler', '🏅 Spiritual Badges'),
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 8),
           if (badges.any((b) => b.seasonal)) ...[
-            const Text('Mübarek günler', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+            Text(t('Mübarek günler', 'Blessed days'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
             const SizedBox(height: 6),
             for (final b in badges.where((b) => b.seasonal)) _badgeTile(b),
             const SizedBox(height: 6),
@@ -340,7 +342,7 @@ class _KarneScreenState extends State<KarneScreen> {
           for (final b in badges.where((b) => !b.earned && !b.seasonal)) _badgeTile(b),
           const SizedBox(height: 10),
           Center(
-            child: Text('Karne sadece senin kayıtlarından hazırlanır · Aile ile Namaz v$_version',
+            child: Text(t('Karne sadece senin kayıtlarından hazırlanır · Aile ile Namaz v$_version', 'The report is built only from your own records · Aile ile Namaz v$_version'),
                 style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
           ),
         ],
@@ -395,9 +397,9 @@ class _KarneScreenState extends State<KarneScreen> {
         const SizedBox(width: 8),
         Text(
             b.maxed
-                ? 'Kazanıldı ✓'
+                ? t('Kazanıldı ✓', 'Earned ✓')
                 : next == 1
-                    ? (b.earned ? 'Kazanıldı ✓' : 'Henüz yok')
+                    ? (b.earned ? t('Kazanıldı ✓', 'Earned ✓') : t('Henüz yok', 'Not yet'))
                     : '${b.value.clamp(0, next)}/$next',
             style: TextStyle(
                 fontSize: 11, fontWeight: FontWeight.bold, color: b.earned ? const Color(0xFF78350F) : AppColors.textMuted)),
@@ -463,18 +465,18 @@ class _KarneScreenState extends State<KarneScreen> {
       ),
       const SizedBox(height: 8),
       Wrap(spacing: 10, runSpacing: 4, children: [
-        _legend(AppColors.emerald, '5 vakit'),
-        _legend(AppColors.prayedMint, 'Kısmen'),
-        _legend(AppColors.missedCoral, 'Kılınmadı'),
-        _legend(AppColors.segmentInactive, 'İşaretsiz'),
+        _legend(AppColors.emerald, t('5 vakit', 'All 5')),
+        _legend(AppColors.prayedMint, t('Kısmen', 'Partly')),
+        _legend(AppColors.missedCoral, t('Kılınmadı', 'Missed')),
+        _legend(AppColors.segmentInactive, t('İşaretsiz', 'Unmarked')),
       ]),
     ]);
   }
 
-  Widget _legend(Color c, String t) => Row(mainAxisSize: MainAxisSize.min, children: [
+  Widget _legend(Color c, String label) => Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 12, height: 12, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(3))),
         const SizedBox(width: 4),
-        Text(t, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
       ]);
 
   Widget _tile(String emoji, String value, String label) => Container(
