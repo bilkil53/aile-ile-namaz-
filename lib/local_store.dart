@@ -54,6 +54,7 @@ class LocalStore {
       k.startsWith('lp_') ||
       k.startsWith('pro.') ||
       k.startsWith('cuma.') ||
+      k.startsWith('sync.') ||
       const {'lk', 'queue', 'myName', 'familySnapshot'}.contains(k);
 
   /// Telefondaki kişisel verileri (bekleyen kuyruk, gün/kaza önbelleği, ad, aile görünümü) bu hesaba
@@ -277,6 +278,18 @@ class LocalStore {
   }
 
   static int get pendingCount => queue().length;
+
+  /// Kuyrukta bekleyen işlem sayısı türe göre: 'prayer' (namaz işareti) ya da 'kaza'.
+  static int pendingOf(String type) => queue().where((o) => o['t'] == type).length;
+
+  /// Bu türden bir kaydın buluta en son başarıyla yazıldığı an (Ayarlar'daki "Verilerin" kutusu).
+  static Future<void> markSynced(String type) =>
+      AppSettings.prefs.setInt('sync.$type', DateTime.now().millisecondsSinceEpoch);
+
+  static DateTime? lastSynced(String type) {
+    final ms = AppSettings.prefs.getInt('sync.$type') ?? 0;
+    return ms > 0 ? DateTime.fromMillisecondsSinceEpoch(ms) : null;
+  }
 
   /// Kuyruğu telefondan yeniden okuyup yalnızca bu işlemi siler. (Elde tutulan eski bir kopyayı
   /// geri yazmak, gönderim sürerken eklenen yeni işaretleri silerdi.)

@@ -421,6 +421,7 @@ class Repo {
           await _sendLatestKaza(o['type'] as String);
         }
         await LocalStore.removeOp(o);
+        if (o['t'] == 'prayer') unawaited(LocalStore.markSynced('prayer'));
         i++;
         sent++;
         offline = false;
@@ -537,6 +538,7 @@ class Repo {
       await _upsertKaza(type, (op['o'] as num).toInt(), (op['c'] as num).toInt())
           .timeout(const Duration(seconds: 10));
       await LocalStore.removeOp(op);
+      unawaited(LocalStore.markSynced('kaza'));
     }
 
     final r = _kazaChain.then((_) => run());

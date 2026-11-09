@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import '../config.dart';
@@ -39,7 +40,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _checking = false;
   bool _syncing = false;
   bool _gpsBusy = false;
-  String _lastSync = '';
   bool _exact = true;
 
   void _proRebuild() {
@@ -189,10 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _syncing = true);
     final sent = await Repo.syncNowCount();
     if (!mounted) return;
-    setState(() {
-      _syncing = false;
-      _lastSync = TimeOfDay.now().format(context);
-    });
+    setState(() => _syncing = false);
     final left = LocalStore.pendingCount;
     _toast(left == 0
         ? (sent > 0 ? t('$sent işaretin gönderildi ✓', '$sent marks sent ✓') : t('Tüm işaretlerin zaten kaydedildi ✓', 'All your marks are already saved ✓'))
@@ -480,6 +477,103 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) setState(() {});
   }
 
+  /// "Verilerin" kutusu: hangi veri nerede (bulut / telefon), en son ne zaman gönderildi, bekleyen var mı.
+  Widget _dataBox(String email) {
+    final white70 = Colors.white.withValues(alpha: 0.75);
+    final pPrayer = LocalStore.pendingOf('prayer'), pKaza = LocalStore.pendingOf('kaza');
+    final pending = pPrayer + pKaza;
+    String when(DateTime? d) {
+      if (d == null) return t('henüz gönderim yok', 'nothing sent yet');
+      final now = DateTime.now();
+      final days = DateTime(now.year, now.month, now.day).difference(DateTime(d.year, d.month, d.day)).inDays;
+      final hm = DateFormat('HH:mm').format(d);
+      if (days == 0) return t('bugün $hm', 'today $hm');
+      if (days == 1) return t('dün $hm', 'yesterday $hm');
+      return '${DateFormat('d MMMM', Lang.code).format(d)} $hm';
+    }
+
+    String state(int n) => n == 0 ? t('Bulutta ✓', 'In the cloud ✓') : t('$n kayıt telefonda bekliyor', '$n waiting on the phone');
+    // Aile havuzu: son görülen hali (Aile Havuzu ekranının telefondaki özeti)
+    String family = t('Bağlı değil', 'Not connected');
+    try {
+      final raw = AppSettings.prefs.getString('familySnapshot');
+      if (raw != null) {
+        final snap = jsonDecode(raw) as Map<String, dynamic>;
+        final n = (snap['members'] as List?)?.length ?? 0;
+        final name = ((snap['pool'] as Map?)?['name'] as String? ?? '').trim();
+        if (n > 0) family = '${name.isEmpty ? t('Ailemiz', 'Our Family') : name} · ${t('$n kişi', '$n people')}';
+      }
+    } catch (_) {}
+
+    Widget row(IconData icon, String label, String value, {String? sub, bool warn = false}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Icon(icon, size: 18, color: Colors.white),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(label, style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+                if (sub != null) Text(sub, style: TextStyle(fontSize: 11, color: white70)),
+              ]),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(value,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: warn ? AppColors.goldContainer : AppColors.prayedMint)),
+            ),
+          ]),
+        );
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Icon(Icons.cloud_outlined, size: 18, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(t('Verilerin', 'Your data'),
+                style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          if (_syncing)
+            const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+        ]),
+        Divider(color: Colors.white.withValues(alpha: 0.18), height: 14),
+        row(Icons.mosque_outlined, t('Namaz işaretleri', 'Prayer marks'), state(pPrayer),
+            sub: t('Son gönderim: ', 'Last sent: ') + when(LocalStore.lastSynced('prayer')), warn: pPrayer > 0),
+        row(Icons.calendar_month_outlined, t('Kaza kayıtları', 'Kaza records'), state(pKaza),
+            sub: t('Son gönderim: ', 'Last sent: ') + when(LocalStore.lastSynced('kaza')), warn: pKaza > 0),
+        row(Icons.diversity_1_outlined, t('Aile Havuzu', 'Family Circle'), family),
+        row(Icons.phone_android, t('Telefonda bekleyen', 'Waiting on the phone'),
+            pending == 0 ? t('Yok', 'None') : t('$pending kayıt', '$pending records'),
+            sub: pending == 0 ? null : t('İnternet gelince kendiliğinden gönderilir', 'Sent automatically when online'),
+            warn: pending > 0),
+        Divider(color: Colors.white.withValues(alpha: 0.18), height: 14),
+        Text(
+            t('Kayıtların $email hesabına bağlı; telefon değişse de kaybolmaz.',
+                'Your records are linked to $email; they are not lost if you change phones.'),
+            style: TextStyle(fontSize: 11, color: white70)),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: _syncing ? null : _sync,
+            icon: const Icon(Icons.sync, size: 16, color: Colors.white),
+            label: Text(_syncing ? t('Gönderiliyor…', 'Sending…') : t('Şimdi eşitle', 'Sync now'),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ),
+      ]),
+    );
+  }
+
   Widget _title(String t) => Text(t, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white));
 
   Widget _tapRow(String label, IconData icon, VoidCallback onTap, {String? sub, Widget? trailing, Color? color}) => InkWell(
@@ -504,18 +598,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final guest = isGuest;
     final hasUpdate = _latest != null && _latest! > _build;
-    final pending = LocalStore.pendingCount;
     final user = supa.auth.currentUser;
     final name = (user?.userMetadata?['full_name'] ?? user?.userMetadata?['name'] ?? '') as String;
     final email = user?.email ?? '';
-    final syncText = guest
-        ? t('Gezinti modu · kayıt yapılmaz', 'Browsing mode · nothing is saved')
-        : (_syncing
-            ? t('Gönderiliyor…', 'Sending…')
-            : (pending > 0
-                ? t('⏳ $pending işaretin henüz gönderilmedi · internet gelince kendiliğinden gider', '⏳ $pending marks not sent yet · they will be sent automatically when online')
-                : t('✓ Tüm işaretlerin kaydedildi', '✓ All your marks are saved') +
-                    (_lastSync.isEmpty ? '' : t(' · Son: $_lastSync', ' · Last: $_lastSync'))));
+    final syncText = t('Gezinti modu · kayıt yapılmaz', 'Browsing mode · nothing is saved');
     return Scaffold(
       appBar: AppBar(title: Text(t('Ayarlar', 'Settings'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
       body: ListView(
@@ -549,22 +635,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ]),
               ),
             ]),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: guest || _syncing ? null : _sync,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(children: [
-                  Icon(guest ? Icons.phone_android : (pending > 0 ? Icons.cloud_upload : Icons.cloud_done),
-                      color: AppColors.prayedMint, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(syncText,
-                        style: const TextStyle(fontSize: 14, color: AppColors.prayedMint, fontWeight: FontWeight.w600)),
-                  ),
-                ]),
-              ),
-            ),
+            const SizedBox(height: 10),
+            if (guest)
+              Text(syncText, style: const TextStyle(fontSize: 13, color: AppColors.prayedMint, fontWeight: FontWeight.w600))
+            else
+              _dataBox(email),
             const SizedBox(height: 6),
             if (guest)
               _whiteBtn(t('Google ile Giriş Yap', 'Sign in with Google'), () async {
