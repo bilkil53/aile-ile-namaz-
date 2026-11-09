@@ -13,7 +13,8 @@ class DiniGun {
   final String nameTr;
 
   /// Seçilen dilde ad (İngilizcede yerleşik karşılığı).
-  String get name => Lang.isEn ? (_enNames[key] ?? nameTr) : nameTr;
+  String get name => Lang.isEn ? nameEn : nameTr;
+  String get nameEn => _enNames[key] ?? nameTr;
   final String emoji;
   final bool bayram;
 

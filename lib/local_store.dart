@@ -283,8 +283,10 @@ class LocalStore {
   static int pendingOf(String type) => queue().where((o) => o['t'] == type).length;
 
   /// Bu türden bir kaydın buluta en son başarıyla yazıldığı an (Ayarlar'daki "Verilerin" kutusu).
-  static Future<void> markSynced(String type) =>
-      AppSettings.prefs.setInt('sync.$type', DateTime.now().millisecondsSinceEpoch);
+  static Future<void> markSynced(String type) async {
+    await AppSettings.prefs.setInt('sync.$type', DateTime.now().millisecondsSinceEpoch);
+    queueChanged.value++; // açık olan Ayarlar ekranı saati hemen güncellesin
+  }
 
   static DateTime? lastSynced(String type) {
     final ms = AppSettings.prefs.getInt('sync.$type') ?? 0;

@@ -101,6 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
     unawaited(Notifications.reschedule());
+    if (mounted) setState(() {}); // "Verilerin" kutusundaki aile satırı hemen güncellensin
     _toast(n == 0 ? t('Önbellek zaten temiz ✓', 'Cache is already clean ✓') : t('Önbellek temizlendi ✓ ($n kayıt)', 'Cache cleared ✓ ($n items)'));
   }
 
@@ -419,24 +420,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// "Verilerin" kutusu: hangi veri nerede (bulut / telefon), en son ne zaman gönderildi, bekleyen var mı.
   Widget _dataBox(String email) {
     final white70 = Colors.white.withValues(alpha: 0.75);
-    final pPrayer = LocalStore.pendingOf('prayer'), pKaza = LocalStore.pendingOf('kaza');
+    // Yeni işaretler 20 sn bekleyip gönderilir: bunlar "birazdan gönderilecek", gerçekten
+    // bekleyenler (internet yok, gönderilemedi) "telefonda bekliyor" sayılır.
+    final soon = Repo.scheduledPrayers();
+    final pPrayer = LocalStore.pendingOf('prayer') - soon, pKaza = LocalStore.pendingOf('kaza');
     final pending = pPrayer + pKaza;
     String when(DateTime? d) {
       if (d == null) return t('henüz gönderim yok', 'nothing sent yet');
       final now = DateTime.now();
-      final days = DateTime(now.year, now.month, now.day).difference(DateTime(d.year, d.month, d.day)).inDays;
+      // Takvim günü farkı UTC üzerinden: yaz saati geçişinde 23/25 saatlik gün yanlış sonuç vermez
+      final days = DateTime.utc(now.year, now.month, now.day).difference(DateTime.utc(d.year, d.month, d.day)).inDays;
       final hm = DateFormat('HH:mm').format(d);
       if (days == 0) return t('bugün $hm', 'today $hm');
       if (days == 1) return t('dün $hm', 'yesterday $hm');
       return '${DateFormat('d MMMM', Lang.code).format(d)} $hm';
     }
 
-    String state(int n) => n == 0 ? t('Bulutta ✓', 'In the cloud ✓') : t('$n kayıt telefonda bekliyor', '$n waiting on the phone');
+    String state(int n, [int soonN = 0]) => n > 0
+        ? t('$n kayıt telefonda bekliyor', '$n waiting on the phone')
+        : soonN > 0
+            ? t('Birazdan gönderilecek', 'Sending shortly')
+            : t('Bulutta ✓', 'In the cloud ✓');
     // Aile havuzu: son görülen hali (Aile Havuzu ekranının telefondaki özeti)
-    String family = t('Bağlı değil', 'Not connected');
+    // Aile Havuzu ekranı bu telefonda hiç açılmadıysa (ya da önbellek temizlendiyse) bilinmiyor: "—"
+    String family = '—';
     try {
       final raw = AppSettings.prefs.getString('familySnapshot');
       if (raw != null) {
+        family = t('Bağlı değil', 'Not connected');
         final snap = jsonDecode(raw) as Map<String, dynamic>;
         final n = (snap['members'] as List?)?.length ?? 0;
         final name = ((snap['pool'] as Map?)?['name'] as String? ?? '').trim();
@@ -486,7 +497,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
         ]),
         Divider(color: Colors.white.withValues(alpha: 0.18), height: 14),
-        row(Icons.mosque_outlined, t('Namaz işaretleri', 'Prayer marks'), state(pPrayer),
+        row(Icons.mosque_outlined, t('Namaz işaretleri', 'Prayer marks'), state(pPrayer, soon),
             sub: t('Son gönderim: ', 'Last sent: ') + when(LocalStore.lastSynced('prayer')), warn: pPrayer > 0),
         row(Icons.calendar_month_outlined, t('Kaza kayıtları', 'Kaza records'), state(pKaza),
             sub: t('Son gönderim: ', 'Last sent: ') + when(LocalStore.lastSynced('kaza')), warn: pKaza > 0),
@@ -496,10 +507,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             sub: pending == 0 ? null : t('İnternet gelince kendiliğinden gönderilir', 'Sent automatically when online'),
             warn: pending > 0),
         Divider(color: Colors.white.withValues(alpha: 0.18), height: 14),
-        Text(
-            t('Kayıtların $email hesabına bağlı; telefon değişse de kaybolmaz.',
-                'Your records are linked to $email; they are not lost if you change phones.'),
-            style: TextStyle(fontSize: 11, color: white70)),
+        if (email.trim().isNotEmpty)
+          Text(
+              t('Kayıtların $email hesabına bağlı; telefon değişse de kaybolmaz.',
+                  'Your records are linked to $email; they are not lost if you change phones.'),
+              style: TextStyle(fontSize: 11, color: white70)),
         Align(
           alignment: Alignment.centerRight,
           child: TextButton.icon(
