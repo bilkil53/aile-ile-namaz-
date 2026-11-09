@@ -39,9 +39,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _lastSync = '';
   bool _exact = true;
 
+  /// Bekleyen kayıt sayısı değişince senkron satırı yenilenir (açıkken de güncel kalsın).
+  void _queueRebuild() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    LocalStore.queueChanged.removeListener(_queueRebuild);
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
+    LocalStore.queueChanged.addListener(_queueRebuild);
     Notifications.exactAllowed().then((v) {
       if (mounted) setState(() => _exact = v);
     });
