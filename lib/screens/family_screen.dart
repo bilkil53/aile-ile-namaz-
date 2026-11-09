@@ -796,7 +796,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Text('"Ailene namazı emret ve kendin de onda devamlı ol." (Tâhâ, 132)',
+          Text(
+              t('"Ailene namazı emret ve kendin de onda devamlı ol." (Tâhâ, 132)',
+                  '"Enjoin prayer upon your family and be steadfast in it yourself." (Ta-Ha, 20:132)'),
               style: TextStyle(fontSize: 11, color: white85, fontStyle: FontStyle.italic)),
         ],
       ),

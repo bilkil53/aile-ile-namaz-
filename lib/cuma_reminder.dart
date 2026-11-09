@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:intl/intl.dart' show DateFormat;
 
+import 'content/content_en.dart';
 import 'data.dart';
 import 'lang.dart';
 import 'local_store.dart';
@@ -66,7 +67,8 @@ class CumaReminder {
       final count = await _missedFridaysInARow(DateTime.parse(day));
       if (count < 3) return;
 
-      final (hadis, kaynak) = _texts[(count - 3) % _texts.length];
+      final (hadisTr, kaynakTr) = _texts[(count - 3) % _texts.length];
+      final hadis = tc(hadisTr), kaynak = tc(kaynakTr);
       await Notifications.showSpecial(
         8800 + DateTime.parse(day).day,
         t('🕌 Cuma namazı hatırlatması', '🕌 Friday prayer reminder'),
