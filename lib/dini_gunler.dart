@@ -1,9 +1,9 @@
-import 'lang.dart';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:intl/intl.dart';
 
+import 'lang.dart';
 import 'settings.dart';
 
 /// Mübarek gün tanımı. Tarihler Diyanet hicri takviminden (aladhan calendarMethod=DIYANET)

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:intl/intl.dart' show DateFormat;
 
 import 'data.dart';
+import 'lang.dart';
 import 'local_store.dart';
 import 'models.dart';
 import 'notifications.dart';
@@ -68,8 +69,9 @@ class CumaReminder {
       final (hadis, kaynak) = _texts[(count - 3) % _texts.length];
       await Notifications.showSpecial(
         8800 + DateTime.parse(day).day,
-        '🕌 Cuma namazı hatırlatması',
-        '$count Cumadır Cuma namazı kılınmadı.\n\n“$hadis”\n— $kaynak\n\nRabbim bir sonraki Cuma\'yı nasip etsin. 🤲',
+        t('🕌 Cuma namazı hatırlatması', '🕌 Friday prayer reminder'),
+        t('$count Cumadır Cuma namazı kılınmadı.\n\n“$hadis”\n— $kaynak\n\nRabbim bir sonraki Cuma\'yı nasip etsin. 🤲',
+            'Friday prayer has been missed for $count Fridays.\n\n“$hadis”\n— $kaynak\n\nMay Allah grant you the next Friday. 🤲'),
       );
       await AppSettings.prefs.setStringList(_kSent, [...sent.where((s) => s.compareTo(_ago(day, 400)) > 0), day]);
     } catch (_) {}
