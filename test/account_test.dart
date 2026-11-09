@@ -98,6 +98,17 @@ void main() {
       expect(LocalStore.parkedCount('A'), 0);
     });
 
+    test('Saklanan kaza sayısı 3 günden sonra atılır (yeni değeri ezmesin), namaz işareti kalır', () async {
+      await start({...userData, 'store.owner': 'A'});
+      await AppSettings.prefs.setString('queue',
+          '[{"t":"prayer","date":"2026-11-08","key":"fajr","status":"PRAYED"},{"t":"kaza","type":"FAJR","o":3,"c":1}]');
+      LocalStore.parkPending('A', now: DateTime.now().subtract(const Duration(days: 4)));
+      LocalStore.wipeUserData();
+      expect(LocalStore.restoreParked('A'), 1);
+      expect(LocalStore.queue().single['t'], 'prayer');
+      expect(LocalStore.queue().single.containsKey('pa'), isFalse);
+    });
+
     test('30 günden eski saklanan kayıtlar atılır', () async {
       await start({...userData, 'store.owner': 'A'});
       LocalStore.parkPending('A', now: DateTime.now().subtract(const Duration(days: 31)));

@@ -80,6 +80,9 @@ class LocalStore {
   static const _kParked = 'parked.v1';
   static const parkDays = 30;
 
+  /// Kaza kaydı mutlak sayı taşır: başka telefonda yapılmış yeni bir değişikliği ezmesin diye kısa tutulur.
+  static const parkKazaDays = 3;
+
   static Map<String, dynamic> _parked() {
     try {
       final raw = AppSettings.prefs.getString(_kParked);
@@ -100,15 +103,17 @@ class LocalStore {
     if (q.isEmpty || uid.isEmpty || uid == 'local') return;
     final m = _parked();
     final old = (m[uid] as Map?)?['queue'] as List? ?? const [];
-    // Aynı vakit/kaza için en yeni kayıt kalır
+    final at = (now ?? DateTime.now()).toUtc().toIso8601String();
+    // Aynı vakit/kaza için en yeni kayıt kalır. Saklama zamanı kayıt başına tutulur ('pa'):
+    // yeni bir saklama eski kayıtların süresini uzatmaz.
     final merged = <Map<String, dynamic>>[
       for (final o in old.cast<Map>()) Map<String, dynamic>.from(o),
     ];
     for (final o in q) {
       merged.removeWhere((x) => _sameTarget(x, o));
-      merged.add(o);
+      merged.add({...o, 'pa': at});
     }
-    m[uid] = {'at': (now ?? DateTime.now()).toUtc().toIso8601String(), 'queue': merged};
+    m[uid] = {'queue': merged};
     _saveParked(m);
   }
 
@@ -118,25 +123,43 @@ class LocalStore {
           (a['t'] == 'kaza' && a['type'] == b['type']));
 
   /// Bu hesap için saklanan kayıtları kuyruğa geri koyar (30 günden eskiler atılır). Dönüş: kaç kayıt.
+  static bool _expired(Map o, DateTime t) {
+    final at = DateTime.tryParse((o['pa'] as String?) ?? '');
+    if (at == null) return true;
+    final days = o['t'] == 'kaza' ? parkKazaDays : parkDays;
+    return t.difference(at).inDays >= days;
+  }
+
   static int restoreParked(String uid, {DateTime? now}) {
     final m = _parked();
     final t = now ?? DateTime.now();
-    m.removeWhere((_, v) {
-      final at = DateTime.tryParse(((v as Map?)?['at'] as String?) ?? '');
-      return at == null || t.difference(at).inDays >= parkDays;
-    });
+    // Süresi dolanlar (bütün hesaplarda) atılır
+    for (final k in m.keys.toList()) {
+      final list = ((m[k] as Map?)?['queue'] as List? ?? const []).cast<Map>().where((o) => !_expired(o, t)).toList();
+      if (list.isEmpty) {
+        m.remove(k);
+      } else {
+        m[k] = {'queue': list};
+      }
+    }
     final entry = m.remove(uid) as Map?;
     _saveParked(m);
     final items = (entry?['queue'] as List?)?.cast<Map>() ?? const [];
     if (items.isEmpty) return 0;
     final q = queue();
+    var added = 0;
     for (final o in items) {
-      final op = Map<String, dynamic>.from(o)..remove('a');
+      final op = Map<String, dynamic>.from(o)
+        ..remove('a')
+        ..remove('pa');
       if (q.any((x) => _sameTarget(x, op))) continue; // telefondaki daha yeni kayıt kalır
       q.add(op);
+      added++;
     }
-    unawaited(saveQueue(q));
-    return items.length;
+    // Giriş kapısının çizimi sırasında çağrılır: bildirim çizim bitince yapılır
+    unawaited(AppSettings.prefs.setString('queue', jsonEncode(q)));
+    scheduleMicrotask(() => queueChanged.value++);
+    return added;
   }
 
   /// Hesap silinince o hesabın saklanan kayıtları da silinir.
