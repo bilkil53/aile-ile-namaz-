@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'lang.dart';
 import 'prayer_times.dart';
 import 'settings.dart';
 
@@ -22,18 +23,23 @@ class LocationHelper {
     if (maxAge > Duration.zero && AppSettings.locationFromGps && age < maxAge.inMilliseconds) return;
     for (var attempt = 1; attempt <= 3; attempt++) {
       final (ok, msg) = await updateFromGps();
-      if (ok || permissionDenied || msg.contains('servisi kapalı')) return;
+      if (ok || permissionDenied || _serviceOff) return;
       if (attempt < 3) await Future<void>.delayed(const Duration(seconds: 10));
     }
   }
 
+  /// Son denemede telefonun konum servisi kapalı mıydı (tekrar denemek boşuna).
+  static bool _serviceOff = false;
+
   /// (başarılı mı, konum adı veya hata mesajı)
   static Future<(bool, String)> updateFromGps() async {
-    if (_running) return (false, 'Konum zaten alınıyor…');
+    if (_running) return (false, t('Konum zaten alınıyor…', 'Already getting location…'));
     _running = true;
+    _serviceOff = false;
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        return (false, 'Telefonun konum servisi kapalı.');
+        _serviceOff = true;
+        return (false, t('Telefonun konum servisi kapalı.', "The phone's location service is off."));
       }
       var perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
@@ -41,7 +47,7 @@ class LocationHelper {
       }
       if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
         await AppSettings.prefs.setBool('locationDenied', true);
-        return (false, 'Konum izni verilmedi.');
+        return (false, t('Konum izni verilmedi.', 'Location permission was not granted.'));
       }
       await AppSettings.prefs.setBool('locationDenied', false);
 
@@ -65,7 +71,7 @@ class LocationHelper {
       version.value++;
       return (true, name);
     } catch (_) {
-      return (false, 'Konum alınamadı.');
+      return (false, t('Konum alınamadı.', 'Could not get location.'));
     } finally {
       _running = false;
     }

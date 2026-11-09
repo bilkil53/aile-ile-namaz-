@@ -474,6 +474,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (picked == null || picked == cur) return;
     await Lang.set(picked);
+    // Planlanmış hatırlatmalar ve bildirim kanalları yeni dille yeniden kurulur
+    unawaited(Notifications.reschedule());
     if (mounted) setState(() {});
   }
 

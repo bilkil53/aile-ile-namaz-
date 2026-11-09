@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart' show DateFormat;
 
-import 'lang.dart';
 import 'dini_gunler.dart';
+import 'lang.dart';
 import 'models.dart';
 
 /// Karne rozeti. [tiers] varsa seviyeli rozettir (Bronz / Gümüş / Altın / Elmas).

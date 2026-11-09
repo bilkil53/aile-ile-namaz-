@@ -4,10 +4,12 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'content/approaching_quotes.dart';
 import 'content/daily_content.dart';
+import 'lang.dart';
 import 'prayer_times.dart';
 import 'dini_gunler.dart';
 import 'pro.dart';
 import 'log.dart';
+import 'models.dart';
 import 'settings.dart';
 
 /// Vakit hatırlatmaları ve günlük ayet/hadis bildirimi (cihaz içinde zamanlanır,
@@ -16,25 +18,26 @@ class Notifications {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static Future<void>? _initF;
 
-  static const _prayerChannel = AndroidNotificationDetails(
+  // Kanal adları seçilen dilde (Android ayarlarında görünür)
+  static AndroidNotificationDetails get _prayerChannel => AndroidNotificationDetails(
     'vakit_hatirlatma',
-    'Vakit hatırlatmaları',
-    channelDescription: 'Namaz vaktinden önce hatırlatma',
+    t('Vakit hatırlatmaları', 'Prayer reminders'),
+    channelDescription: t('Namaz vaktinden önce hatırlatma', 'Reminder before each prayer time'),
     importance: Importance.high,
     priority: Priority.high,
   );
 
-  static const _contentChannel = AndroidNotificationDetails(
+  static AndroidNotificationDetails get _contentChannel => AndroidNotificationDetails(
     'gunluk_icerik',
-    'Günün ayeti ve hadisi',
-    channelDescription: 'Her gün öğlen bir ayet, hadis veya dua',
+    t('Günün ayeti ve hadisi', 'Verse and hadith of the day'),
+    channelDescription: t('Her gün öğlen bir ayet, hadis veya dua', 'A verse, hadith or dua every day at noon'),
     importance: Importance.defaultImportance,
   );
 
-  static const _familyChannel = AndroidNotificationDetails(
+  static AndroidNotificationDetails get _familyChannel => AndroidNotificationDetails(
     'aile_olaylari',
-    'Aile bildirimleri',
-    channelDescription: 'Aileden biri namaz kılınca veya dua gönderince',
+    t('Aile bildirimleri', 'Family notifications'),
+    channelDescription: t('Aileden biri namaz kılınca veya dua gönderince', 'When a family member prays or sends a dua'),
     importance: Importance.high,
     priority: Priority.high,
   );
@@ -77,8 +80,8 @@ class Notifications {
         NotificationDetails(
           android: AndroidNotificationDetails(
             'ozel_hatirlatma',
-            'Özel hatırlatmalar',
-            channelDescription: 'Cuma namazı gibi kişiye özel hatırlatmalar',
+            t('Özel hatırlatmalar', 'Personal reminders'),
+            channelDescription: t('Cuma namazı gibi kişiye özel hatırlatmalar', 'Personal reminders such as Friday prayer'),
             importance: Importance.high,
             priority: Priority.high,
             styleInformation: BigTextStyleInformation(body),
@@ -104,10 +107,10 @@ class Notifications {
     // FCM bildirimleri (uygulama kapalıyken) bu kanala düşer; önceden oluşturulmalı
     await _plugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
+        ?.createNotificationChannel(AndroidNotificationChannel(
           'aile_olaylari',
-          'Aile bildirimleri',
-          description: 'Aileden biri namaz kılınca veya dua gönderince',
+          t('Aile bildirimleri', 'Family notifications'),
+          description: t('Aileden biri namaz kılınca veya dua gönderince', 'When a family member prays or sends a dua'),
           importance: Importance.high,
         ));
   }
@@ -137,8 +140,8 @@ class Notifications {
       await init();
       await _plugin.show(
         9999,
-        '🔔 Test bildirimi',
-        'Bildirimler bu telefonda çalışıyor ✓',
+        t('🔔 Test bildirimi', '🔔 Test notification'),
+        t('Bildirimler bu telefonda çalışıyor ✓', 'Notifications work on this phone ✓'),
         NotificationDetails(
           android: AndroidNotificationDetails(
             _familyChannel.channelId,
@@ -190,28 +193,30 @@ class Notifications {
       for (var d = 0; d < 10; d++) {
         final day = DateTime(now.year, now.month, now.day).add(Duration(days: d));
         if (AppSettings.prayerReminders) {
-          final t = await PrayerTimesService.forDate(day);
+          final pt = await PrayerTimesService.forDate(day);
           final friday = day.weekday == DateTime.friday;
           final list = [
-            ('Sabah', 'fajr', t.imsak),
-            (friday ? 'Cuma Namazı' : 'Öğle', friday ? 'cuma' : 'dhuhr', t.ogle),
-            ('İkindi', 'asr', t.ikindi),
-            ('Akşam', 'maghrib', t.aksam),
-            ('Yatsı', 'isha', t.yatsi),
+            (prayerLabels['fajr']!, 'fajr', pt.imsak),
+            (friday ? t('Cuma Namazı', 'Friday Prayer') : prayerLabels['dhuhr']!, friday ? 'cuma' : 'dhuhr', pt.ogle),
+            (prayerLabels['asr']!, 'asr', pt.ikindi),
+            (prayerLabels['maghrib']!, 'maghrib', pt.aksam),
+            (prayerLabels['isha']!, 'isha', pt.yatsi),
           ];
           for (final (name, key, hhmm) in list) {
-            final at = t.at(hhmm).subtract(Duration(minutes: lead));
+            final at = pt.at(hhmm).subtract(Duration(minutes: lead));
             if (at.isAfter(now)) {
               // Vakte özel hadis / ayet / dua (gün gün döner)
               final quotes = approachingQuotes[key] ?? _pool;
               final q = quotes[(_dayOfYear(day) + day.year) % quotes.length];
               final cuma = key == 'cuma';
               final title = cuma
-                  ? '🕌 Hayırlı Cumalar! Cuma Namazına $lead Dakika Kaldı ($hhmm)'
-                  : '🕌 $name Vaktine $lead Dakika Kaldı ($hhmm)';
+                  ? t('🕌 Hayırlı Cumalar! Cuma Namazına $lead Dakika Kaldı ($hhmm)',
+                      '🕌 Jumuah Mubarak! $lead Minutes to Friday Prayer ($hhmm)')
+                  : t('🕌 $name Vaktine $lead Dakika Kaldı ($hhmm)', '🕌 $lead Minutes to $name ($hhmm)');
               final lead2 = cuma
-                  ? 'Abdestini tazeleyip Cuma namazı ve hutbeye yetişmek için camiye hazırlanmayı unutma. 🤲'
-                  : 'Haydi namaza 🤲';
+                  ? t('Abdestini tazeleyip Cuma namazı ve hutbeye yetişmek için camiye hazırlanmayı unutma. 🤲',
+                      "Don't forget to renew your wudu and get ready to reach the mosque for the Friday prayer and khutbah. 🤲")
+                  : t('Haydi namaza 🤲', 'Come to prayer 🤲');
               await _schedule(id, title, '$lead2\n\n${q.title}: ${q.text}\n— ${q.source}', at, _prayerChannel);
             }
             id++;
@@ -232,8 +237,10 @@ class Notifications {
         final at = DateTime(e.date.year, e.date.month, e.date.day, 19).subtract(const Duration(days: 1));
         if (!at.isAfter(now) || at.difference(now).inDays > 60) continue;
         final g = e.gun;
-        final when = g.eveBefore ? 'Yarın akşam' : 'Yarın';
-        final title = g.bayram ? '${g.emoji} $when ${g.name} · Bayramınız mübarek olsun!' : '${g.emoji} $when ${g.name}';
+        final when = g.eveBefore ? t('Yarın akşam', 'Tomorrow evening') : t('Yarın', 'Tomorrow');
+        final title = g.bayram
+            ? t('${g.emoji} $when ${g.name} · Bayramınız mübarek olsun!', '${g.emoji} $when ${g.name} · Eid Mubarak!')
+            : t('${g.emoji} $when ${g.name}', '${g.emoji} $when: ${g.name}');
         await _schedule(did++, title, g.meaning, at, _contentChannel);
       }
     } catch (_) {

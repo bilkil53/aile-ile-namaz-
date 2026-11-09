@@ -363,14 +363,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Future<void> _loadGuest() async {
     final me = Member(userId: myId, name: t('Misafir', 'Guest'), roleTitle: 'Aile Ferdi', icon: '👤');
     final pool = Pool(id: 'local', name: t('Aile İbadet Havuzum', 'My Family Worship Circle'), ownerId: myId, inviteCode: 'EMB-······');
-    final t = await Repo.dayPrayers([myId], todayStr());
+    final td = await Repo.dayPrayers([myId], todayStr());
     final y = await Repo.dayPrayers([myId], _yStr());
     if (!mounted) return;
     setState(() {
       _pools = [pool];
       _members = [me];
       _myName = t('Misafir', 'Guest');
-      _today = t;
+      _today = td;
       _yesterday = y;
       _loading = false;
     });
