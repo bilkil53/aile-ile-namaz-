@@ -61,7 +61,8 @@ void main() {
     await pumpUntil(t, todayList);
     // Yalnızca vakit kartındaki "Sabah" (üstteki özet kartında da geçebilir)
     final sabah = find.ancestor(of: find.text('Sabah'), matching: find.byType(InkWell));
-    await t.scrollUntilVisible(sabah.first, 200, scrollable: todayList.first, maxScrolls: 30);
+    // Not: .first boşken hata verir; kaydırma sırasında süzgeçsiz bulucu verilir
+    await t.scrollUntilVisible(sabah, 200, scrollable: todayList.first, maxScrolls: 30);
     await t.ensureVisible(sabah.first);
     await settle(t, 4);
     await t.tap(sabah.first);
