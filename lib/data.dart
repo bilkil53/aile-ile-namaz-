@@ -4,6 +4,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cuma_reminder.dart';
+import 'lang.dart';
 import 'local_store.dart';
 import 'log.dart';
 import 'settings.dart';
@@ -153,7 +154,7 @@ class Repo {
   static String? _myName;
   static Future<String> myDisplayName() async {
     if (_myName != null) return _myName!;
-    if (isGuest) return 'Misafir';
+    if (isGuest) return t('Misafir', 'Guest');
     try {
       final p = await supa
           .from('profiles')

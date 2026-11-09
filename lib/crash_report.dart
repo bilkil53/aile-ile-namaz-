@@ -175,7 +175,7 @@ class CrashReport {
                 style: const TextStyle(fontSize: 12, color: Colors.black54)),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Kapat')),
+            TextButton(onPressed: () => Navigator.pop(c), child: Text(t('Kapat', 'Close'))),
             FilledButton.icon(
               icon: const Icon(Icons.mail_outline, size: 18),
               label: Text(t('Mail gönder', 'Send email')),
