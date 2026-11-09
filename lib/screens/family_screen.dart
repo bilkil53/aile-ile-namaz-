@@ -132,7 +132,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               for (final (m, at) in list)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(t('📩 ${withFirstName(_label(m!), m.firstName)} Pro istedi · ${Pro.fmt(at)}', '📩 ${withFirstName(_label(m!), m.firstName)} asked for Pro · ${Pro.fmt(at)}'),
+                  child: Text(t('📩 ${withFirstName(_label(m!), m.firstName)} Pro istedi · ${Pro.fmt(at)}', '📩 ${withFirstName(_label(m), m.firstName)} asked for Pro · ${Pro.fmt(at)}'),
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 ),
               Text(t('Pro alırsan havuzdaki herkes (en fazla 5 kişi) Pro olur.', 'If you get Pro, everyone in the circle (up to 5 people) becomes Pro.'),
