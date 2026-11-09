@@ -60,16 +60,20 @@ class Pro {
   }
 
   /// Bu hesap Pro test listesinde mi? (Sunucu her işlemde ayrıca denetler; burası yalnızca
-  /// test panelini ve "Pro'ya geç" düğmesini göstermek için.) Bağlantı yoksa false.
-  static Future<bool> isTester() async {
+  /// test panelini göstermek için.) null = öğrenilemedi (internet yok / sunucuya ulaşılamadı).
+  static Future<bool?> testerStatus() async {
     if (isGuest) return false;
     try {
       final r = await supa.rpc('am_i_pro_tester').timeout(const Duration(seconds: 6));
       return r == true;
     } catch (_) {
-      return false;
+      return null;
     }
   }
+
+  static String _testError(Object e) => e.toString().contains('not_tester')
+      ? t('Bu test sürümünde Pro yalnızca test hesaplarına açık.', 'In this test version Pro is open to test accounts only.')
+      : t('İşlem yapılamadı. İnternetini kontrol edip tekrar dene.', 'Could not complete. Check your internet and try again.');
 
   /// Reis olmayan üye: Aile Reisine "Pro istiyorum" iletir.
   /// Dönüş: null = iletildi, aksi halde kullanıcıya gösterilecek hata.
@@ -220,11 +224,17 @@ class Pro {
   }
 
   /// TEST: denemeyi baştan başlat (7 gün, Pro kaldırılır).
-  static Future<void> testRestartTrial() async {
+  /// Başarılıysa true; değilse [lastError] doldurulur.
+  static Future<bool> testRestartTrial() async {
     try {
       await supa.rpc('test_restart_trial').timeout(const Duration(seconds: 8));
-    } catch (_) {}
-    await refresh();
+      lastError = null;
+      await refresh();
+      return true;
+    } catch (e) {
+      lastError = _testError(e);
+      return false;
+    }
   }
 
   /// Pro isteği gönderenlerin adları (ör. "Kızın Ayşe").
@@ -311,11 +321,17 @@ class Pro {
   }
 
   /// TEST: demo süresini hemen bitirir.
-  static Future<void> expireTest() async {
+  /// Pro'dan düşer (ücretsize döner). Başarılıysa true; değilse [lastError] doldurulur.
+  static Future<bool> expireTest() async {
     try {
       final r = await supa.rpc('expire_pro_test').timeout(const Duration(seconds: 8));
       await _save(r == null ? null : DateTime.tryParse(r as String)?.toLocal());
+      lastError = null;
       await refresh();
-    } catch (_) {}
+      return true;
+    } catch (e) {
+      lastError = _testError(e);
+      return false;
+    }
   }
 }

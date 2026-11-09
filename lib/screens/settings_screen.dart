@@ -32,6 +32,10 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   static const _repo = 'https://github.com/bilkil53/aile-ile-namaz-';
 
+  /// Test paneli: (test listesinde mi [null = bağlantı yok], Aile Reisi mi). Bir kez sorulur;
+  /// düğmelere basınca yeniden sorulmaz (panel sıçramaz). Bağlantı yoksa "Tekrar dene" ile yenilenir.
+  Future<(bool?, bool)>? _panelInfo;
+
   String _version = '';
   int _build = 0;
   int? _latest;
@@ -312,18 +316,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: ValueListenableBuilder<int>(
           valueListenable: Pro.changed,
-          builder: (_, __, ___) => FutureBuilder<(bool, bool)>(
-            future: (() async => (await Pro.isTester(), await Pro.isReis()))(),
+          builder: (_, __, ___) => FutureBuilder<(bool?, bool)>(
+            future: _panelInfo ??= (Pro.testerStatus(), Pro.isReis()).wait,
             builder: (context, snap) {
-              final tester = snap.data?.$1 ?? false;
-              final reis = snap.data?.$2 ?? true;
-              if (snap.connectionState != ConnectionState.done) return const SizedBox.shrink();
+              const brown = Color(0xFF78350F);
+              if (!snap.hasData) {
+                return const Text('🧪 Test Paneli yükleniyor…', style: TextStyle(fontSize: 12, color: brown));
+              }
+              final (tester, reis) = snap.data!;
+              if (tester == null) {
+                return Row(children: [
+                  const Expanded(
+                    child: Text('🧪 Test Paneli: sunucuya ulaşılamadı (internet yok).',
+                        style: TextStyle(fontSize: 12, color: brown)),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => _panelInfo = null),
+                    child: const Text('Tekrar dene', style: TextStyle(color: brown, fontWeight: FontWeight.bold)),
+                  ),
+                ]);
+              }
               if (!tester) {
                 return const Text('🧪 Test Paneli yalnızca test hesaplarına açık.',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF78350F)));
+                    style: TextStyle(fontSize: 12, color: brown));
               }
-              const brown = Color(0xFF78350F);
-              Widget btn(String label, IconData icon, Future<void> Function()? onTap) => OutlinedButton.icon(
+              Widget btn(String label, IconData icon, Future<bool> Function()? onTap) => OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: brown,
                       side: const BorderSide(color: Color(0xFFF59E0B)),
@@ -332,8 +349,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: onTap == null
                         ? null
                         : () async {
-                            await onTap();
-                            if (mounted) setState(() {});
+                            final ok = await onTap();
+                            if (!mounted) return;
+                            if (!ok) _toast(Pro.lastError ?? 'İşlem yapılamadı. İnternetini kontrol edip tekrar dene.');
+                            setState(() {});
                           },
                     icon: Icon(icon, size: 18),
                     label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -347,7 +366,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 10),
                 Wrap(spacing: 8, runSpacing: 8, children: [
                   btn(reis ? 'Pro\'ya geç' : 'Pro\'ya geç: Pro\'yu reis alır', Icons.workspace_premium,
-                      reis ? () async => await Pro.redeem() : null),
+                      reis ? Pro.redeem : null),
                   btn('Pro\'dan düş → Ücretsiz', Icons.close, Pro.expireTest),
                   btn('Denemeyi baştan başlat (7 gün)', Icons.play_arrow, Pro.testRestartTrial),
                 ]),
