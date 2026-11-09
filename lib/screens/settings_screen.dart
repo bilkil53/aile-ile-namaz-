@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import '../config.dart';
@@ -101,7 +100,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
     unawaited(Notifications.reschedule());
-    if (mounted) setState(() {}); // "Verilerin" kutusundaki aile satırı hemen güncellensin
     _toast(n == 0 ? t('Önbellek zaten temiz ✓', 'Cache is already clean ✓') : t('Önbellek temizlendi ✓ ($n kayıt)', 'Cache cleared ✓ ($n items)'));
   }
 
@@ -441,20 +439,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         : soonN > 0
             ? t('Birazdan gönderilecek', 'Sending shortly')
             : t('Bulutta ✓', 'In the cloud ✓');
-    // Aile havuzu: son görülen hali (Aile Havuzu ekranının telefondaki özeti)
-    // Aile Havuzu ekranı bu telefonda hiç açılmadıysa (ya da önbellek temizlendiyse) bilinmiyor: "—"
-    String family = '—';
-    try {
-      final raw = AppSettings.prefs.getString('familySnapshot');
-      if (raw != null) {
-        family = t('Bağlı değil', 'Not connected');
-        final snap = jsonDecode(raw) as Map<String, dynamic>;
-        final n = (snap['members'] as List?)?.length ?? 0;
-        final name = ((snap['pool'] as Map?)?['name'] as String? ?? '').trim();
-        if (n > 0) family = '${name.isEmpty ? t('Ailemiz', 'Our Family') : name} · ${t('$n kişi', '$n people')}';
-      }
-    } catch (_) {}
-
     Widget row(IconData icon, String label, String value, {String? sub, bool warn = false}) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -501,7 +485,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             sub: t('Son gönderim: ', 'Last sent: ') + when(LocalStore.lastSynced('prayer')), warn: pPrayer > 0),
         row(Icons.calendar_month_outlined, t('Kaza kayıtları', 'Kaza records'), state(pKaza),
             sub: t('Son gönderim: ', 'Last sent: ') + when(LocalStore.lastSynced('kaza')), warn: pKaza > 0),
-        row(Icons.diversity_1_outlined, t('Aile Havuzu', 'Family Circle'), family),
         row(Icons.phone_android, t('Telefonda bekleyen', 'Waiting on the phone'),
             pending == 0 ? t('Yok', 'None') : t('$pending kayıt', '$pending records'),
             sub: pending == 0 ? null : t('İnternet gelince kendiliğinden gönderilir', 'Sent automatically when online'),
