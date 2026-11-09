@@ -1,14 +1,33 @@
 // Günün ayeti / hadisi / duası içerikleri.
+import 'content_en.dart';
 
 class DailyQuote {
-  final String category, title, text, source;
+  // Metinler Türkçe saklanır; okunurken seçilen dile çevrilir (content_en.dart).
+  final String _category, _title, _text, _source;
   final String? arabic;
-  const DailyQuote({required this.category, required this.title, required this.text, required this.source, this.arabic});
+  const DailyQuote({required String category, required String title, required String text, required String source, this.arabic})
+      : _category = category,
+        _title = title,
+        _text = text,
+        _source = source;
+
+  String get category => tc(_category);
+  String get title => tc(_title);
+  String get text => tc(_text);
+  String get source => tc(_source);
 }
 
 class Greeting {
-  final String title, category, emoji, text;
-  const Greeting({required this.title, required this.category, required this.emoji, required this.text});
+  final String _title, _category, _text;
+  final String emoji;
+  const Greeting({required String title, required String category, required this.emoji, required String text})
+      : _title = title,
+        _category = category,
+        _text = text;
+
+  String get title => tc(_title);
+  String get category => tc(_category);
+  String get text => tc(_text);
 }
 
 const ayetler = <DailyQuote>[

@@ -32,7 +32,7 @@ class DiniGun {
   /// Bildirimde ve kartta gösterilecek açıklama (kendi cümlelerimizle).
   final String meaningTr;
 
-  /// Seçilen dilde açıklama (İngilizcesi onaylanana kadar Türkçe kalır).
+  /// Seçilen dilde açıklama.
   String get meaning => Lang.isEn ? (_enMeanings[key] ?? meaningTr) : meaningTr;
 
   const DiniGun(this.key, this.nameTr, this.emoji, this.hDay, this.hMonth, this.meaningTr,
@@ -56,8 +56,35 @@ const _enNames = {
   'kurban_bayrami': 'Eid al-Adha',
 };
 
-/// Açıklamaların İngilizcesi: dini metin olduğu için kullanıcı onayından sonra doldurulacak.
-const Map<String, String> _enMeanings = {};
+/// Açıklamaların İngilizcesi (kullanıcı onayıyla).
+const _enMeanings = <String, String>{
+  'hicri_yilbasi':
+      "A new year in the Hijri calendar, which begins with the Prophet's (pbuh) migration (hijrah) from Mecca to Medina. An opportunity to reflect on the past year and begin the new one with repentance, supplication and good intentions.",
+  'asure':
+      "The tenth day of the month of Muharram. Our Prophet fasted on this day and recommended fasting it; it is good to fast it together with the day before or after. Sharing ashura (Noah's pudding) is a symbol of neighbourliness and brotherhood.",
+  'mevlid':
+      "The night our Prophet Muhammad (pbuh) came into the world. It is spent remembering his life, character and sunnah, sending salawat, reading the Qur'an and making supplication.",
+  'uc_aylar':
+      "The blessed three months of Rajab, Sha'ban and Ramadan are beginning. Our Prophet's supplication \"O Allah! Bless us in Rajab and Sha'ban and let us reach Ramadan\" expresses the spirit of these months.",
+  'regaib':
+      "The first Friday night of the three holy months. \"Raghaib\" means precious things that are much desired; this night, when Allah's grace and generosity are abundant, is revived with prayer, supplication, repentance and the Qur'an.",
+  'mirac':
+      "The night our Prophet was taken from al-Masjid al-Haram to al-Masjid al-Aqsa and from there raised to the heavens. The five daily prayers were made obligatory on this night, so it is a special night to remember the value of prayer.",
+  'berat':
+      "The fifteenth night of the month of Sha'ban. \"Bara'ah\" means deliverance and acquittal; it is a night of purification from sins, asking forgiveness and preparing for Ramadan. Fasting during its day is recommended.",
+  'ramazan':
+      "Ramadan, the sultan of the eleven months, is beginning. Fasting is obligatory in this month in which the Qur'an was revealed; it is spent with tarawih, reciting the Qur'an, charity and sharing. The first suhur is tonight.",
+  'kadir':
+      "The night in which the Holy Qur'an began to be revealed and which Surah al-Qadr describes as \"better than a thousand months\". It is revived with prayer, the Qur'an, repentance and supplication.",
+  'ramazan_arefe':
+      "The last day of Ramadan and the eve of Eid. A good day to deliver fitrah and zakat to those in need before Eid and to end any resentments.",
+  'ramazan_bayrami':
+      "A festival of gratitude after a month of fasting. The Eid prayer is performed, elders are visited, children are made happy; those who are estranged reconcile, and doors and hearts are opened.",
+  'kurban_arefe':
+      "The day the pilgrims stand at Arafat. Fasting and making much supplication on the Day of Arafah is recommended; the takbirs of tashriq begin from this day's Fajr prayer.",
+  'kurban_bayrami':
+      "The Eid that recalls the submission of Prophet Abraham (Ibrahim). The sacrifice is offered to draw closer to Allah and to share; its meat is shared with relatives, neighbours and those in need. The takbirs of tashriq continue until Asr on the 4th day of Eid.",
+};
 
 const diniGunler = <DiniGun>[
   DiniGun('hicri_yilbasi', 'Hicri Yılbaşı', '🌙', 1, 1,
