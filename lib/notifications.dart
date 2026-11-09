@@ -235,7 +235,7 @@ class Notifications {
         final g = e.gun;
         final when = g.eveBefore ? t('Yarın akşam', 'Tomorrow evening') : t('Yarın', 'Tomorrow');
         final title = g.bayram
-            ? t('${g.emoji} $when ${g.name} · Bayramınız mübarek olsun!', '${g.emoji} $when ${g.name} · Eid Mubarak!')
+            ? t('${g.emoji} $when ${g.name} · Bayramınız mübarek olsun!', '${g.emoji} $when: ${g.name} · Eid Mubarak!')
             : t('${g.emoji} $when ${g.name}', '${g.emoji} $when: ${g.name}');
         await _schedule(did++, title, g.meaning, at, _contentChannel);
       }

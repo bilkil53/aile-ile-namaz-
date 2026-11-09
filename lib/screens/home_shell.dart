@@ -182,10 +182,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                   r['target_id'] == myId
                       ? t('$who sana dua gönderdi 🤲', '$who sent you a dua 🤲')
                       : t('$who aileye dua gönderdi 🤲', '$who sent the family a dua 🤲'),
-                  (r['message'] as String?) ?? ''),
+                  ((r['message'] as String?) ?? '').isNotEmpty
+                      ? r['message'] as String
+                      : t('Allah ibadetlerimizi kabul etsin.', 'May Allah accept our worship.')),
               'MEMBER_JOINED' => (t('Aile havuzuna katılım 🤝', 'New family member 🤝'),
                   t('${r['message'] ?? 'Yeni bir ferd'} aile havuzuna katıldı.',
-                      '${r['message'] ?? 'A new member'} joined the family circle.')),
+                      '${r['message'] == null ? 'A new member' : roleText(r['message'] as String)} joined the family circle.')),
               _ => ('', ''),
             };
             if (title.isEmpty) return;

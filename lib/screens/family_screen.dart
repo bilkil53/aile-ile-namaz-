@@ -373,14 +373,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
               controlAffinity: ListTileControlAffinity.leading,
               value: a,
               onChanged: (v) => setD(() => a = v ?? false),
-              title: Text('1. onay: $first', style: const TextStyle(fontSize: 13)),
+              title: Text(t('1. onay: $first', 'Confirmation 1: $first'), style: const TextStyle(fontSize: 13)),
             ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               value: b,
               onChanged: a ? (v) => setD(() => b = v ?? false) : null,
-              title: Text('2. onay: $second', style: const TextStyle(fontSize: 13)),
+              title: Text(t('2. onay: $second', 'Confirmation 2: $second'), style: const TextStyle(fontSize: 13)),
             ),
           ]),
           actions: [
@@ -463,7 +463,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ownerIcon: ownerTitles[res.owner],
           memberGender: res.gender,
           ownerGender: res.ownerGender);
-      _toast(t('🎉 ${res.title} aile havuzuna katıldı!', '🎉 ${res.title} joined the family circle!'));
+      _toast(t('🎉 ${titleFor(res.title, viewerIsReis: true)} aile havuzuna katıldı!',
+          '🎉 ${titleFor(res.title, viewerIsReis: true)} joined the family circle!'));
       await _load();
     } catch (e) {
       _toast(_err(e));
@@ -475,8 +476,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Future<void> _sendDua({Member? to}) async {
     if (isGuest) return _needLogin(t('Dua göndermek', 'send a prayer (dua)'));
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
-    if (text == null || text.trim().isEmpty || _pool == null) return;
-    final msg = text.trim();
+    if (text == null || _pool == null) return;
+    // Hazır dua seçildiyse boş gider: her alıcı onu kendi dilinde görür (sunucu ve uygulama doldurur)
+    final msg = text == _DuaDialog.useDefault ? '' : text.trim();
+    if (msg.isEmpty && text != _DuaDialog.useDefault) return;
     try {
       await Repo.sendDua(_pool!.id, msg.length > 280 ? msg.substring(0, 280) : msg, targetId: to?.userId);
       _toast(to == null ? t('Dua tüm aileye gönderildi 🤲', 'Dua sent to the whole family 🤲') : t('Dua yalnızca ona gönderildi 🤲 (${_label(to)})', 'Dua sent only to them 🤲 (${_label(to)})'));
@@ -656,7 +659,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 color: _members.length > 1 ? AppColors.prayedMint : AppColors.goldContainer,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(_members.length > 1 ? t('🟢 AKTİF', '🟢 ACTIVE') : '⏳ BEKLEMEDE',
+              child: Text(_members.length > 1 ? t('🟢 AKTİF', '🟢 ACTIVE') : t('⏳ BEKLEMEDE', '⏳ PENDING'),
                   style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -812,7 +815,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(t('Katıldıktan sonra ünvanını (Eşi, Oğlu, Kızı…) ve simgeni Aile Reisi belirler.', 'After you join, the head of family sets your title (Wife, Son, Daughter…) and icon.'),
+            Text(t('Katıldıktan sonra ünvanını (Eşi, Oğlu, Kızı…) ve simgeni Aile Reisi belirler.', 'After you join, the head of family sets your title (Spouse, Son, Daughter…) and icon.'),
                 style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85))),
             const SizedBox(height: 12),
             SizedBox(
@@ -1006,7 +1009,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 'Bu kodu ailenle paylaş. Katılmak istediklerinde burada onay kartı açılır; '
                     'onaylarken ona sana göre ünvanını (Eşi, Oğlu, Kızı…) ve simgesini verirsin.',
                 'Share this code with your family. When they want to join, an approval card opens here; '
-                    'while approving you give them a title relative to you (Wife, Son, Daughter…) and an icon.'),
+                    'while approving you give them a title relative to you (Spouse, Son, Daughter…) and an icon.'),
             style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85), height: 1.35),
           ),
         ],
@@ -1112,7 +1115,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                           : t('Bugün Aile Başarısı: $done / $total Vakit', "Today's Family Success: $done / $total prayers"),
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
-                Text('%$pct',
+                Text(t('%$pct', '$pct%'),
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.prayedMint)),
               ]),
             );
@@ -1238,7 +1241,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(isMe ? '${m.shownName} (sen)' : _label(m),
+                Text(isMe ? t('${roleText(m.shownName)} (sen)', '${roleText(m.shownName)} (you)') : _label(m),
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 Text(isOwner ? t('• 🏡 Havuz Yöneticisi', '• 🏡 Circle Admin') : t('• 👥 Aile Ferdi', '• 👥 Family Member'),
                     style: TextStyle(
@@ -1449,6 +1452,9 @@ class _DuaDialog extends StatefulWidget {
 
 class _DuaDialogState extends State<_DuaDialog> {
   final _ctrl = TextEditingController();
+  /// "Hazır duayı gönder" seçimi: mesaj boş gönderilir, alıcı kendi dilinde görür.
+  static const useDefault = '\u0000default';
+
   static String get _defaultDua => t('Allah ibadetlerimizi kabul etsin, ailemizi namazda buluştursun 🤲',
       'May Allah accept our worship and unite our family in prayer 🤲');
 
@@ -1506,7 +1512,7 @@ class _DuaDialogState extends State<_DuaDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: Text(t('Vazgeç', 'Cancel'))),
         FilledButton(
           // Boş bırakılırsa gönderilecek dua önizlemede yazar
-          onPressed: () => Navigator.pop(context, _ctrl.text.trim().isEmpty ? _defaultDua : _ctrl.text),
+          onPressed: () => Navigator.pop(context, _ctrl.text.trim().isEmpty ? useDefault : _ctrl.text),
           child: Text(_ctrl.text.trim().isEmpty ? t('Hazır duayı gönder 🤲', 'Send the ready-made dua 🤲') : t('Yazdığımı gönder 🤲', 'Send what I wrote 🤲')),
         ),
       ],

@@ -110,7 +110,7 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
                 await fix();
                 await _refresh();
               },
-              child: const Text('Aç'),
+              child: Text(t('Aç', 'Turn on')),
             ),
         ]),
       );

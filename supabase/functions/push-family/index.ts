@@ -135,7 +135,7 @@ function text(type: string, who: string, prayer: string | null, message: string,
       case "PRAYED": return [`${who} prayed 🤲`, `Prayed ${p}. May Allah accept it.`];
       case "KAZA": return [`${who} made up a missed prayer 📿`, "Completed one kaza prayer. May Allah accept it."];
       case "DUA": return [toMe ? `${who} sent you a dua 🤲` : `${who} sent the family a dua 🤲`, message || "May Allah accept our worship."];
-      case "MEMBER_JOINED": return ["New family member 🤝", `${message || who} joined the family circle.`];
+      case "MEMBER_JOINED": return ["New family member 🤝", `${message ? kin(message, true) : who} joined the family circle.`];
       case "PRO_REQUEST": return [`${who} wants Pro 🌟`, "If you get Family Pro, everyone in the circle becomes Pro."];
       default: return null;
     }
@@ -241,7 +241,9 @@ Deno.serve(async (req) => {
       : ev.event_type === "DUA" ? "notify_dua" : null;
     let q = db.from("devices").select("user_id, fcm_token, lock_screen, lang").in("user_id", recipients);
     if (prefCol) q = q.eq(prefCol, true);
-    const { data: rawDevices } = await q;
+    const { data: rawDevices, error: devErr } = await q;
+    // Cihaz listesi okunamazsa olay "gönderildi" sayılmasın: tekrar denensin (fail-closed)
+    if (devErr) { await finish(false); return Response.json({ error: devErr.message, retry: true }, { status: 500 }); }
     const seen = new Set<string>();
     const devices = (rawDevices ?? []).filter((d) => !seen.has(d.fcm_token) && !!seen.add(d.fcm_token));
     if (!devices.length) { await finish(true); return Response.json({ sent: 0, reason: "cihaz yok" }); }

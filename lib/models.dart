@@ -183,7 +183,7 @@ class Pool {
   /// EMB-123456 biçiminde gösterim.
   /// Ekranda görünen havuz adı. Otomatik verilen "<Reis adı> Ailesi" yerine "Ailemiz";
   /// Aile Reisi kendi ad verdiyse o ad görünür.
-  String get displayName => name.trim().isEmpty || name.trim().endsWith(' Ailesi') ? 'Ailemiz' : name.trim();
+  String get displayName => name.trim().isEmpty || name.trim().endsWith(' Ailesi') ? t('Ailemiz', 'Our Family') : name.trim();
 
   String get displayCode => inviteCode.startsWith('EMB') && inviteCode.length > 3
       ? 'EMB-${inviteCode.substring(3)}'
@@ -225,7 +225,7 @@ class Member {
   /// Kişinin ilk adı (bildirimde aynı ünvanlı iki kişiyi ayırmak için: "Kızın Ayşe").
   String get firstName {
     final n = name.trim().split(RegExp(r'\s+')).first;
-    if (n.isEmpty || n == 'Misafir') return '';
+    if (n.isEmpty || n == 'Misafir' || n == 'Guest') return '';
     // Hepsi büyük ya da hepsi küçük yazılmışsa Türkçe kurallarıyla düzelt (ERDİNÇ → Erdinç)
     if (n != n.toUpperCase() && n != n.toLowerCase()) return n;
     String up(String c) => c == 'i' ? 'İ' : (c == 'ı' ? 'I' : c.toUpperCase());
