@@ -252,20 +252,14 @@ class Repo {
   /// bekleyen kayıt kalmayınca sıfırlanır).
   static bool offline = false;
 
-  /// Çevrimiçiden çevrimdışına geçildiğinde artar; ekran "telefona kaydedildi" bilgisini gösterir.
-  /// Yalnızca bu açılışta kullanıcı bir vakit işaretlediyse artar (açılışta kendiliğinden not çıkmasın).
-  static final offlineNotice = ValueNotifier<int>(0);
-
   /// Sunucu bir kaydı kalıcı olarak reddettiğinde artar; ekran "kaydedilemedi" bilgisini gösterir.
   static final rejectNotice = ValueNotifier<int>(0);
 
-  static bool _userMarked = false;
-
   /// Bir vakti kaydeder. Önce telefona yazılır; aile bildirimi 15 sn, buluta yazma 20 sn sonra
   /// son duruma göre yapılır (hızlı değiştirmelerde tek yazma, tek bildirim). İnternet yoksa kayıt
-  /// telefonda bekler ve bağlantı gelince arka planda otomatik gönderilir.
-  /// Dönüş: true = çevrimiçi, kayıt birazdan buluta gidecek;
-  ///        false = misafir ya da şu an çevrimdışı (kayıt telefonda bekliyor; kullanıcıya bilgi verilir).
+  /// telefonda bekler ve bağlantı gelince arka planda otomatik gönderilir. Kullanıcıya uyarı
+  /// gösterilmez; ekrandaki küçük simge bekliyor (⏳) / bulutta (☁️✓) durumunu sessizce gösterir.
+  /// Dönüş: true = çevrimiçi, kayıt birazdan buluta gidecek; false = misafir ya da şu an çevrimdışı.
   static Future<bool> setPrayer({
     required String key,
     required PrayerStatus status,
@@ -276,7 +270,6 @@ class Repo {
     final day = date ?? todayStr();
     await LocalStore.setPrayer(day, key, status);
     CumaReminder.onMarked(day, key, status); // erkeklere peş peşe 3. Cuma uyarısı
-    _userMarked = true;
     await LocalStore.enqueue({'t': 'prayer', 'date': day, 'key': key, 'status': status.code});
     final id = '$day|$key';
     if (day == todayStr()) _pendingAnnounce.add(id);
@@ -293,8 +286,6 @@ class Repo {
       _writeTimers.remove(id);
       unawaited(syncNow());
     });
-    // Zaten çevrimdışıysa bilgi hemen verilir. İnternet yeni kesildiyse gönderim (20 sn sonra)
-    // başarısız olunca offlineNotice ile verilir.
     return !offline;
   }
 
@@ -441,10 +432,7 @@ class Repo {
           rejectNotice.value++;
           continue;
         }
-        if (!offline) {
-          offline = true;
-          if (_userMarked) offlineNotice.value++;
-        }
+        offline = true;
         break;
       }
     }
@@ -548,7 +536,6 @@ class Repo {
     if (isGuest) return;
     final prev = LocalStore.kaza()[type];
     await LocalStore.saveKaza(type, owed, completed);
-    _userMarked = true;
     final op = <String, dynamic>{'t': 'kaza', 'type': type, 'o': owed, 'c': completed};
     await LocalStore.enqueue(op);
     try {
@@ -563,10 +550,7 @@ class Repo {
         await LocalStore.saveKaza(type, o0, c0);
         rethrow;
       }
-      if (!offline) {
-        offline = true;
-        offlineNotice.value++;
-      }
+      offline = true;
       _ensureRetry();
       return;
     }
@@ -630,7 +614,6 @@ class Repo {
     _retry?.cancel();
     _retry = null;
     offline = false;
-    _userMarked = false;
   }
 
   // ---- Olaylar ----
