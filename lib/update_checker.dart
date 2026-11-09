@@ -252,7 +252,7 @@ class UpdateChecker {
       // (Küçük APK'dan büyük APK'ya geçilemez: Android bunu eski sürüm sayar. Bu yüzden yedek yok.)
       final req = await client.getUrl(Uri.parse(_abiUrl() ?? downloadUrl));
       req.headers.set('User-Agent', 'aile-ile-namaz-app');
-      final res = await req.close();
+      final res = await req.close().timeout(const Duration(seconds: 20));
       if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
 
       final total = res.contentLength;

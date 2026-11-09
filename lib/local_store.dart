@@ -9,8 +9,8 @@ import 'sync_logic.dart';
 import 'settings.dart';
 
 /// Kayıtlar:
-/// - Giriş yapmadan gezinenler (misafir): kayıt yapılmaz (gezinti yalnızca bakmak içindir).
-///   Giriş yapılırsa o oturumda işaretlenenler buluta gönderilir.
+/// - Giriş yapmadan gezinenler (misafir): kayıt yapılmaz (gezinti yalnızca bakmak içindir);
+///   giriş yapınca gezintiden hiçbir şey aktarılmaz.
 /// - Giriş yapanlar için son bilinen durum (çevrimdışı gösterim) telefonda.
 /// - İnternet yokken yapılan işlemlerin bekleme kuyruğu telefonda.
 class LocalStore {

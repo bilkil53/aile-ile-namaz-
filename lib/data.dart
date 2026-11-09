@@ -188,7 +188,7 @@ class Repo {
   }
 
   // ---- Namaz durumları ----
-  /// Kendi kaydım: misafirde telefondan; girişliyse sunucudan (olmazsa son bilinen).
+  /// Kendi kaydım: sunucudan (olmazsa telefondaki son bilinen + bekleyenler). Gezintide boş.
   static Future<Map<String, Map<String, PrayerStatus>>> dayPrayers(
       List<String> userIds, String date) async {
     if (userIds.isEmpty) return {};
@@ -307,6 +307,14 @@ class Repo {
 
   /// Bekleyen kayıtları buluta yazar, sonra aile bildirimlerini gönderir.
   /// Gönderilemeyen kalırsa 20 saniyede bir arka planda tekrar dener.
+  /// Elle "şimdi gönder": syncNow ile aynı kilidi kullanır. Dönüş: gönderilen kayıt sayısı.
+  static Future<int> syncNowCount() async {
+    final before = LocalStore.pendingCount;
+    await syncNow();
+    final after = LocalStore.pendingCount;
+    return before > after ? before - after : 0;
+  }
+
   static Future<void> syncNow() async {
     if (isGuest || _syncing) return;
     _syncing = true;
@@ -416,6 +424,7 @@ class Repo {
           // Sunucu kalıcı olarak reddetti: tekrar denemek sonsuz döngü olur ve arkadaki kayıtları
           // bekletir. Bu kayıt kuyruktan çıkarılır, kullanıcıya "kaydedilemedi" bilgisi verilir.
           await LocalStore.removeOp(o);
+          if (o['t'] == 'kaza') await _restoreKazaFromCloud(o['type'] as String);
           i++;
           rejectNotice.value++;
           continue;
@@ -486,6 +495,16 @@ class Repo {
         'completed_count': completed,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id,prayer_type');
+
+  /// Reddedilen kaza değişikliğinden sonra telefondaki sayıyı buluttaki değere döndürür
+  /// (bulut okunamazsa dokunulmaz; bir sonraki açılışta düzelir).
+  static Future<void> _restoreKazaFromCloud(String type) async {
+    try {
+      final cloud = await myKaza().timeout(const Duration(seconds: 10));
+      final (o, c) = cloud[type] ?? (0, 0);
+      await LocalStore.saveKaza(type, o, c);
+    } catch (_) {}
+  }
 
   /// Kaza gönderimleri sırayla yapılır (aynı anda iki gönderim olmaz): hızlı art arda değişiklikte
   /// eski sayı yenisinden sonra buluta yazılıp onu ezemez.

@@ -45,10 +45,7 @@ Aile İle Namaz, namazlarınızı ailenizle birlikte takip etmeniz için hazırl
 • Mübarek gün ve gece hatırlatmaları, Cuma hatırlatması
 • Reklamsız, sade ve Türkçe
 
-👨‍👩‍👧 Aile Pro'su: Aile Reisinin Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur. Her yeni kullanıcıya 7 gün ücretsiz deneme.
-Fiyat: aylık 153 ₺ · yıllık 1.553 ₺ (Google Play üzerinden, otomatik yenilenir; Google Play aboneliklerinden istediğiniz zaman iptal edebilirsiniz).
-
-ℹ️ Hizmet notu: Aile havuzu, aile bildirimleri, bulut yedekleme ve Pro gibi internet gerektiren özellikler, uygulamanın sunucu altyapısı (Supabase, Google Firebase) çalıştığı sürece kullanılabilir. Bakım veya altyapı kesintilerinde bu özellikler geçici olarak çalışmayabilir. Namaz vakitleri ve telefona kaydedilen işaretler internetsiz de çalışır; bağlantı gelince otomatik eşitlenir.
+ℹ️ Hizmet notu: Aile havuzu, aile bildirimleri, bulut yedekleme gibi internet gerektiren özellikler, uygulamanın sunucu altyapısı (Supabase, Google Firebase) çalıştığı sürece kullanılabilir. Bakım veya altyapı kesintilerinde bu özellikler geçici olarak çalışmayabilir. Namaz vakitleri ve telefona kaydedilen işaretler internetsiz de çalışır; bağlantı gelince otomatik eşitlenir.
 
 ## Ücretsiz plandan çıkış
 - Supabase ücretsiz proje **7 gün hiç kullanılmazsa duraklatılır**; aktif kullanıcılarla sorun olmaz. Büyüyünce Pro (25 $/ay) — kod değişikliği gerekmez.

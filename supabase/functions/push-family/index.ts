@@ -115,8 +115,33 @@ function text(type: string, who: string, prayer: string | null, message: string,
   }
 }
 
+// Çağrı anahtarı: yalnızca veritabanı tetikleyicisi ve tekrar deneme görevi bilir (Vault'ta üretilir).
+// Anahtar okunamazsa ya da tutmazsa çağrı reddedilir (fail-closed). Önbellek: anahtar her istekte okunmaz.
+let hookSecret: { value: string; at: number } | null = null;
+async function expectedSecret(db: ReturnType<typeof createClient>): Promise<string | null> {
+  if (hookSecret && Date.now() - hookSecret.at < 10 * 60_000) return hookSecret.value;
+  const { data, error } = await db.rpc("push_hook_secret");
+  if (error || typeof data !== "string" || data.length < 32) return null;
+  hookSecret = { value: data, at: Date.now() };
+  return data;
+}
+
+function sameSecret(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+
 Deno.serve(async (req) => {
   try {
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const given = req.headers.get("x-push-secret") ?? "";
+    const expected = await expectedSecret(db);
+    if (!expected || !given || !sameSecret(given, expected)) {
+      return new Response("yetkisiz", { status: 401 });
+    }
+
     const { event_id, check } = await req.json().catch(() => ({}));
 
     // Sağlık kontrolü: anahtar var mı ve Google'dan erişim izni alınabiliyor mu? (gizli bilgi döndürmez)
@@ -128,13 +153,11 @@ Deno.serve(async (req) => {
         await accessToken(sa);
         return Response.json({ configured: true, oauth: "ok", project: sa.project_id });
       } catch (e) {
-        return Response.json({ configured: true, oauth: "hata", detail: String(e).slice(0, 120) });
+        return Response.json({ configured: true, oauth: "hata" });
       }
     }
 
     if (!event_id) return new Response("event_id gerekli", { status: 400 });
-
-    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Olayı atomik sahiplen (pending/failed, 3 denemeden az, son 10 dk)
     const { data: claimed } = await db.rpc("claim_push_event", { p_id: event_id });
@@ -182,8 +205,10 @@ Deno.serve(async (req) => {
       : ev.event_type === "DUA" ? "notify_dua" : null;
     let q = db.from("devices").select("user_id, fcm_token, lock_screen").in("user_id", recipients);
     if (prefCol) q = q.eq(prefCol, true);
-    const { data: devices } = await q;
-    if (!devices?.length) { await finish(true); return Response.json({ sent: 0, reason: "cihaz yok" }); }
+    const { data: rawDevices } = await q;
+    const seen = new Set<string>();
+    const devices = (rawDevices ?? []).filter((d) => !seen.has(d.fcm_token) && !!seen.add(d.fcm_token));
+    if (!devices.length) { await finish(true); return Response.json({ sent: 0, reason: "cihaz yok" }); }
 
     let token: string;
     try {
@@ -237,9 +262,12 @@ Deno.serve(async (req) => {
       if (res.ok) {
         sent++;
       } else if (res.status === 404 || res.status === 400) {
-        // Geçersiz / silinmiş cihaz adresi: listeden çıkar
+        // Yalnızca cihaz adresi gerçekten geçersizse listeden çıkar. Mesaj içeriğinden kaynaklanan
+        // bir 400 (INVALID_ARGUMENT ama adres geçerli) geçerli cihazı silmesin.
         const body = await res.text();
-        if (body.includes("UNREGISTERED") || body.includes("INVALID_ARGUMENT")) {
+        const badToken = res.status === 404 || body.includes("UNREGISTERED") ||
+          (body.includes("INVALID_ARGUMENT") && /registration token|message\.token|"token"/i.test(body));
+        if (badToken) {
           await db.from("devices").delete().eq("user_id", d.user_id).eq("fcm_token", d.fcm_token);
         }
       }

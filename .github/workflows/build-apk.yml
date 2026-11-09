@@ -36,6 +36,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Sabit sürüm: yeni bir Flutter yayınındaki yeni analiz uyarısı derlemeyi habersiz durdurmasın
+          flutter-version: 3.47.9
           cache: true
 
       - name: Android platform dosyalarını oluştur
@@ -356,7 +358,7 @@ jobs:
           open(p, 'w', encoding='utf-8').write(s)
           PY
           flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
-            --dart-define=STORE=play --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
+            --dart-define=STORE=play --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
           cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
           (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
 
