@@ -85,9 +85,12 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 - **Kurulum (proje sahibi yapar, şifre içerir):** Supabase → Project Settings → Database → Connection string → *Session pooler* (5432) adresini kopyalayın, şifreyi yerleştirin; GitHub → Settings → Secrets and variables → Actions → *New repository secret*: ad `SUPABASE_DB_URL`.
 - Test her çalışmada **UYARI** olarak bilinen açığı da raporlar: `test_restart_trial` ve `test_remove_pro` giriş yapmış herkese açık (demo test paneli için bilerek; ücretli Pro'dan önce kapatılacak).
 
-## İmza kontrolü neden yalnızca uyarı
+## İmza kontrolü (fail-closed)
 
-- `lib/integrity.dart` bilerek engellemez: (1) değiştirilmiş bir APK bu kontrolü de kaldırabilir, engellemek güvenlik sağlamaz; (2) Google Play'e çıkınca Play kendi anahtarıyla yeniden imzalar, beklenen imza tutmazsa gerçek kullanıcılar kilitlenir; (3) yetki kontrolü zaten sunucuda (RLS, sütun yetkileri, RPC'ler; 20 kontrollük test). Gerçek cihaz/uygulama doğrulaması gerekirse Play'e çıkışta **Play Integrity API** + sunucu tarafı doğrulama eklenmeli.
+- `lib/integrity.dart`: GitHub'dan dağıtılan sürümlerde (stabil ve demo) uygulama açılışta kendi imzasının SHA-256'sını beklenenle karşılaştırır. **Tutmazsa ya da okunamazsa uygulama açılmaz**: kapatılamayan pencerede yalnızca "Resmi sürümü indir" ve "Kapat" vardır; kontrol bütün açılış işlerinden önce çalışır.
+- Google Play sürümünde (`STORE=play`) bu kontrol yapılmaz: Play uygulamayı kendi anahtarıyla yeniden imzalar, kontrol gerçek kullanıcıları kilitlerdi. Play'e çıkışta doğru yöntem **Play Integrity API** + sunucu tarafı doğrulamadır.
+- Kendini kilitleme koruması: CI, `MainActivity` imza okuyucusunu içermiyorsa ya da beklenen imza (`EXPECTED_SIG`) main/demo'da boşsa yayını durdurur. Karar mantığı `test/integrity_test.dart` ile sınanır.
+- Sınır: değiştirilmiş bir APK bu kontrolü de silebilir; bu yüzden yetki kontrolü her zaman sunucuda (RLS, sütun yetkileri, RPC'ler; 20 kontrollük test) yapılır.
 
 ## 6. İstemci tarafı notlar
 

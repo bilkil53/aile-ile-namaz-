@@ -1,48 +1,86 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'theme.dart';
 
-/// APK imza kontrolü: uygulama kendi imzasının parmak izini (SHA-256) okur ve
-/// derleme sırasında gömülen beklenen değerle karşılaştırır. Başkası APK'yı
-/// değiştirip kendi imzasıyla yeniden imzalarsa parmak izi tutmaz.
+/// Kontrolün sonucu.
+enum IntegrityVerdict {
+  /// İmza beklenenle aynı.
+  ok,
+
+  /// Kontrol yapılmaz: Google Play sürümü (Play kendi anahtarıyla yeniden imzalar; doğrulama Play
+  /// Integrity ile yapılmalı) ya da beklenen imza gömülmemiş yerel geliştirme derlemesi.
+  skip,
+
+  /// İmza tutmuyor ya da okunamadı: uygulama açılmaz (fail-closed).
+  block,
+}
+
+/// APK imza kontrolü: uygulama kendi imzasının parmak izini (SHA-256) okur ve derleme sırasında
+/// gömülen beklenen değerle karşılaştırır. Başkası APK'yı değiştirip kendi imzasıyla yeniden
+/// imzalarsa parmak izi tutmaz ve uygulama AÇILMAZ ("devam et" seçeneği yoktur).
 ///
-/// ŞİMDİLİK SADECE UYARI: uygulama kapanmaz, yalnızca bir kez uyarı gösterir.
-/// İleride sağlam çalıştığı görülünce engellemeye çevrilebilir.
+/// Not: Bu bir yetki sınırı değildir (değiştirilmiş bir APK bu kontrolü de silebilir); verilere
+/// erişim her zaman sunucuda (RLS, RPC) denetlenir. Amaç, değiştirilmiş kopyaların kullanıcıyı
+/// kandırmasını zorlaştırmaktır.
 class Integrity {
   static const _ch = MethodChannel('aile/exit');
 
-  /// Derlemede --dart-define=EXPECTED_SIG ile gömülür. Birden çok geçerli imza
-  /// virgülle verilebilir (GitHub imzası + Google Play imzası). Boşsa kontrol yapılmaz.
+  /// Derlemede --dart-define=EXPECTED_SIG ile gömülür. Birden çok geçerli imza virgülle verilebilir.
   static const _expected = String.fromEnvironment('EXPECTED_SIG');
-
+  static const _store = String.fromEnvironment('STORE', defaultValue: 'github');
+  static const _officialUrl = 'https://github.com/bilkil53/aile-ile-namaz-/releases';
   static bool _checked = false;
 
+  /// Saf karar (birim testleriyle sınanır).
+  static IntegrityVerdict verdict({required String? signature, required String expected, required String store}) {
+    if (store == 'play') return IntegrityVerdict.skip;
+    final valid = expected.toLowerCase().split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+    if (valid.isEmpty) return IntegrityVerdict.skip;
+    final sig = signature?.toLowerCase().trim() ?? '';
+    if (sig.isEmpty) return IntegrityVerdict.block; // okunamadı: sessizce geçilmez
+    return valid.contains(sig) ? IntegrityVerdict.ok : IntegrityVerdict.block;
+  }
+
+  /// Açılışta bir kez çalışır. İmza tutmazsa ya da okunamazsa kapatılamayan bir pencere gösterir
+  /// ve bu fonksiyon geri dönmez (uygulamanın geri kalanı başlamaz).
   static Future<void> check(BuildContext context) async {
-    if (_checked || _expected.trim().isEmpty) return;
+    if (_checked) return;
     _checked = true;
+    String? sig;
     try {
-      final sig = (await _ch.invokeMethod<String>('signatureSha256'))?.toLowerCase().trim();
-      if (sig == null || sig.isEmpty) return; // okunamadıysa sessiz geç
-      final valid = _expected.toLowerCase().split(',').map((e) => e.trim()).where((e) => e.isNotEmpty);
-      if (valid.contains(sig)) return; // imza geçerli
-      if (!context.mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          icon: const Icon(Icons.gpp_maybe_outlined, color: AppColors.missed, size: 32),
-          title: const Text('Güvenlik uyarısı'),
-          content: const Text(
-            'Bu uygulama bilinen güvenli kaynaktan kurulmamış ya da üzerinde değişiklik yapılmış olabilir. '
-            'Güvenliğin için uygulamayı resmi bağlantıdan yeniden kurmanı öneririz.',
+      sig = await _ch.invokeMethod<String>('signatureSha256');
+    } catch (_) {
+      sig = null; // kanal yok / hata: okunamadı sayılır
+    }
+    if (verdict(signature: sig, expected: _expected, store: _store) != IntegrityVerdict.block) return;
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          icon: const Icon(Icons.gpp_bad_outlined, color: AppColors.missed, size: 34),
+          title: const Text('Bu kopya doğrulanamadı'),
+          content: Text(
+            sig == null || sig.isEmpty
+                ? 'Uygulamanın imzası okunamadığı için güvenliğin adına açılmıyor. '
+                    'Lütfen uygulamayı resmi bağlantıdan yeniden kur.'
+                : 'Bu uygulama resmi kaynaktan kurulmamış ya da üzerinde değişiklik yapılmış. '
+                    'Güvenliğin adına açılmıyor. Lütfen resmi sürümü kur.',
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Yine de devam et')),
+            TextButton(onPressed: () => SystemNavigator.pop(), child: const Text('Kapat')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+              onPressed: () => launchUrl(Uri.parse(_officialUrl), mode: LaunchMode.externalApplication),
+              child: const Text('Resmi sürümü indir'),
+            ),
           ],
         ),
-      );
-    } catch (_) {
-      // Kanal yoksa / okunamadıysa sessiz geç
-    }
+      ),
+    );
   }
 }
