@@ -109,6 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
     unawaited(Notifications.reschedule());
+    unawaited(Push.register()); // durum yazısı yeni dilde
     _toast(n == 0 ? t('Önbellek zaten temiz ✓', 'Cache is already clean ✓') : t('Önbellek temizlendi ✓ ($n kayıt)', 'Cache cleared ✓ ($n items)'));
   }
 

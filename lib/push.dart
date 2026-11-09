@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show PlatformException;
 
 import 'data.dart';
+import 'lang.dart';
 import 'pro.dart';
 import 'settings.dart';
 
@@ -39,7 +40,7 @@ class Push {
   static bool _ready = false;
 
   /// Ayarlar'da gösterilen durum: telefonun anlık bildirime kayıtlı olup olmadığı.
-  static final status = ValueNotifier<String>('Kontrol ediliyor…');
+  static final status = ValueNotifier<String>(t('Kontrol ediliyor…', 'Checking…'));
   static bool ok = false;
   static String? _token;
   static StreamSubscription<String>? _refreshSub;
@@ -83,44 +84,44 @@ class Push {
     }
     if (!_ready) {
       _initF = null; // sonraki açılışta / "tekrar dene"de yeniden denensin
-      _set(false, 'Firebase başlatılamadı (${_short(lastError ?? 'bilinmeyen hata')})');
+      _set(false, t('Firebase başlatılamadı', 'Firebase could not start') + ' (${_short(lastError ?? t('bilinmeyen hata', 'unknown error'))})');
       return;
     }
   }
 
   /// Giriş yapılmışsa ve aile bildirimleri açıksa cihazı kaydeder.
   static Future<void> register() async {
-    if (!ok) status.value = 'Hazırlanıyor…';
+    if (!ok) status.value = t('Hazırlanıyor…', 'Preparing…');
     await init();
     if (!_ready) return;
-    if (isGuest) return _set(false, 'Giriş yapılmadı');
+    if (isGuest) return _set(false, t('Giriş yapılmadı', 'Not signed in'));
     if (Pro.isDemo) {
       await unregister();
-      return _set(false, 'Ücretsiz sürümde kapalı');
+      return _set(false, t('Ücretsiz sürümde kapalı', 'Off in the free version'));
     }
     if (!AppSettings.familyAlerts) {
       await unregister();
-      return _set(false, 'Aile bildirimleri kapalı');
+      return _set(false, t('Aile bildirimleri kapalı', 'Family notifications are off'));
     }
     try {
       final fm = FirebaseMessaging.instance;
       await fm.setAutoInitEnabled(true);
-      String? t;
-      for (var i = 0; i < 3 && t == null; i++) {
+      String? tok;
+      for (var i = 0; i < 3 && tok == null; i++) {
         try {
-          t = await fm.getToken();
+          tok = await fm.getToken();
         } catch (_) {
           if (i == 2) rethrow;
           await Future<void>.delayed(const Duration(seconds: 5));
         }
       }
-      if (t == null) return _set(false, 'Cihaz adresi alınamadı');
-      await _save(t, strict: true);
+      if (tok == null) return _set(false, t('Cihaz adresi alınamadı', 'Could not get the device address'));
+      await _save(tok, strict: true);
       _refreshSub ??= fm.onTokenRefresh.listen(_save);
-      _set(true, 'Hazır ✓ Uygulama kapalıyken de bildirim gelir');
+      _set(true, t('Hazır ✓ Uygulama kapalıyken de bildirim gelir', 'Ready ✓ Notifications arrive even when the app is closed'));
     } catch (e) {
       lastErrorDetail = _detail(e);
-      _set(false, 'Kayıt olmadı: ${_short(e)}');
+      _set(false, t('Kayıt olmadı: ', 'Registration failed: ') + _short(e));
     }
   }
 

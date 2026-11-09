@@ -80,7 +80,7 @@ class CrashReport {
       final detail = 'Kapanma kodu: $reason (${info.$1})\nBellek: $rssMb MB\n${desc.isEmpty ? '' : 'Android: $desc\n'}'
           '${trace.isEmpty ? '' : '\n${trace.length > 1200 ? trace.substring(0, 1200) : trace}'}';
       _show(
-        title: 'Uygulama son kullanımda kapandı',
+        title: t('Uygulama son kullanımda kapandı', 'The app closed during last use'),
         reason: info.$2,
         detail: detail,
       );
@@ -93,18 +93,18 @@ class CrashReport {
       case 3:
         // Arka planda bellek için kapatılması Android'in normal davranışıdır; yalnızca ekrandayken göster.
         return foreground
-            ? ('LOW_MEMORY', 'Telefonun belleği (RAM) doldu, Android uygulamayı kapattı. Arkada açık uygulamaları kapatmak yardımcı olur.')
+            ? ('LOW_MEMORY', t('Telefonun belleği (RAM) doldu, Android uygulamayı kapattı. Arkada açık uygulamaları kapatmak yardımcı olur.', 'The phone ran out of memory (RAM) and Android closed the app. Closing background apps helps.'))
             : null;
       case 4:
-        return ('CRASH', 'Uygulamada bir kod hatası oluştu ve uygulama çöktü.');
+        return ('CRASH', t('Uygulamada bir kod hatası oluştu ve uygulama çöktü.', 'A code error occurred and the app crashed.'));
       case 5:
-        return ('CRASH_NATIVE', 'Uygulamanın telefon tarafındaki bir bileşeni çöktü (kod hatası).');
+        return ('CRASH_NATIVE', t('Uygulamanın telefon tarafındaki bir bileşeni çöktü (kod hatası).', 'A native component of the app crashed (code error).'));
       case 6:
-        return ('ANR', 'Uygulama dondu ve yanıt vermedi (işlemci yoğunluğu ya da takılan bir işlem).');
+        return ('ANR', t('Uygulama dondu ve yanıt vermedi (işlemci yoğunluğu ya da takılan bir işlem).', 'The app froze and stopped responding (high CPU load or a stuck task).'));
       case 7:
-        return ('INIT_FAIL', 'Uygulama açılırken başlatılamadı.');
+        return ('INIT_FAIL', t('Uygulama açılırken başlatılamadı.', 'The app could not start while opening.'));
       case 9:
-        return ('EXCESSIVE_RESOURCE', 'Uygulama çok fazla işlemci/pil kullandığı için Android tarafından durduruldu.');
+        return ('EXCESSIVE_RESOURCE', t('Uygulama çok fazla işlemci/pil kullandığı için Android tarafından durduruldu.', 'Android stopped the app because it used too much CPU/battery.'));
       default:
         return null;
     }
@@ -129,16 +129,19 @@ class CrashReport {
 
   /// Kullanıcıya anlaşılır sebep. İnternet kesintisi gibi zararsız durumlarda popup açılmaz (null).
   static String? _reasonOf(Object e, int ramMb) {
-    final t = e.toString();
+    final msg = e.toString();
     if (e is SocketException || e is TimeoutException || e is HttpException ||
-        t.contains('SocketException') || t.contains('Failed host lookup') || t.contains('ClientException')) {
+        msg.contains('SocketException') || msg.contains('Failed host lookup') || msg.contains('ClientException')) {
       return null; // internet yok: uygulama zaten çevrimdışı çalışıyor
     }
-    if (t.contains('OutOfMemory') || ramMb > 700) {
-      return 'Uygulama çok fazla bellek (RAM) kullanıyor ($ramMb MB). Telefon belleği yetersiz kalmış olabilir.';
+    if (msg.contains('OutOfMemory') || ramMb > 700) {
+      return t('Uygulama çok fazla bellek (RAM) kullanıyor ($ramMb MB). Telefon belleği yetersiz kalmış olabilir.', 'The app is using too much memory (RAM) ($ramMb MB). The phone may be low on memory.');
     }
-    return 'Uygulamanın kodunda bir hata oluştu. Uygulama çalışmaya devam ediyor; '
-        'aynı sorun tekrarlarsa geliştiriciye bildirmen düzeltmemize yardımcı olur.';
+    return t(
+        'Uygulamanın kodunda bir hata oluştu. Uygulama çalışmaya devam ediyor; '
+            'aynı sorun tekrarlarsa geliştiriciye bildirmen düzeltmemize yardımcı olur.',
+        'An error occurred in the app code. The app keeps running; '
+            'if the same problem happens again, reporting it to the developer helps us fix it.');
   }
 
   static void _show({required String title, required String reason, required String detail}) {
@@ -160,19 +163,22 @@ class CrashReport {
           icon: const Icon(Icons.error_outline, color: Colors.redAccent, size: 36),
           title: Text(title, textAlign: TextAlign.center),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Sebep', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(t('Sebep', 'Reason'), style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Text(reason),
             const SizedBox(height: 10),
-            const Text('Hata kaydı otomatik ve anonim olarak geliştiriciye iletildi. '
-                'İstersen ayrıntıları mail ile de gönderebilirsin.',
-                style: TextStyle(fontSize: 12, color: Colors.black54)),
+            Text(
+                t('Hata kaydı otomatik ve anonim olarak geliştiriciye iletildi. '
+                        'İstersen ayrıntıları mail ile de gönderebilirsin.',
+                    'The error log was sent to the developer automatically and anonymously. '
+                        'You can also send the details by email if you like.'),
+                style: const TextStyle(fontSize: 12, color: Colors.black54)),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(c), child: const Text('Kapat')),
             FilledButton.icon(
               icon: const Icon(Icons.mail_outline, size: 18),
-              label: const Text('Mail gönder'),
+              label: Text(t('Mail gönder', 'Send email')),
               onPressed: () {
                 Navigator.pop(c);
                 _mail(title, reason, detail);
@@ -188,11 +194,12 @@ class CrashReport {
 
   static Future<void> _mail(String title, String reason, String detail) async {
     final os = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
-    var body = 'Merhaba,\n\nUygulamada sorun yaşadım. (Ne yaparken olduğunu buraya yazabilirsin)\n\n\n'
+    var body = t('Merhaba,\n\nUygulamada sorun yaşadım. (Ne yaparken olduğunu buraya yazabilirsin)\n\n\n',
+            'Hello,\n\nI had a problem with the app. (You can write what you were doing here)\n\n\n') +
         '---\n$title\nSebep: $reason\nSürüm: v$_version (iç derleme $_build)\nCihaz: $os\n\n${scrubSensitive(detail)}';
     if (body.length > 1800) body = body.substring(0, 1800);
     final q = {
-      'subject': 'Aile ile Namaz – Hata bildirimi (v$_version)',
+      'subject': t('Aile ile Namaz – Hata bildirimi (v$_version)', 'Aile ile Namaz – Error report (v$_version)'),
       'body': body,
     }.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
     try {
