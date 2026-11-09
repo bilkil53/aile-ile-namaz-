@@ -21,5 +21,9 @@ final Map<String, String> familyMessagesEn = {
   for (final d in diniGunler.where((d) => d.bayram)) bayramMessageTr(d): bayramMessageEn(d),
 };
 
+/// İngilizce → Türkçe: 1.78 sürümü hazır mesajları gönderenin dilinde yolluyordu; İngilizce
+/// kullanan birinin eski sürümden gönderdiği tebrik Türkçe alıcıda Türkçe görünsün.
+final Map<String, String> familyMessagesTr = {for (final e in familyMessagesEn.entries) e.value: e.key};
+
 /// Gelen aile mesajını alıcının dilinde döndürür; kendi yazılmış mesajlar olduğu gibi kalır.
-String familyMessageText(String m) => Lang.isEn ? (familyMessagesEn[m] ?? m) : m;
+String familyMessageText(String m) => (Lang.isEn ? familyMessagesEn[m] : familyMessagesTr[m]) ?? m;

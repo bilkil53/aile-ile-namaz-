@@ -39,6 +39,11 @@ void main() {
     expect(familyMessageText('Kendi duam'), 'Kendi duam');
     await Lang.set(AppLang.tr);
     expect(familyMessageText(tr), tr);
+    // 1.78'den İngilizce gönderilmiş tebrik Türkçe alıcıda Türkçe görünür
+    expect(familyMessageText(greetings.first.textEn), tr);
+    for (final m in ['constructor', '__proto__', 'toString', '']) {
+      expect(familyMessageText(m), m);
+    }
   });
 
   test('Sunucudaki (push-family) İngilizce liste uygulamayla aynı', () {

@@ -140,6 +140,16 @@ const GREET_EN: Record<string, string> = {
   "🎉 Ramazan Bayramınız mübarek olsun! Allah nice bayramlara sağlık, huzur ve birlik içinde ulaştırsın. 🤲": "🎉 Eid al-Fitr Mubarak! May Allah let us reach many more Eids in health, peace and togetherness. 🤲",
   "🐑 Kurban Bayramınız mübarek olsun! Allah nice bayramlara sağlık, huzur ve birlik içinde ulaştırsın. 🤲": "🐑 Eid al-Adha Mubarak! May Allah let us reach many more Eids in health, peace and togetherness. 🤲",
 };
+// İngilizce → Türkçe (1.78 sürümü hazır mesajı gönderenin dilinde yolluyordu)
+const GREET_TR: Record<string, string> = Object.fromEntries(Object.entries(GREET_EN).map(([tr, en]) => [en, tr]));
+
+// Hazır mesajı alıcının dilinde verir; kendi yazılmış mesaj olduğu gibi kalır. Object.hasOwn:
+// "constructor", "__proto__" gibi bir mesaj nesnenin kendi alanlarına denk gelmesin.
+function greeting(message: string, en: boolean): string {
+  if (!message) return "";
+  const map = en ? GREET_EN : GREET_TR;
+  return Object.hasOwn(map, message) ? map[message] : message;
+}
 
 function text(type: string, who: string, prayer: string | null, message: string, toMe = false, en = false): [string, string] | null {
   if (en) {
@@ -147,7 +157,7 @@ function text(type: string, who: string, prayer: string | null, message: string,
     switch (type) {
       case "PRAYED": return [`${who} prayed 🤲`, `Prayed ${p}. May Allah accept it.`];
       case "KAZA": return [`${who} made up a missed prayer 📿`, "Completed one kaza prayer. May Allah accept it."];
-      case "DUA": return [toMe ? `${who} sent you a dua 🤲` : `${who} sent the family a dua 🤲`, (message && GREET_EN[message]) || message || "May Allah accept our worship."];
+      case "DUA": return [toMe ? `${who} sent you a dua 🤲` : `${who} sent the family a dua 🤲`, greeting(message, true) || "May Allah accept our worship."];
       case "MEMBER_JOINED": return ["New family member 🤝", `${message ? kin(message, true) : who} joined the family circle.`];
       case "PRO_REQUEST": return [`${who} wants Pro 🌟`, "If you get Family Pro, everyone in the circle becomes Pro."];
       default: return null;
@@ -157,7 +167,7 @@ function text(type: string, who: string, prayer: string | null, message: string,
   switch (type) {
     case "PRAYED": return [`${who} namazını kıldı 🤲`, `${p} namazını kıldı. Allah kabul etsin.`];
     case "KAZA": return [`${who} kaza namazı kıldı 📿`, "Bir kaza namazı eda etti. Allah kabul etsin."];
-    case "DUA": return [toMe ? `${who} sana dua gönderdi 🤲` : `${who} aileye dua gönderdi 🤲`, message || "Allah ibadetlerimizi kabul etsin."];
+    case "DUA": return [toMe ? `${who} sana dua gönderdi 🤲` : `${who} aileye dua gönderdi 🤲`, greeting(message, false) || "Allah ibadetlerimizi kabul etsin."];
     case "MEMBER_JOINED": return ["Aile havuzuna katılım 🤝", `${message || who} aile havuzuna katıldı.`];
     case "PRO_REQUEST": return [`${who} Pro istiyor 🌟`, "Aile Pro'sunu alırsan havuzdaki herkes Pro olur."];
     default: return null;

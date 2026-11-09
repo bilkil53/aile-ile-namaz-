@@ -285,6 +285,8 @@ class Repo {
     _writeTimers.remove(id)?.cancel();
     _writeTimers[id] = Timer(const Duration(seconds: 20), () {
       _writeTimers.remove(id);
+      // Ayarlar'daki "Birazdan gönderilecek" gönderim başarısız olsa da "telefonda bekliyor"a geçsin
+      LocalStore.queueChanged.value++;
       unawaited(syncNow());
     });
     return !offline;
@@ -301,7 +303,10 @@ class Repo {
   /// "Son gönderim" saatini yazar; arada çıkış/hesap değişimi olduysa yazmaz (başka hesaba geçmesin).
   static Future<void> _markSynced(String type, String uid) async {
     if (_stopSync || isGuest || myId != uid) return;
-    await LocalStore.markSynced(type);
+    // Yalnızca bilgi amaçlı: yazılamazsa gönderilmiş kayıt hata sayılmasın
+    try {
+      await LocalStore.markSynced(type);
+    } catch (_) {}
   }
   static final Map<String, Timer> _announceTimers = {};
   static final Set<String> _pendingAnnounce = {};
@@ -418,7 +423,7 @@ class Repo {
     while (i < q.length) {
       if (_stopSync || isGuest || myId != uid) break;
       final o = q[i];
-      // 5 saniyelik bekleme süresi dolmamış işaretler henüz gönderilmez
+      // 20 saniyelik bekleme süresi dolmamış işaretler henüz gönderilmez
       if (o['t'] == 'prayer' && _writeTimers.containsKey('${o['date']}|${o['key']}')) {
         i++;
         continue;
@@ -434,6 +439,8 @@ class Repo {
         }
         // Önce "son gönderim" saati (yalnızca hâlâ aynı hesapsa), sonra kuyruktan silme:
         // silme ekranı yeniler, yenilenen ekran güncel saati görür.
+        // Arada çıkış/hesap değişimi olduysa kuyruğa dokunma: yeni hesabın aynı kaydı silinmesin
+        if (_stopSync || isGuest || myId != uid) break;
         if (o['t'] == 'prayer') await _markSynced('prayer', uid);
         await LocalStore.removeOp(o);
         i++;
@@ -552,6 +559,7 @@ class Repo {
       if (op == null) return;
       await _upsertKaza(type, (op['o'] as num).toInt(), (op['c'] as num).toInt())
           .timeout(const Duration(seconds: 10));
+      if (_stopSync || isGuest || myId != uid) return; // arada çıkış yapıldı: yeni hesabın kuyruğu silinmez
       await _markSynced('kaza', uid);
       await LocalStore.removeOp(op);
     }
