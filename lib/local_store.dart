@@ -82,7 +82,8 @@ class LocalStore {
     }
     unawaited(p.remove(_kOwner));
     clearGuest();
-    queueChanged.value++;
+    // Ekran çizimi sırasında çağrılabilir (giriş kapısı): bildirim çizim bitince yapılır
+    scheduleMicrotask(() => queueChanged.value++);
   }
 
   /// Eski sürümlerin kalıcı misafir bayraklarını ve test dönemi önbelleğini bir kez temizle.
