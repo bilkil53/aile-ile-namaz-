@@ -1,4 +1,4 @@
-Namaz Demo — Gezinti (giriş yapmadan) modu artık yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz, kayıt için Google ile giriş penceresi çıkar; giriş sonrası gezintiden hiçbir şey aktarılmaz. Hata raporlarından e-posta, oturum anahtarı, kimlik ve telefon gibi bilgiler gönderilmeden önce silinir. Kaza sayıları önce telefona, sonra buluta kaydedilir. Test Pro kodu: 1.
+Namaz Demo — Gizlilik ve güvenilirlik: aynı telefonda başka hesapla giriş yapılınca önceki hesabın kayıtları yeni hesaba yazılmaz ve görünmez; çıkışta telefondaki hesap verisi silinir, gönderilmemiş kayıt varsa uyarı verilir; KVKK onayı her hesaba ayrı sorulur. Kaza reddinde sayı doğru değere döner; güncelleme kontrolü takılmaz. Test Pro kodu: 1.
 
 ## 🌟 Kullanıcı için
 
