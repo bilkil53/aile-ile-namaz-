@@ -151,11 +151,23 @@ jobs:
           print('desugaring ok')
           PY
 
-      - name: Firebase Gradle eklentisi (google-services)
+      - name: Firebase Gradle eklentisi (google-services) ve Maven aynası
         run: |
           cp android-config/google-services.json android/app/google-services.json
           python3 - <<'PY'
           import re
+          # Maven Central bazı büyük dosyaları GitHub'a yönlendiriyor; GitHub kesintisinde (504) derleme
+          # durmasın diye önce Google'ın Maven Central aynası denenir, sonra asıl Maven Central.
+          mirror = 'maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }'
+          for f in ['android/settings.gradle.kts', 'android/build.gradle.kts']:
+              try:
+                  t = open(f, encoding='utf-8').read()
+              except FileNotFoundError:
+                  continue
+              if mirror not in t:
+                  t = re.sub(r'(^[ \t]*)mavenCentral\(\)', lambda m: m.group(1) + mirror + '\n' + m.group(1) + 'mavenCentral()', t, flags=re.M)
+                  open(f, 'w', encoding='utf-8').write(t)
+              print(f, 'ayna:', mirror in t)
           st = 'android/settings.gradle.kts'
           s = open(st, encoding='utf-8').read()
           if 'com.google.gms.google-services' not in s:
@@ -306,7 +318,10 @@ jobs:
           if [ -n "$uy" ] && [ "$uy" != "yok" ]; then echo "::warning::Sunucu güvenlik testi uyarısı: $uy"; fi
           case "$res" in
             "SONUC: OK"*) ;;
-            *) echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı; derleme durduruldu."; exit 1 ;;
+            *)
+              # Teşhis: ilk satırlar (bağlantı adresi gizlenir; GitHub gizli değerleri ayrıca maskeler)
+              echo "$out" | sed "s#${SUPABASE_DB_URL}#***#g; s#postgres[a-z]*://[^ ]*#***#g" | head -15
+              echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı; derleme durduruldu."; exit 1 ;;
           esac
 
       - name: Derleme numarası (r1, r2, r3 … yalnızca resmi yayınlara göre artar)
