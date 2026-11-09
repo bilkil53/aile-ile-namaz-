@@ -34,6 +34,11 @@ Future<void> settle(WidgetTester t, [int frames = 8]) async {
   }
 }
 
+/// Uygulamanın kendi hata penceresi açıldıysa test o adımda net bir sebeple durur.
+void noErrorDialog(String where) {
+  expect(find.text('Bir hata oluştu'), findsNothing, reason: '$where: uygulamada hata penceresi açıldı');
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -65,6 +70,7 @@ void main() {
     await t.scrollUntilVisible(sabah, 200, scrollable: todayList.first, maxScrolls: 30);
     await t.ensureVisible(sabah.first);
     await settle(t, 4);
+    noErrorDialog('Bugün ekranı');
     await t.tap(sabah.first);
     final loginDlg = find.text('Google Girişi Gerekir');
     final notYet = find.textContaining('girecek');
@@ -81,6 +87,7 @@ void main() {
       await pumpUntil(t, f);
       await t.tap(f);
       await settle(t, 10);
+      noErrorDialog('$tab sekmesi');
       expect(t.takeException(), isNull, reason: '$tab sekmesinde hata');
     }
     await pumpUntil(t, todayList); // Bugün'e geri dönüldü, liste yine görünüyor
