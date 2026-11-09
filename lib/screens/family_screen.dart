@@ -478,8 +478,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final text = await showDialog<String>(context: context, builder: (_) => _DuaDialog(to: to == null ? null : _label(to)));
     if (text == null || _pool == null) return;
     // Hazır dua seçildiyse boş gider: her alıcı onu kendi dilinde görür (sunucu ve uygulama doldurur)
-    final msg = text == _DuaDialog.useDefault ? '' : text.trim();
-    if (msg.isEmpty && text != _DuaDialog.useDefault) return;
+    final msg = text == _kDuaDefault ? '' : text.trim();
+    if (msg.isEmpty && text != _kDuaDefault) return;
     try {
       await Repo.sendDua(_pool!.id, msg.length > 280 ? msg.substring(0, 280) : msg, targetId: to?.userId);
       _toast(to == null ? t('Dua tüm aileye gönderildi 🤲', 'Dua sent to the whole family 🤲') : t('Dua yalnızca ona gönderildi 🤲 (${_label(to)})', 'Dua sent only to them 🤲 (${_label(to)})'));
@@ -1442,6 +1442,9 @@ class _TitleDialogState extends State<_TitleDialog> {
 }
 
 /// Dua ve tebrik gönder: hazır dualar + kendin yaz.
+/// "Hazır duayı gönder" seçimi: mesaj boş gönderilir, her alıcı hazır duayı kendi dilinde görür.
+const _kDuaDefault = '\u0000default';
+
 class _DuaDialog extends StatefulWidget {
   final String? to;
   const _DuaDialog({this.to});
@@ -1452,9 +1455,6 @@ class _DuaDialog extends StatefulWidget {
 
 class _DuaDialogState extends State<_DuaDialog> {
   final _ctrl = TextEditingController();
-  /// "Hazır duayı gönder" seçimi: mesaj boş gönderilir, alıcı kendi dilinde görür.
-  static const useDefault = '\u0000default';
-
   static String get _defaultDua => t('Allah ibadetlerimizi kabul etsin, ailemizi namazda buluştursun 🤲',
       'May Allah accept our worship and unite our family in prayer 🤲');
 
@@ -1512,7 +1512,7 @@ class _DuaDialogState extends State<_DuaDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: Text(t('Vazgeç', 'Cancel'))),
         FilledButton(
           // Boş bırakılırsa gönderilecek dua önizlemede yazar
-          onPressed: () => Navigator.pop(context, _ctrl.text.trim().isEmpty ? useDefault : _ctrl.text),
+          onPressed: () => Navigator.pop(context, _ctrl.text.trim().isEmpty ? _kDuaDefault : _ctrl.text),
           child: Text(_ctrl.text.trim().isEmpty ? t('Hazır duayı gönder 🤲', 'Send the ready-made dua 🤲') : t('Yazdığımı gönder 🤲', 'Send what I wrote 🤲')),
         ),
       ],
