@@ -312,10 +312,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: ValueListenableBuilder<int>(
           valueListenable: Pro.changed,
-          builder: (_, __, ___) => FutureBuilder<bool>(
-            future: Pro.isReis(),
+          builder: (_, __, ___) => FutureBuilder<(bool, bool)>(
+            future: (() async => (await Pro.isTester(), await Pro.isReis()))(),
             builder: (context, snap) {
-              final reis = snap.data ?? true;
+              final tester = snap.data?.$1 ?? false;
+              final reis = snap.data?.$2 ?? true;
+              if (snap.connectionState != ConnectionState.done) return const SizedBox.shrink();
+              if (!tester) {
+                return const Text('🧪 Test Paneli yalnızca test hesaplarına açık.',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF78350F)));
+              }
               const brown = Color(0xFF78350F);
               Widget btn(String label, IconData icon, Future<void> Function()? onTap) => OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
@@ -340,11 +346,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: const TextStyle(fontSize: 13, color: brown)),
                 const SizedBox(height: 10),
                 Wrap(spacing: 8, runSpacing: 8, children: [
+                  btn(reis ? 'Pro\'ya geç' : 'Pro\'ya geç: Pro\'yu reis alır', Icons.workspace_premium,
+                      reis ? () async => await Pro.redeem() : null),
+                  btn('Pro\'dan düş → Ücretsiz', Icons.close, Pro.expireTest),
                   btn('Denemeyi baştan başlat (7 gün)', Icons.play_arrow, Pro.testRestartTrial),
-                  btn('Denemeyi bitir → Ücretsiz', Icons.stop, Pro.expireTest),
-                  btn(reis ? 'Pro yap (test)' : 'Pro yap: Pro\'yu reis alır', Icons.workspace_premium,
-                      reis ? () async => await Pro.redeem('1') : null),
-                  btn('Pro\'yu kaldır', Icons.close, Pro.testRemovePro),
                 ]),
                 const SizedBox(height: 6),
                 const Text('Bu panel yalnızca test sürümünde görünür; gerçek kullanıcılar görmez.',
@@ -806,7 +811,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Expanded(
                       child: Text(t('Ücretsiz sürümde bildirimler kapalı · Pro ile açılır', 'Notifications are off in the free version · open with Pro'),
                           style: TextStyle(color: Colors.white70, fontSize: 13))),
-                  TextButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro kodu', 'Pro code'))),
+                  TextButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
                 ]),
               ),
             ])

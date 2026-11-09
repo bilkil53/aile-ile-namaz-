@@ -8,7 +8,7 @@ import 'settings.dart';
 /// Pro / Demo durumu.
 /// - Yeni kullanıcı: ilk girişte 7 gün Pro deneme (sunucu ensure_pro_trial).
 /// - Süre bitince Demo: bazı özellikler kilitlenir.
-/// - Pro kodu girilince (redeem_pro_code) tekrar Pro.
+/// - Test listesindeki hesap "Pro'ya geç"e basınca (redeem_pro_code, kod gerekmez) tekrar Pro.
 /// - Aile Pro'su: reis (havuz sahibi) Pro alınca havuzdaki herkes Pro olur; deneme kişiye özeldir.
 /// Durum hesaba bağlıdır (sunucu my_pro_status) ve telefonda önbelleğe alınır (çevrimdışı çalışır).
 /// Namaz Demo (test kanalı) mı: test paneli ve 🧪 etiketleri yalnızca burada.
@@ -56,6 +56,18 @@ class Pro {
       return pools.isEmpty || pools.first.ownerId == myId;
     } catch (_) {
       return true; // bağlantı yoksa sunucu zaten kontrol eder
+    }
+  }
+
+  /// Bu hesap Pro test listesinde mi? (Sunucu her işlemde ayrıca denetler; burası yalnızca
+  /// test panelini ve "Pro'ya geç" düğmesini göstermek için.) Bağlantı yoksa false.
+  static Future<bool> isTester() async {
+    if (isGuest) return false;
+    try {
+      final r = await supa.rpc('am_i_pro_tester').timeout(const Duration(seconds: 6));
+      return r == true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -215,14 +227,6 @@ class Pro {
     await refresh();
   }
 
-  /// TEST: kendi aldığın Pro'yu kaldır (deneme durumu kalır).
-  static Future<void> testRemovePro() async {
-    try {
-      await supa.rpc('test_remove_pro').timeout(const Duration(seconds: 8));
-    } catch (_) {}
-    await refresh();
-  }
-
   /// Pro isteği gönderenlerin adları (ör. "Kızın Ayşe").
   static Map<String, String> requestNames = {};
 
@@ -286,8 +290,9 @@ class Pro {
 
   static String? lastError;
 
-  /// Pro kodu dener. Doğruysa Pro'ya geçer; yanlışsa false.
-  static Future<bool> redeem(String code) async {
+  /// Pro'ya geçer (test aşaması: yalnızca test listesindeki hesaplar, kod gerekmez; gerçek satışta
+  /// Google Play ödemesine geçilecek). Başarılıysa true.
+  static Future<bool> redeem([String code = '']) async {
     try {
       final r = await supa.rpc('redeem_pro_code', params: {'p_code': code}).timeout(const Duration(seconds: 8));
       await _save(r == null ? null : DateTime.tryParse(r as String)?.toLocal());
@@ -295,9 +300,12 @@ class Pro {
       lastError = null;
       return active;
     } catch (e) {
-      lastError = e.toString().contains('only_reis')
+      final s = e.toString();
+      lastError = s.contains('only_reis')
           ? t('Pro\'yu yalnızca Aile Reisi alabilir.', 'Only the head of family can get Pro.')
-          : null;
+          : s.contains('not_tester')
+              ? t('Bu test sürümünde Pro yalnızca test hesaplarına açık.', 'In this test version Pro is open to test accounts only.')
+              : null;
       return false;
     }
   }

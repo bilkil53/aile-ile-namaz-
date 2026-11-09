@@ -15,7 +15,7 @@ class ProBadge extends StatelessWidget {
       );
 }
 
-/// Kilitli özelliğe dokununca: "Bu özellik Pro sürümde" bilgisi + Pro kodu girme.
+/// Kilitli özelliğe dokununca: "Bu özellik Pro sürümde" bilgisi + Pro'ya geç.
 Future<void> showProRequired(BuildContext context, {String? feature}) async {
   await showDialog<void>(
     context: context,
@@ -97,32 +97,27 @@ Future<void> _showAskReisDialog(BuildContext context) async {
   );
 }
 
-/// Pro kodu girme penceresi (yalnızca Aile Reisi). Reis değilse "Aile Reisine ilet" açılır.
+/// Pro'ya geçiş penceresi (yalnızca Aile Reisi). Reis değilse "Aile Reisine ilet" açılır.
+/// Test aşaması: kod yok; test listesindeki hesap "Pro'ya geç"e basınca Pro olur (sunucu denetler).
 Future<void> showProCodeDialog(BuildContext context) async {
   if (!await Pro.isReis()) {
     if (context.mounted) await _showAskReisDialog(context);
     return;
   }
   if (!context.mounted) return;
-  final ctrl = TextEditingController();
   var busy = false;
   String? err;
   await showDialog<void>(
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setLocal) => AlertDialog(
-        title: Text(t('Pro kodu', 'Pro code')),
+        title: Text(t('Pro\'ya geç', 'Get Pro')),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          TextField(
-            controller: ctrl,
-            autofocus: true,
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(hintText: t('Kodu yaz', 'Enter the code'), errorText: err),
-            onChanged: (_) => setLocal(() => err = null),
-          ),
-          const SizedBox(height: 10),
           Text(t('👨‍👩‍👧 Ailede bir kişinin (Aile Reisi) Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur.', '👨‍👩‍👧 It is enough for one person in the family (the head of family) to get Pro; everyone in the family circle (up to 5 people) becomes Pro.'), style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-
+          if (err != null) ...[
+            const SizedBox(height: 8),
+            Text(err!, style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold)),
+          ],
           const SizedBox(height: 8),
           Text(t('ℹ️ İnternet gerektiren özellikler (aile havuzu, bildirimler, bulut yedekleme, Pro) sunucu altyapısı çalıştığı sürece kullanılabilir; bakım veya kesintide geçici olarak çalışmayabilir.', 'ℹ️ Features that need the internet (family circle, notifications, cloud backup, Pro) work as long as the server infrastructure is running; they may be temporarily unavailable during maintenance or outages.'), style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
         ]),
@@ -132,8 +127,11 @@ Future<void> showProCodeDialog(BuildContext context) async {
             onPressed: busy
                 ? null
                 : () async {
-                    setLocal(() => busy = true);
-                    final ok = await Pro.redeem(ctrl.text);
+                    setLocal(() {
+                      busy = true;
+                      err = null;
+                    });
+                    final ok = await Pro.redeem();
                     if (!ctx.mounted) return;
                     if (ok) {
                       Navigator.pop(ctx);
@@ -142,15 +140,14 @@ Future<void> showProCodeDialog(BuildContext context) async {
                     } else {
                       setLocal(() {
                         busy = false;
-                        err = Pro.lastError ?? t('Kod geçersiz', 'Invalid code');
+                        err = Pro.lastError ?? t('Pro\'ya geçilemedi. İnternetini kontrol edip tekrar dene.', 'Could not switch to Pro. Check your internet and try again.');
                       });
                     }
                   },
-            child: Text(busy ? '...' : t('Etkinleştir', 'Activate')),
+            child: Text(busy ? '...' : t('Pro\'ya geç', 'Get Pro')),
           ),
         ],
       ),
     ),
   );
-  ctrl.dispose();
 }
