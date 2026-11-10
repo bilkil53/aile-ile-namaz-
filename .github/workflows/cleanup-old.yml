@@ -1,0 +1,55 @@
+name: Eskileri temizle (son 2 sürüm kalır)
+
+# Yalnızca elle başlatılır. Kalıcı siler, geri alınamaz:
+#  - Yayınlar (APK dosyalarıyla): her kanalda (kararlı ve demo) en yeni 2 sürüm kalır, daha eskileri silinir.
+#    Kanal başına ayrı sayılır; böylece kararlı "en son sürüm" (uygulama içi güncelleme buradan okur) hiç silinmez.
+#  - Etiketler: kalan yayınlara ait olmayan v… ve eski r… etiketleri silinir.
+#  - Dallar: check/son dışındaki check/* kontrol dalları silinir. main, demo, dev ve check/son'a dokunulmaz.
+on:
+  workflow_dispatch:
+    inputs:
+      onay:
+        description: 'Kalıcı silme, geri alınamaz. Onaylamak için SIL yazın. Boş bırakılırsa yalnızca liste gösterilir.'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-numbering
+  cancel-in-progress: false
+
+jobs:
+  temizle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Listele ve (onay varsa) sil
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ONAY: ${{ inputs.onay }}
+        run: |
+          R="repos/$GITHUB_REPOSITORY"
+          gh api "$R/releases?per_page=100" --paginate --jq '.[] | "\(.id) \(.tag_name)"' > hepsi.txt
+          V='^v[0-9]+\.[0-9]+\.[0-9]+$'; D='^v[0-9]+\.[0-9]+\.[0-9]+-demo$'
+          # Son hane (derleme sırası) büyükten küçüğe; kanal başına ilk 2 kalır
+          sirala() { awk '{print $2}' hepsi.txt | grep -E "$1" | sed 's/-demo$//' | awk -F. '{print $3" "$0}' | sort -rn | awk '{print $2}'; }
+          sirala "$V" | head -2 > kalan.txt
+          sirala "$D" | head -2 | sed 's/$/-demo/' >> kalan.txt
+          if ! grep -Eq "$V" kalan.txt; then echo "::error::Kalacak kararlı sürüm bulunamadı; hiçbir şey silinmedi."; exit 1; fi
+          grep -vxFf kalan.txt <(awk '{print $2}' hepsi.txt) > sil_yayin.txt || true
+          gh api "$R/git/matching-refs/tags/" --paginate --jq '.[].ref | ltrimstr("refs/tags/")' \
+            | grep -E '^(v[0-9]+\.[0-9]+\.[0-9]+(-demo)?|r[0-9]+)$' | grep -vxFf kalan.txt > sil_etiket.txt || true
+          gh api "$R/git/matching-refs/heads/check/" --paginate --jq '.[].ref | ltrimstr("refs/heads/")' \
+            | grep -E '^check/' | grep -vx 'check/son' > sil_dal.txt || true
+          echo "KALACAK sürümler:";  cat kalan.txt
+          echo "SİLİNECEK yayınlar ($(wc -l < sil_yayin.txt)):"; cat sil_yayin.txt
+          echo "SİLİNECEK etiketler ($(wc -l < sil_etiket.txt)):"; cat sil_etiket.txt
+          echo "SİLİNECEK dallar ($(wc -l < sil_dal.txt)):"; cat sil_dal.txt
+          if [ "$ONAY" != "SIL" ]; then echo "::notice::Onay yok (SIL yazılmadı): yalnızca liste gösterildi, hiçbir şey silinmedi."; exit 0; fi
+          while read -r tag; do
+            id=$(awk -v t="$tag" '$2==t{print $1}' hepsi.txt)
+            gh api -X DELETE "$R/releases/$id" && echo "yayın silindi: $tag"
+          done < sil_yayin.txt
+          while read -r tag; do gh api -X DELETE "$R/git/refs/tags/$tag" && echo "etiket silindi: $tag"; done < sil_etiket.txt
+          while read -r b; do gh api -X DELETE "$R/git/refs/heads/$b" && echo "dal silindi: $b"; done < sil_dal.txt
+          echo "Kalan yayınlar:"; gh api "$R/releases?per_page=100" --jq '.[].tag_name'
