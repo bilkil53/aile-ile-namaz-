@@ -94,11 +94,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       supportedLocales: const [Locale('tr'), Locale('en')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       navigatorKey: CrashReport.navigatorKey,
-      // Telefonun büyük yazı ayarı uygulamayı büyütmesin (ekranlar ve pencereler taşmasın)
+      // Telefonun büyük yazı ayarı %30'a kadar uygulanır (daha fazlasında ekranlar ve pencereler taşar)
       builder: (context, child) {
         final mq = MediaQuery.of(context);
         return MediaQuery(
-          data: mq.copyWith(textScaler: mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.0)),
+          data: mq.copyWith(textScaler: mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.3)),
           child: child!,
         );
       },

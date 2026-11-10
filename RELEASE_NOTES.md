@@ -1,4 +1,4 @@
-Namaz Demo — 🌟 5 vaktin hepsini kılana teşvik bildirimi; aile havuzundakilere de otomatik haber gider ("… 5 vaktin hepsini kıldı"). Muaf günler sayılmaz, her gün için bir kez gider.
+Namaz Demo — Büyük yazı desteği (telefonun yazı boyutu ayarı %30'a kadar uygulanır). Gizlilik: namaz vakitleri için konum yaklaşık 1 km'ye yuvarlanarak gönderilir; gizlilik metni buna göre düzeltildi. Sağlamlaştırma: paket sürümleri sabitlendi, zorunlu güncelleme altyapısı, bağlantı zaman aşımları.
 
 ## 🌟 Kullanıcı için
 
