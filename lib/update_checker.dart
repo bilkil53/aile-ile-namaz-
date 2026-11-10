@@ -18,7 +18,7 @@ import 'log.dart';
 /// Güncelleme iki kanaldan yapılır (derlemede `--dart-define=STORE=` ile seçilir):
 /// - `github` (varsayılan): GitHub Releases'taki son APK uygulama içinde indirilir, Android kurulum ekranı açılır.
 /// - `play`: Google Play'in uygulama içi güncelleme sistemi kullanılır (Play kuralları APK indirmeyi yasaklar).
-/// Karşılaştırma derleme numarasıyla yapılır (yayın etiketi rN = versionCode N).
+/// Karşılaştırma derleme numarasıyla yapılır (yayın etiketi v1.0.N = versionCode N + 1).
 class UpdateChecker {
   static const store = String.fromEnvironment('STORE', defaultValue: 'github');
   static bool get isPlay => store == 'play';
