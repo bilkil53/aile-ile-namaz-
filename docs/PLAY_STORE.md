@@ -26,7 +26,7 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
    - Toplanan: Ad, e-posta (hesap yönetimi) · Uygulama etkinliği: namaz/kaza kayıtları, mesajlar (uygulama işlevi) · Cihaz kimliği: bildirim kimliği (uygulama işlevi) · Uygulama bilgileri ve performansı: çökme/hata raporu — **isteğe bağlı** (yalnızca kullanıcı "Raporu gönder" derse; hesapla ilişkilendirilmez; uygulama işlevi/hata giderme)
    - Konum: **yaklaşık konum paylaşılıyor, toplanmıyor** — yaklaşık 1 km'ye yuvarlanmış koordinat, kimlik bilgisi olmadan namaz vakti servisine (api.aladhan.com) gönderilir; sunucumuzda saklanmaz. Play formunda "Yaklaşık konum → uygulama işlevi → geçici işleme" olarak beyan edilir.
    - Veriler aktarım sırasında şifreleniyor: Evet · Kullanıcı silme isteyebilir: Evet (uygulama içi + web bağlantısı).
-   - Üçüncü taraflarla paylaşım: Hayır (Supabase ve Firebase hizmet sağlayıcıdır).
+   - Üçüncü taraflarla paylaşım: yalnızca yaklaşık konum (namaz vakti servisi api.aladhan.com); diğer veriler için Hayır (Supabase ve Firebase hizmet sağlayıcıdır).
 5. **İzin beyanları:** Konum (ön planda, vakit hesabı); Bildirim; Kesin alarm (`SCHEDULE_EXACT_ALARM` — namaz vakti hatırlatıcısı, kullanıcı izniyle).
 6. **İçerik derecelendirmesi** anketi (dini içerik, şiddet yok) → genellikle "Herkes".
 7. **Mağaza sayfası:** kısa/uzun açıklama, en az 2 ekran görüntüsü, 512×512 simge, 1024×500 öne çıkan görsel.
