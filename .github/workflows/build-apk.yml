@@ -396,8 +396,68 @@ jobs:
           done
           ls -la aile-ile-namaz*.apk
 
+      - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
+        run: |
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          if 'xmlns:tools' not in s:
+              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
+          s = s.replace('<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>',
+                        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>')
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
+            --dart-define=STORE=play --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
+          cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
+          (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aile-ile-namaz-apk
+          path: |
+            aile-ile-namaz*.apk
+            aile-ile-namaz.aab
+            debug-symbols.zip
+
+      - name: Sürüm notlarını hazırla (RELEASE_NOTES.md + teknik ayrıntılar)
+        if: github.ref == 'refs/heads/main'
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          V="v${{ env.APP_VERSION }}"
+          D="$(TZ=Europe/Istanbul date '+%d.%m.%Y %H:%M')"
+          echo "RELEASE_TITLE=$V — $D" >> "$GITHUB_ENV"
+          {
+            # İlk satır uygulama içi güncelleme penceresinde gösterilir
+            echo "$(head -n 1 RELEASE_NOTES.md)"
+            tail -n +2 RELEASE_NOTES.md
+            echo
+            echo "---"
+            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
+            echo
+            echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
+          } > release_body.md
+
+      - name: Yayınla (uygulama içi güncelleme buradan okur)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: r${{ env.BUILD_NO }}
+          name: ${{ env.RELEASE_TITLE }}
+          body_path: release_body.md
+          prerelease: false
+          make_latest: true
+          files: |
+            aile-ile-namaz.apk
+            aile-ile-namaz-arm64-v8a.apk
+            aile-ile-namaz-armeabi-v7a.apk
+            aile-ile-namaz-x86_64.apk
+            aile-ile-namaz.aab
+
       # ── TEST ORTAMI 1: GitHub emülatörü ── gerçek uygulama bir Android emülatöründe açılır,
-      # misafir akışı parmakla dokunur gibi denenir. Başarısızsa yayın yapılmaz (her dalda).
+      # misafir akışı parmakla dokunur gibi denenir. YAYINDAN SONRA çalışır: başarısızsa çalışma kırmızı olur,
+      # yayın yerinde kalır; sorun incelenip düzeltme yayını yapılır. (Zorunlu kontroller yayından önce.)
       - name: Emülatör için donanım hızlandırma (KVM)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -423,31 +483,15 @@ jobs:
           [ -f ui-test.txt ] || exit 0
           { echo '## GitHub emülatör ekran testi'; echo '```'; grep -vE '^(INFO|WARNING) ' ui-test.txt | tail -n 60; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
-        run: |
-          python3 - <<'PY'
-          p = 'android/app/src/main/AndroidManifest.xml'
-          s = open(p, encoding='utf-8').read()
-          if 'xmlns:tools' not in s:
-              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
-          s = s.replace('<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>',
-                        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>')
-          open(p, 'w', encoding='utf-8').write(s)
-          PY
-          flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
-            --dart-define=STORE=play --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
-          cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
-          (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
-
       # ── TEST ORTAMI 2: Google Firebase Test Lab ── yayınlanacak APK'nın kendisi Google'ın
       # 1 gerçek telefonunda ve 1 sanal telefonunda robotla gezilir. Kota sınırlı olduğu için
-      # yalnızca yayın dallarında (main, demo). Anahtar yoksa veya test geçmezse yayın yapılmaz.
+      # yalnızca yayın dallarında (main, demo). Yayından sonra çalışır; geçmezse çalışma kırmızı olur.
       - name: Test Lab anahtarı var mı
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
         env:
           KEY: ${{ secrets.FIREBASE_TESTLAB_KEY }}
         run: |
-          [ -n "$KEY" ] || { echo '::error::FIREBASE_TESTLAB_KEY yok: Google Test Lab testi yapılamaz, yayın durduruldu.'; exit 1; }
+          [ -n "$KEY" ] || { echo '::error::FIREBASE_TESTLAB_KEY yok: Google Test Lab testi yapılamadı (yayın yapıldı, test eksik).'; exit 1; }
           echo 'Test Lab anahtarı hazır'
 
       - uses: google-github-actions/auth@v2
@@ -530,46 +574,3 @@ jobs:
           done
           echo "Test Lab deposu: $LIMIT öncesine ait $n eski test klasörü silindi"
           echo "Test Lab deposu: $n eski rapor silindi (son 7 gün saklanıyor)" >> "$GITHUB_STEP_SUMMARY"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: aile-ile-namaz-apk
-          path: |
-            aile-ile-namaz*.apk
-            aile-ile-namaz.aab
-            debug-symbols.zip
-
-      - name: Sürüm notlarını hazırla (RELEASE_NOTES.md + teknik ayrıntılar)
-        if: github.ref == 'refs/heads/main'
-        env:
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-        run: |
-          V="v${{ env.APP_VERSION }}"
-          D="$(TZ=Europe/Istanbul date '+%d.%m.%Y %H:%M')"
-          echo "RELEASE_TITLE=$V — $D" >> "$GITHUB_ENV"
-          {
-            # İlk satır uygulama içi güncelleme penceresinde gösterilir
-            echo "$(head -n 1 RELEASE_NOTES.md)"
-            tail -n +2 RELEASE_NOTES.md
-            echo
-            echo "---"
-            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
-            echo
-            echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
-          } > release_body.md
-
-      - name: Yayınla (uygulama içi güncelleme buradan okur)
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: r${{ env.BUILD_NO }}
-          name: ${{ env.RELEASE_TITLE }}
-          body_path: release_body.md
-          prerelease: false
-          make_latest: true
-          files: |
-            aile-ile-namaz.apk
-            aile-ile-namaz-arm64-v8a.apk
-            aile-ile-namaz-armeabi-v7a.apk
-            aile-ile-namaz-x86_64.apk
-            aile-ile-namaz.aab
