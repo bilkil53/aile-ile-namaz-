@@ -24,12 +24,8 @@ jobs:
           channel: stable
           flutter-version: 3.47.9
           cache: true
-      - run: flutter pub get
-      - name: Paket kilit dosyası (pubspec.lock)
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: pubspec-lock
-          path: pubspec.lock
+      # Paket sürümleri pubspec.lock ile sabittir: kilit dosyasıyla uyuşmuyorsa durur
+      - run: flutter pub get --enforce-lockfile
       - name: Kod analizi
         run: |
           set +e
