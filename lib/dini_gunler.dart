@@ -234,12 +234,16 @@ class DiniGunler {
   /// Yaklaşan mübarek gün: [within] gün içindeki en yakın gün ve kalan gün sayısı (1 = yarın).
   /// Bugünün kendisi sayılmaz (o gün bugünkü kart gösterilir).
   static (DiniGun, int)? upcoming(DateTime day, {int within = 7}) {
-    final d = _d(day);
+    // Gün farkı UTC tarihleriyle: yaz/kış saati geçişinde bir gün eksik sayılmasın
+    final d = DateTime.utc(day.year, day.month, day.day);
     (DiniGun, int)? best;
     for (final e in _events) {
-      final left = e.date.difference(d).inDays;
+      final left = DateTime.utc(e.date.year, e.date.month, e.date.day).difference(d).inDays;
       if (left < 1 || left > within) continue;
-      if (best == null || left < best.$2) best = (e.gun, left);
+      // Aynı güne denk gelen iki günde kandil öne alınır (ör. Üç Ayların Başlangıcı + Regaib)
+      if (best == null || left < best.$2 || (left == best.$2 && e.gun.eveBefore && !best.$1.eveBefore)) {
+        best = (e.gun, left);
+      }
     }
     return best;
   }
