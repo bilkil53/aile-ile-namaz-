@@ -344,9 +344,14 @@ jobs:
           # Eski r<N> etiketleri (v1.0.0 öncesi) sayılmaz.
           F='select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-demo)?$")) | sub("-demo$"; "") | split(".") | .[2] | tonumber + 1'
           rel=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName -q "[.[].tagName | $F] | max // 0")
-          tag=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --paginate \
-            -q "[.[].ref | ltrimstr(\"refs/tags/\") | $F] | max // 0" | sort -n | tail -1)
-          case "$rel$tag" in ''|*[!0-9]*) echo "::error::Sürüm numarası okunamadı (rel='$rel' tag='$tag'); yayın durduruldu."; exit 1 ;; esac
+          # Çok sayfalı yanıtta her sayfa ayrı satır verir: en büyüğü alınır
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --paginate \
+            -q "[.[].ref | ltrimstr(\"refs/tags/\") | $F] | max // 0")
+          tag=$(printf '%s\n' "$refs" | sort -n | tail -1)
+          # Okunamazsa tahmin yürütülmez (yanlış numara = kurulamayan güncelleme): yayın durur
+          for x in "$rel" "$tag"; do
+            case "$x" in ''|*[!0-9]*) echo "::error::Sürüm numarası okunamadı (yayın='$rel' etiket='$tag'); yayın durduruldu."; exit 1 ;; esac
+          done
           last=$(( rel > tag ? rel : tag ))
           echo "BUILD_NO=$((last + 1))" >> "$GITHUB_ENV"
           echo "APP_VERSION=${{ env.APP_MAJOR }}.${{ env.APP_MINOR }}.$last" >> "$GITHUB_ENV"
