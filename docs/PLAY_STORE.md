@@ -10,11 +10,12 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
 | APK kurma izni | AAB'de `REQUEST_INSTALL_PACKAGES` kaldırılır (Play politikası). |
 | Hesap silme (uygulama içi) | Ayarlar → Hesabımı ve verilerimi sil |
 | Hesap silme (web) | https://bilkil53.github.io/aile-ile-namaz-/delete-account.html |
-| Gizlilik politikası | https://bilkil53.github.io/aile-ile-namaz-/privacy.html |
+| Gizlilik politikası | https://bilkil53.github.io/aile-ile-namaz-/privacy.html (İngilizce: privacy-en.html) |
 | Kod karıştırma | `--obfuscate --split-debug-info` (sembol dosyaları Actions artifact'ında `debug-symbols.zip`) |
 | Hedef Android sürümü | Flutter stable'ın varsayılanı (Play'in yıllık hedef SDK şartını karşılar); `flutter create` her derlemede günceller. |
 
 ## Çıkış günü yapılacaklar (sırayla)
+0. **⚠️ KVKK yurt dışı aktarım:** Supabase ve Google ile Kurul'un standart sözleşmesi (Tip 2: veri sorumlusundan veri işleyene) Türkçe metin üzerinde imzalanmalı, imzadan itibaren 5 iş günü içinde Kurum'a bildirilmeli; ardından gizlilik sayfasındaki aktarım dayanağı cümlesi "standart sözleşme" olarak güncellenmeli. Bir KVKK avukatına danışılması önerilir.
 1. **Play Console geliştirici hesabı** aç (tek seferlik 25 $), uygulama oluştur: ad "Aile İle Namaz", paket `com.bilkil53.aile_ile_namaz`.
 2. **Play App Signing**'i kabul et; ilk sürüm olarak son `aile-ile-namaz.aab` dosyasını "Dahili test" kanalına yükle.
 3. **⚠️ Google girişi (S2):** Play uygulamayı kendi anahtarıyla imzalar → SHA-1 değişir. Play Console → *Kurulum → Uygulama imzalama* sayfasındaki **"Uygulama imzalama anahtarı sertifikası" SHA-1**'ini kopyala ve şuralara ekle:
@@ -22,7 +23,7 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
    - Firebase **aile-ile-namaz-d437f** → Proje ayarları → Android uygulaması → *Parmak izi ekle*.
    - Google Cloud **aile-ile-namaz-d437f** → Credentials → *Android key (auto created by Firebase)* → Android uygulama kısıtlamasına aynı paket + Play SHA-1'ini ekle.
 4. **Veri güvenliği formu** (Data safety):
-   - Toplanan: Ad, e-posta (hesap yönetimi) · Uygulama etkinliği: namaz/kaza kayıtları, mesajlar (uygulama işlevi) · Cihaz kimliği: bildirim kimliği (uygulama işlevi) · (Çökme raporu toplanmıyor.)
+   - Toplanan: Ad, e-posta (hesap yönetimi) · Uygulama etkinliği: namaz/kaza kayıtları, mesajlar (uygulama işlevi) · Cihaz kimliği: bildirim kimliği (uygulama işlevi) · Uygulama bilgileri ve performansı: çökme/hata raporu — **isteğe bağlı** (yalnızca kullanıcı "Raporu gönder" derse; hesapla ilişkilendirilmez; uygulama işlevi/hata giderme)
    - Konum: **toplanmıyor** (yalnızca cihazda işleniyor).
    - Veriler aktarım sırasında şifreleniyor: Evet · Kullanıcı silme isteyebilir: Evet (uygulama içi + web bağlantısı).
    - Üçüncü taraflarla paylaşım: Hayır (Supabase ve Firebase hizmet sağlayıcıdır).
@@ -43,7 +44,7 @@ Aile İle Namaz, namazlarınızı ailenizle birlikte takip etmeniz için hazırl
 • Kaza namazı takibi: borcunuzu kaydedin, kıldıkça düşün
 • Karne: seri, aylık takvim, istatistikler ve manevi rozetler
 • Mübarek gün ve gece hatırlatmaları, Cuma hatırlatması
-• Reklamsız, sade ve Türkçe
+• Reklamsız ve sade; Türkçe ve İngilizce
 
 ℹ️ Hizmet notu: Aile havuzu, aile bildirimleri, bulut yedekleme gibi internet gerektiren özellikler, uygulamanın sunucu altyapısı (Supabase, Google Firebase) çalıştığı sürece kullanılabilir. Bakım veya altyapı kesintilerinde bu özellikler geçici olarak çalışmayabilir. Namaz vakitleri ve telefona kaydedilen işaretler internetsiz de çalışır; bağlantı gelince otomatik eşitlenir.
 

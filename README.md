@@ -139,7 +139,7 @@
 | Telefon yedeği | Android otomatik yedeklemesi kapalı; oturum bilgisi başka cihaza taşınamaz. Kişisel kayıtlar hesaba bağlı bulutta |
 | Giriş yöntemi | Sadece Google; e-posta/şifre ile kayıt kapalı |
 | Hesap silme | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
-| KVKK | Girişte aydınlatma metni + yurt dışına aktarım için açık rıza (onay kutusu); rıza tarihi `profiles.kvkk_consent_at`; mevcut kullanıcılara bir kez sorulur |
+| KVKK | Girişte Aydınlatma Metni (TR/EN, `docs/privacy.html` · `privacy-en.html`) için yalnızca "okudum ve anladım" beyanı — açık rıza istenmez (Kurul İlke Kararı 2026/347); beyan tarihi `profiles.kvkk_consent_at`. Yurt dışı aktarım için standart sözleşme Play öncesi yapılacak (`docs/PLAY_STORE.md`) |
 | İmza anahtarı | GitHub Secrets'ta; repoda değil |
 | İmza kontrolü | Uygulama açılışta kendi sertifikasının SHA-256 parmak izini derlemede gömülen değerle (`--dart-define=EXPECTED_SIG`) karşılaştırır; uymazsa uyarı (şimdilik engellemez). Play imzası eklendiğinde iki değer olur |
 | Hata kayıtları | Anonim; uygulama okuyamaz, sadece yazabilir; 30 gün sonra silinir |
@@ -192,7 +192,7 @@ lib/
   cuma_reminder.dart   Erkeklere peş peşe 3 Cuma uyarısı
   log.dart             Sessiz hataların kaydı (son hata)
   integrity.dart       APK imza kontrolü (tutmazsa uygulama açılmaz; Play sürümünde yok; yetki kontrolü sunucuda)
-  kvkk.dart            KVKK aydınlatma ve açık rıza
+  kvkk.dart            KVKK aydınlatma (okudum beyanı)
   screens/             today, family, kaza, karne, settings, login (Hoş Geldiniz), home_shell, notify_health (Bildirim izinleri)
   widgets/             prayer_icon, qibla_card (pusula), dini_gun_card (bayram / kandil kartı)
 android-config/

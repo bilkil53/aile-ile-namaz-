@@ -1,4 +1,4 @@
-Hata olunca artık hiçbir bilgi otomatik gönderilmez: pencerede istersen "Raporu gönder" ya da "Mail ile" seçersin. Hesap değiştirirken bekleyen kayıtlar daha güvenli saklanır.
+Gizlilik metni yenilendi ve artık İngilizce de var: girişte açık rıza yerine "Aydınlatma Metni'ni okudum" beyanı alınır (KVKK Kurul kararı 2026/347).
 
 ## 🌟 Kullanıcı için
 

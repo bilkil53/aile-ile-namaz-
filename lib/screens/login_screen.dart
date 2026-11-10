@@ -196,7 +196,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
             text: t('Haftalık başarı oranınız, manevi rozetler ve günün hadisi.', 'Your weekly success rate, spiritual badges and the hadith of the day.'),
           ),
           const SizedBox(height: 8),
-          // KVKK açık rızası: işaretlenmeden giriş yapılamaz
+          // KVKK aydınlatma: "okudum" beyanı işaretlenmeden giriş yapılamaz (açık rıza değil)
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             SizedBox(
               width: 32,
@@ -228,7 +228,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
                   onTap: Kvkk.openText,
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Text(t('Aydınlatma metnini oku', 'Read the privacy notice'),
+                    child: Text(t('Aydınlatma metnini oku', 'Read the information notice'),
                         style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -242,7 +242,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
           if (_consentWarn)
             Padding(
               padding: EdgeInsets.only(bottom: 6),
-              child: Text(t('Google ile giriş için onay kutusunu işaretle.', 'Tick the consent box to sign in with Google.'),
+              child: Text(t('Google ile giriş için "okudum" kutusunu işaretle.', 'Tick the "I have read" box to sign in with Google.'),
                   style: TextStyle(fontSize: 11, color: AppColors.missed, fontWeight: FontWeight.bold)),
             ),
           const SizedBox(height: 6),
