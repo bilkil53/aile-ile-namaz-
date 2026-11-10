@@ -265,7 +265,8 @@ jobs:
             echo "::warning::İmza parmak izi okunamadı; imza kontrolü bu derlemede kapalı."
           fi
 
-      - run: flutter pub get
+      # Paket sürümleri pubspec.lock ile sabittir: kilit dosyasıyla uyuşmuyorsa durur
+      - run: flutter pub get --enforce-lockfile
 
       - name: Kod analizi (hata veya uyarı varsa derleme durur)
         run: |
