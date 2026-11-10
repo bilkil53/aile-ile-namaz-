@@ -14,14 +14,15 @@ import 'lang.dart';
 import 'privacy.dart';
 import 'ui_test_mode.dart';
 
-/// Hata bildirimi:
-/// 1) Uygulama içinde beklenmedik hata olursa kullanıcıya sebebiyle birlikte popup çıkar,
-///    "Geliştiriciye mail gönder" ile ayrıntılar hazır mail olarak açılır.
-/// 2) Uygulama tamamen kapanırsa (bellek doldu, çöktü, dondu) Android 11+ sebebi kaydeder;
-///    bir sonraki açılışta popup ile gösterilir.
-/// 3) Her iki durumda da anonim kayıt Supabase `crash_reports` tablosuna gider.
-/// Kişisel veri (ad, e-posta, namaz kaydı) gönderilmez: hata metni ve yığın izi gönderilmeden önce
-/// e-posta, oturum anahtarı, kimlik, telefon, gizli parametre ve dosya adlarından temizlenir (privacy.dart).
+/// Hata bildirimi — HİÇBİR ŞEY OTOMATİK GÖNDERİLMEZ:
+/// 1) Uygulama içinde beklenmedik hata olursa kullanıcıya sebebiyle birlikte pencere çıkar.
+/// 2) Uygulama ekrandayken tamamen kapanırsa (bellek doldu, çöktü, dondu) Android 11+ sebebi kaydeder;
+///    bir sonraki açılışta pencere ile gösterilir.
+/// Pencerede kişi isterse "Raporu gönder" (anonim kayıt Supabase `crash_reports` tablosuna) ya da
+/// "Mail ile gönder" der; "Kapat" derse hiçbir şey gitmez. Pencere çıkmayan durumlarda (internet
+/// kesintisi, arka plandayken kapanma) da hiçbir şey gönderilmez.
+/// Gönderilecek metin önce e-posta, oturum anahtarı, kimlik, telefon, gizli parametre, veritabanı satır
+/// değerleri ve dosya yollarından temizlenir (privacy.dart).
 class CrashReport {
   static final navigatorKey = GlobalKey<NavigatorState>();
   static const _ch = MethodChannel('aile/exit');
@@ -74,15 +75,15 @@ class CrashReport {
       final foreground = importance <= 200;
       final info = _exitInfo(reason, foreground: foreground);
       if (info == null) return; // normal kapanış (kullanıcı kapattı, güncelleme…)
-      unawaited(_send('EXIT ${info.$1}: $desc (importance $importance${foreground ? ', ekrandaydı' : ', arka plandaydı'})',
-          null, fatal: true, ramMb: rssMb, rawStack: trace));
-      if (!foreground) return;
+      if (!foreground) return; // arka plandayken kapanma: pencere yok, rapor da gönderilmez
       final detail = 'Kapanma kodu: $reason (${info.$1})\nBellek: $rssMb MB\n${desc.isEmpty ? '' : 'Android: $desc\n'}'
           '${trace.isEmpty ? '' : '\n${trace.length > 1200 ? trace.substring(0, 1200) : trace}'}';
       _show(
         title: t('Uygulama son kullanımda kapandı', 'The app closed during last use'),
         reason: info.$2,
         detail: detail,
+        send: () => _send('EXIT ${info.$1}: $desc (importance $importance, ekrandaydı)', null,
+            fatal: true, ramMb: rssMb, rawStack: trace),
       );
     } catch (_) {}
   }
@@ -115,15 +116,15 @@ class CrashReport {
     final key = text.length > 120 ? text.substring(0, 120) : text;
     if (!_seen.add(key)) return; // aynı hata bir kez
     final ram = (ProcessInfo.currentRss / (1024 * 1024)).round();
-    unawaited(_send(text, stack, fatal: fatal, ramMb: ram));
     final reason = _reasonOf(error, ram);
-    if (reason == null) return;
+    if (reason == null) return; // pencere yok → rapor da yok
     var st = stack?.toString() ?? '';
     if (st.length > 1200) st = st.substring(0, 1200);
     _show(
       title: t('Bir hata oluştu', 'An error occurred'),
       reason: reason,
       detail: 'Hata: ${text.length > 600 ? text.substring(0, 600) : text}\nBellek: $ram MB\n\n$st',
+      send: () => _send(text, stack, fatal: fatal, ramMb: ram),
     );
   }
 
@@ -144,7 +145,12 @@ class CrashReport {
             'if the same problem happens again, reporting it to the developer helps us fix it.');
   }
 
-  static void _show({required String title, required String reason, required String detail}) {
+  static void _show({
+    required String title,
+    required String reason,
+    required String detail,
+    required Future<bool> Function() send,
+  }) {
     // Spam olmasın: bir açılışta en fazla 2 popup, aralarında en az 30 sn
     if (_dialogOpen || _shownThisRun >= 2) return;
     if (_lastShown != null && DateTime.now().difference(_lastShown!) < const Duration(seconds: 30)) return;
@@ -168,20 +174,37 @@ class CrashReport {
             Text(reason),
             const SizedBox(height: 10),
             Text(
-                t('Hata kaydı otomatik ve anonim olarak geliştiriciye iletildi. '
-                        'İstersen ayrıntıları mail ile de gönderebilirsin.',
-                    'The error log was sent to the developer automatically and anonymously. '
-                        'You can also send the details by email if you like.'),
+                t('Hiçbir bilgi otomatik gönderilmedi. İstersen hata raporunu geliştiriciye gönderebilirsin; '
+                        'adın, e-postan ve kayıtların raporda yer almaz.',
+                    'Nothing was sent automatically. If you like, you can send the error report to the developer; '
+                        'your name, email and records are not included.'),
                 style: const TextStyle(fontSize: 12, color: Colors.black54)),
           ]),
+          actionsOverflowButtonSpacing: 4,
           actions: [
             TextButton(onPressed: () => Navigator.pop(c), child: Text(t('Kapat', 'Close'))),
-            FilledButton.icon(
+            TextButton.icon(
               icon: const Icon(Icons.mail_outline, size: 18),
-              label: Text(t('Mail gönder', 'Send email')),
+              label: Text(t('Mail ile', 'By email')),
               onPressed: () {
                 Navigator.pop(c);
                 _mail(title, reason, detail);
+              },
+            ),
+            FilledButton.icon(
+              icon: const Icon(Icons.send_outlined, size: 18),
+              label: Text(t('Raporu gönder', 'Send report')),
+              onPressed: () async {
+                Navigator.pop(c);
+                final ok = await send();
+                final m = navigatorKey.currentContext;
+                if (m != null && m.mounted) {
+                  ScaffoldMessenger.maybeOf(m)?.showSnackBar(SnackBar(
+                      content: Text(ok
+                          ? t('Rapor gönderildi, teşekkürler 🤲', 'Report sent, thank you 🤲')
+                          : t('Rapor gönderilemedi (internet yok). "Mail ile" seçeneğini deneyebilirsin.',
+                              'Could not send the report (no internet). You can try "By email".'))));
+                }
               },
             ),
           ],
@@ -208,9 +231,10 @@ class CrashReport {
     } catch (_) {}
   }
 
-  static Future<void> _send(String text, StackTrace? stack, {required bool fatal, int? ramMb, String? rawStack}) async {
+  /// Yalnızca kişi "Raporu gönder"e basınca çağrılır. Gittiyse true.
+  static Future<bool> _send(String text, StackTrace? stack, {required bool fatal, int? ramMb, String? rawStack}) async {
     try {
-      if (_sentThisRun >= 5 || kUiTest) return; // CI ekran testindeki hatalar canlı tabloya gitmesin
+      if (_sentThisRun >= 5 || kUiTest) return false; // CI ekran testindeki hatalar canlı tabloya gitmesin
       _sentThisRun++;
       var st = scrubSensitive(rawStack ?? stack?.toString() ?? '');
       if (st.length > 7500) st = st.substring(0, 7500);
@@ -226,8 +250,9 @@ class CrashReport {
         'error': err.length > 1900 ? err.substring(0, 1900) : err,
         'stack': st,
       }).timeout(const Duration(seconds: 8));
+      return true;
     } catch (_) {
-      // İnternet yoksa sessizce geç
+      return false; // internet yok / sunucu hatası: kişiye söylenir, "Mail ile" önerilir
     }
   }
 }

@@ -102,7 +102,7 @@ void main() {
       await start({...userData, 'store.owner': 'A'});
       await AppSettings.prefs.setString('queue',
           '[{"t":"prayer","date":"2026-11-08","key":"fajr","status":"PRAYED"},{"t":"kaza","type":"FAJR","o":3,"c":1}]');
-      LocalStore.parkPending('A', now: DateTime.now().subtract(const Duration(days: 4)));
+      await LocalStore.parkPending('A', now: DateTime.now().subtract(const Duration(days: 4)));
       LocalStore.wipeUserData();
       expect(LocalStore.restoreParked('A'), 1);
       expect(LocalStore.queue().single['t'], 'prayer');
@@ -111,7 +111,7 @@ void main() {
 
     test('30 günden eski saklanan kayıtlar atılır', () async {
       await start({...userData, 'store.owner': 'A'});
-      LocalStore.parkPending('A', now: DateTime.now().subtract(const Duration(days: 31)));
+      await LocalStore.parkPending('A', now: DateTime.now().subtract(const Duration(days: 31)));
       LocalStore.wipeUserData();
       expect(LocalStore.restoreParked('A'), 0);
       expect(LocalStore.pendingCount, 0);
@@ -119,7 +119,7 @@ void main() {
 
     test('Telefondaki daha yeni kayıt saklanan eskisini ezmez', () async {
       await start({...userData, 'store.owner': 'A'});
-      LocalStore.parkPending('A');
+      await LocalStore.parkPending('A');
       await AppSettings.prefs.setString('queue', '[{"t":"prayer","date":"2026-11-08","key":"fajr","status":"MISSED"}]');
       LocalStore.restoreParked('A');
       expect(LocalStore.queue().single['status'], 'MISSED');
@@ -127,15 +127,39 @@ void main() {
 
     test('Hesap silinince saklanan kayıtlar da silinir', () async {
       await start({...userData, 'store.owner': 'A'});
-      LocalStore.parkPending('A');
+      await LocalStore.parkPending('A');
       LocalStore.dropParked('A');
       expect(LocalStore.parkedCount('A'), 0);
     });
 
+    test('Saklama diske yazılınca true döner ve kayıt kalıcıdır', () async {
+      await start({...userData, 'store.owner': 'A'});
+      expect(await LocalStore.parkPending('A'), isTrue);
+      expect(AppSettings.prefs.getString('parked.v1'), contains('"A"'));
+      LocalStore.wipeUserData();
+      expect(LocalStore.parkedCount('A'), 1);
+    });
+
+    test('Saklanamazsa kuyruk ve sahibi silinmez, diğer kişisel veriler silinir (fail-closed)', () async {
+      await start({...userData, ...deviceData, 'store.owner': 'A'});
+      LocalStore.wipeUserData(keepQueue: true);
+      expect(LocalStore.pendingCount, 1);
+      expect(AppSettings.prefs.getString('store.owner'), 'A');
+      expect(AppSettings.prefs.getString('myName'), isNull);
+      expect(AppSettings.prefs.getString('lk'), isNull);
+      expect(AppSettings.prefs.getString('cityName'), 'Ankara');
+      // Aynı hesap tekrar girince kuyruk yerinde, başka hesap girince önce saklanır
+      expect(LocalStore.bindUser('A'), isFalse);
+      expect(LocalStore.pendingCount, 1);
+      expect(LocalStore.bindUser('B'), isTrue);
+      expect(LocalStore.pendingCount, 0);
+      expect(LocalStore.parkedCount('A'), 1);
+    });
+
     test('Giriş yokken (local) ya da boş kuyrukta saklama yapılmaz', () async {
       await start({'store.owner': 'A'});
-      LocalStore.parkPending('A');
-      LocalStore.parkPending('local');
+      expect(await LocalStore.parkPending('A'), isTrue); // saklanacak kayıt yok: başarı sayılır
+      await LocalStore.parkPending('local');
       expect(LocalStore.parkedCount('A'), 0);
       expect(LocalStore.parkedCount('local'), 0);
     });

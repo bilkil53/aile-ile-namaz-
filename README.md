@@ -102,9 +102,9 @@
 * Planlanan model: ilk girişte **7 günlük deneme** (her şey açık) → 8. gün **Ücretsiz sürüm** (Bugün ve Karne açık; Aile Havuzu ve Kaza pasif, bildirimler kapalı) → **Aile Reisi Pro alınca havuzdaki herkes Pro** (en fazla 5 kişi). Diğer üyeler "Aile Reisine ilet" ile istek gönderir; reis kabul eder ya da reddeder. Ayrıntılar `demo` dalının README'sinde.
 
 ### 7. 🛟 Hata bildirimi
-* Uygulama kullanılırken beklenmedik bir hata olursa sebebiyle (kod hatası / bellek) bir pencere çıkar; **Mail gönder** ile ayrıntılar hazır mail olarak açılır. İnternet kesintisinde pencere çıkmaz.
-* Uygulama ekrandayken tamamen kapanırsa (bellek doldu, çöktü, dondu, aşırı işlemci kullanımı) bir sonraki açılışta sebebi gösterilir. Arka planda olan kapanmalar kullanıcıyı rahatsız etmeden kaydedilir.
-* Kayıtlar anonimdir (sürüm, Android sürümü, bellek kullanımı, hata ve kod satırları); kişisel veri içermez, 30 gün saklanır.
+* **Hiçbir şey otomatik gönderilmez.** Uygulama kullanılırken beklenmedik bir hata olursa sebebiyle (kod hatası / bellek) bir pencere çıkar; kişi isterse **Raporu gönder** (anonim kayıt) ya da **Mail ile** der, **Kapat** derse hiçbir şey gitmez. İnternet kesintisinde pencere çıkmaz.
+* Uygulama ekrandayken tamamen kapanırsa (bellek doldu, çöktü, dondu, aşırı işlemci kullanımı) bir sonraki açılışta sebebi aynı pencereyle gösterilir. Arka planda olan kapanmalar için pencere de rapor da yoktur.
+* Gönderilen rapor anonimdir (sürüm, Android sürümü, bellek kullanımı, hata ve kod satırları); e-posta, kimlik, telefon, veritabanı satır değerleri (ad, dua metni) ve dosya yolları gönderilmeden önce silinir. 30 gün saklanır.
 
 ### 8. 👀 Gezinti Modu (giriş yapmadan)
 * Gezinti modu **yalnızca bakmak içindir**: bütün ekranlar, Aile Havuzu dahil, görülebilir ama işaretleme ve kayıt yapılmaz.

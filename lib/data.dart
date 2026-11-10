@@ -638,8 +638,11 @@ class Repo {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
       resetUserCache();
-      if (keepPending) LocalStore.parkPending(myId);
-      LocalStore.wipeUserData();
+      // Bekleyen kayıtlar bu hesap adına saklanır ve diske yazılması beklenir. Yazılamazsa kuyruk
+      // silinmez (kayıt kaybolmaz); sahibi de durur, başka hesap girerse önce yeniden saklanır.
+      final parked = !keepPending || await LocalStore.parkPending(myId);
+      if (!parked) Log.warn('hesap', 'bekleyen kayıtlar saklanamadı; kuyruk telefonda bırakıldı');
+      LocalStore.wipeUserData(keepQueue: !parked);
       await supa.auth.signOut();
     } finally {
       _stopSync = false;

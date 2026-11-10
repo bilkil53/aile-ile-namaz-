@@ -21,6 +21,12 @@ final List<(RegExp, String)> _rules = [
   (RegExp(r'\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b'), '[kimlik]'),
   // Telefon numarası (Türkiye cep)
   (RegExp(r'(?<![\d])(?:\+?90[\s\-]?)?0?5\d{2}[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}(?![\d])'), '[telefon]'),
+  // Veritabanı hata ayrıntısı satırın değerlerini yazar (ad, aile adı, dua metni olabilir):
+  // "Failing row contains (…)" ve "Key (sütun)=(değer)" → değerler silinir, sütun adı kalır
+  (RegExp(r'(Failing row contains )\((?:[^()]|\([^()]*\))*\)'), r'$1([gizli])'),
+  (RegExp(r'(Key \([^)]*\)=)\((?:[^()]|\([^()]*\))*\)'), r'$1([gizli])'),
+  // Uygulamanın telefondaki klasörü (/data/user/0/…, /data/data/…): klasör kökü kalır, devamı silinir
+  (RegExp(r'''(/data/(?:user/\d+|data|user_de/\d+))/[^\s:)'"]+'''), r'$1/[uygulama]'),
   // Ortak depolamadaki dosya adları (indirilenler, fotoğraflar): klasör kalır, dosya adı silinir
   (RegExp(r'''(/storage/emulated/\d+|/sdcard)/[^\s:)'"]+'''), r'$1/[dosya]'),
   // Uzun anahtar benzeri diziler (bildirim jetonu, imza vb.)

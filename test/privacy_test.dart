@@ -40,6 +40,20 @@ void main() {
           'fcm [gizli]');
     });
 
+    test('Veritabanı satır ayrıntısındaki değerler (ad, dua metni) silinir', () {
+      expect(
+          scrubSensitive('new row violates check constraint "x" Failing row contains (12, Ayşe Yılmaz, Allah kabul etsin (dua), 2026-11-10).'),
+          'new row violates check constraint "x" Failing row contains ([gizli]).');
+      expect(scrubSensitive('Key (display_name)=(Erdinç Bilkil) already exists.'),
+          'Key (display_name)=([gizli]) already exists.');
+    });
+
+    test('Uygulamanın telefondaki klasör yolu silinir', () {
+      expect(scrubSensitive('FileSystemException: /data/user/0/com.bilkil53.aile_ile_namaz/app_flutter/a.json (OS Error)'),
+          'FileSystemException: /data/user/0/[uygulama] (OS Error)');
+      expect(scrubSensitive('open failed: /data/data/com.x/files/y'), 'open failed: /data/data/[uygulama]');
+    });
+
     test('Hata ayıklama için gereken bilgi korunur', () {
       for (final t in [
         '#0      Repo.flushQueue (package:aile_ile_namaz/data.dart:445:11)',

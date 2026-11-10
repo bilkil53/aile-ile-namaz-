@@ -305,10 +305,11 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
+          # Zorunlu (fail-closed): bağlantı bilgisi yoksa test sessizce atlanmaz, derleme ve yayın durur
           if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::warning::SUPABASE_DB_URL gizli ayarı tanımlı değil: sunucu güvenlik testi atlandı. Tanımlanınca her derlemede zorunlu çalışır."
-            echo '## Sunucu güvenlik testi: atlandı (SUPABASE_DB_URL yok)' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error::SUPABASE_DB_URL gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı; derleme ve yayın durduruldu."
+            echo '## Sunucu güvenlik testi: ÇALIŞTIRILAMADI (SUPABASE_DB_URL yok) — yayın durduruldu' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           out=$(psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/tests/security_test.sql 2>&1 || true)
           res=$(echo "$out" | grep -oE 'SONUC: .*' | head -1)
