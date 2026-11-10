@@ -167,7 +167,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             // Arka plandayken bildirimi FCM gösterir; çift bildirim olmasın
             if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
             final type = r['event_type'] as String?;
-            if ((type == 'PRAYED' && !AppSettings.notifyPrayer) ||
+            if (((type == 'PRAYED' || type == 'ALL_PRAYED') && !AppSettings.notifyPrayer) ||
                 (type == 'KAZA' && !AppSettings.notifyKaza) ||
                 (type == 'DUA' && !AppSettings.notifyDua)) {
               return;
@@ -177,6 +177,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             final (title, body) = switch (r['event_type']) {
               'PRAYED' => (t('$who namazını kıldı 🤲', '$who prayed 🤲'),
                   t('$prayer namazını kıldı. Allah kabul etsin.', 'Prayed $prayer. May Allah accept it.')),
+              'ALL_PRAYED' => (t('$who 5 vaktin hepsini kıldı 🌟', '$who prayed all 5 prayers 🌟'),
+                  t('Maşallah! Günün bütün namazlarını eda etti. Allah kabul etsin.',
+                      'Masha\'Allah! Completed all of the day\'s prayers. May Allah accept them.')),
               'KAZA' => (t('$who kaza namazı kıldı', '$who made up a missed prayer'),
                   t('Bir kaza namazı eda etti.', 'Completed one kaza prayer.')),
               'DUA' => (

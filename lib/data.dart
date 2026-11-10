@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'all_prayed.dart';
 import 'cuma_reminder.dart';
 import 'lang.dart';
 import 'local_store.dart';
@@ -271,6 +272,7 @@ class Repo {
     final day = date ?? todayStr();
     await LocalStore.setPrayer(day, key, status);
     CumaReminder.onMarked(day, key, status); // erkeklere peş peşe 3. Cuma uyarısı
+    AllPrayed.onMarked(uid: myId, day: day, today: todayStr(), status: status); // 5 vakit tamam: teşvik
     await LocalStore.enqueue({'t': 'prayer', 'date': day, 'key': key, 'status': status.code});
     final id = '$day|$key';
     if (day == todayStr()) _pendingAnnounce.add(id);

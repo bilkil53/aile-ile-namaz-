@@ -157,6 +157,7 @@ function text(type: string, who: string, prayer: string | null, message: string,
     switch (type) {
       case "PRAYED": return [`${who} prayed 🤲`, `Prayed ${p}. May Allah accept it.`];
       case "KAZA": return [`${who} made up a missed prayer 📿`, "Completed one kaza prayer. May Allah accept it."];
+      case "ALL_PRAYED": return [`${who} prayed all 5 prayers 🌟`, "Masha'Allah! Completed all of the day's prayers. May Allah accept them."];
       case "DUA": return [toMe ? `${who} sent you a dua 🤲` : `${who} sent the family a dua 🤲`, greeting(message, true) || "May Allah accept our worship."];
       case "MEMBER_JOINED": return ["New family member 🤝", `${message ? kin(message, true) : who} joined the family circle.`];
       case "PRO_REQUEST": return [`${who} wants Pro 🌟`, "If you get Family Pro, everyone in the circle becomes Pro."];
@@ -167,6 +168,7 @@ function text(type: string, who: string, prayer: string | null, message: string,
   switch (type) {
     case "PRAYED": return [`${who} namazını kıldı 🤲`, `${p} namazını kıldı. Allah kabul etsin.`];
     case "KAZA": return [`${who} kaza namazı kıldı 📿`, "Bir kaza namazı eda etti. Allah kabul etsin."];
+    case "ALL_PRAYED": return [`${who} 5 vaktin hepsini kıldı 🌟`, "Maşallah! Günün bütün namazlarını eda etti. Allah kabul etsin."];
     case "DUA": return [toMe ? `${who} sana dua gönderdi 🤲` : `${who} aileye dua gönderdi 🤲`, greeting(message, false) || "Allah ibadetlerimizi kabul etsin."];
     case "MEMBER_JOINED": return ["Aile havuzuna katılım 🤝", `${message || who} aile havuzuna katıldı.`];
     case "PRO_REQUEST": return [`${who} Pro istiyor 🌟`, "Aile Pro'sunu alırsan havuzdaki herkes Pro olur."];
@@ -259,7 +261,7 @@ Deno.serve(async (req) => {
     }
 
     // Kişinin bildirim tercihi: namaz / kaza / dua (katılım bildirimi herkese)
-    const prefCol = ev.event_type === "PRAYED" ? "notify_prayer"
+    const prefCol = ev.event_type === "PRAYED" || ev.event_type === "ALL_PRAYED" ? "notify_prayer"
       : ev.event_type === "KAZA" ? "notify_kaza"
       : ev.event_type === "DUA" ? "notify_dua" : null;
     let q = db.from("devices").select("user_id, fcm_token, lock_screen, lang").in("user_id", recipients);
