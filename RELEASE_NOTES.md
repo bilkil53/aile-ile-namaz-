@@ -1,4 +1,4 @@
-Büyük yazı desteği (telefonun yazı boyutu ayarı %30'a kadar uygulanır). Gizlilik: namaz vakitleri için konum yaklaşık 1 km'ye yuvarlanarak gönderilir; gizlilik metni buna göre düzeltildi. Sağlamlaştırma: paket sürümleri sabitlendi, zorunlu güncelleme altyapısı, bağlantı zaman aşımları.
+🕯️ Mübarek günler için geri sayım kartı: kandil, bayram ve özel günlere 7 gün kala Bugün ekranında açılır, her gün sayar, günün anlam ve önemini gösterir; 7 gün kala hatırlatma bildirimi de gelir.
 
 ## 🌟 Kullanıcı için
 

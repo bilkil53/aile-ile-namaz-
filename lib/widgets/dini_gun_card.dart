@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../lang.dart';
 import '../data.dart';
@@ -57,6 +58,8 @@ class _DiniGunCardState extends State<DiniGunCard> {
     if (b != null) return _bayram(b.$1, b.$2);
     final s = DiniGunler.specialOn(now);
     if (s != null) return _special(s);
+    final u = DiniGunler.upcoming(now);
+    if (u != null) return _upcoming(u.$1, u.$2);
     return const SizedBox.shrink();
   }
 
@@ -117,6 +120,53 @@ class _DiniGunCardState extends State<DiniGunCard> {
               ),
             ),
           ]),
+        ]),
+      ),
+    );
+  }
+
+  /// Mübarek güne 7 gün kala açılır; her gün geri sayar, anlam ve önemini gösterir.
+  Widget _upcoming(DiniGun g, int left) {
+    final when = left == 1
+        ? (g.eveBefore ? t('Yarın akşam', 'Tomorrow evening') : t('Yarın', 'Tomorrow'))
+        : t('$left gün kaldı', '$left days left');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.cardBorder),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Text(g.emoji, style: const TextStyle(fontSize: 22)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(g.name,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(999)),
+              child: Text(when, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Text(t('Anlamı ve önemi', 'Meaning and significance'),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const SizedBox(height: 2),
+          Text(g.meaning, style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.textSecondary)),
+          InkWell(
+            onTap: () => launchUrl(Uri.parse('https://www.diyanet.gov.tr'), mode: LaunchMode.externalApplication),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(t('Tarih Diyanet takvimine göredir · Ayrıntılı bilgi: diyanet.gov.tr', 'Date follows the Diyanet calendar · More: diyanet.gov.tr'),
+                  style: TextStyle(fontSize: 11, color: AppColors.emerald, decoration: TextDecoration.underline)),
+            ),
+          ),
         ]),
       ),
     );
