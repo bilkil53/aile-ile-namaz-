@@ -1,4 +1,4 @@
-Namaz Demo — Gizlilik metni yenilendi ve artık İngilizce de var: girişte açık rıza yerine "Aydınlatma Metni'ni okudum ve anladım" beyanı alınır (KVKK Kurul kararı 2026/347).
+Namaz Demo — KVKK: girişte iki ayrı kutu — "Aydınlatma Metni'ni okudum" ve namaz/kaza kayıtları ile dua mesajları için ayrı "Açık Rıza" (din bilgisi özel nitelikli veridir, KVKK md. 6). Daha önce giriş yapanlara bir kez sorulur.
 
 ## 🌟 Kullanıcı için
 

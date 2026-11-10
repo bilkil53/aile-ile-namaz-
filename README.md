@@ -145,7 +145,7 @@
 | Telefon yedeği | Android otomatik yedeklemesi kapalı; oturum bilgisi başka cihaza taşınamaz. Kişisel kayıtlar hesaba bağlı bulutta |
 | Giriş yöntemi | Sadece Google; e-posta/şifre ile kayıt kapalı |
 | Hesap silme | Uygulamadan; dolu havuzların reisliği en eski üyeye geçer |
-| KVKK | Girişte Aydınlatma Metni (TR/EN, `docs/privacy.html` · `privacy-en.html`) için yalnızca "okudum ve anladım" beyanı — açık rıza istenmez (Kurul İlke Kararı 2026/347); beyan tarihi `profiles.kvkk_consent_at`. Yurt dışı aktarım için standart sözleşme Play öncesi yapılacak (`docs/PLAY_STORE.md`) |
+| KVKK | Girişte iki ayrı kutu (Kurul İlke Kararı 2026/347): Aydınlatma Metni (TR/EN, `docs/privacy.html` · `privacy-en.html`) için "okudum ve anladım" beyanı (`profiles.kvkk_consent_at`) ve namaz/kaza kayıtları ile dua mesajları (din bilgisi, md. 6) için ayrı Açık Rıza Metni (`#acik-riza`; tarih `profiles.acik_riza_at`, yalnızca `record_acik_riza()` ile). Yurt dışı aktarım için standart sözleşme Play öncesi yapılacak (`docs/PLAY_STORE.md`) |
 | İmza anahtarı | GitHub Secrets'ta; repoda değil |
 | İmza kontrolü | Uygulama açılışta kendi sertifikasının SHA-256 parmak izini derlemede gömülen değerle (`--dart-define=EXPECTED_SIG`) karşılaştırır; uymazsa uyarı (şimdilik engellemez). Play imzası eklendiğinde iki değer olur |
 | Hata kayıtları | Anonim; uygulama okuyamaz, sadece yazabilir; 30 gün sonra silinir |

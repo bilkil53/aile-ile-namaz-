@@ -20,7 +20,7 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 | Tablo | API yetkisi (authenticated) | RLS politikası |
 |---|---|---|
-| `profiles` | Sütun bazında: SELECT `id`, `display_name`, `icon`, `created_at`; UPDATE `display_name`, `icon`, `kvkk_consent_at` | Kendisi, aynı havuzdakiler veya bana bekleyen isteği olan kişi görür; yalnızca kendini günceller. E-posta ve Pro sütunları (`pro_until`, `pro_paid_until`, `pro_trial_started_at`) API'den **okunamaz ve yazılamaz**; Pro durumu yalnızca `my_pro_status()` ile okunur. |
+| `profiles` | Sütun bazında: SELECT `id`, `display_name`, `icon`, `created_at`; UPDATE `display_name`, `icon`, `kvkk_consent_at`; açık rıza tarihi `acik_riza_at` yalnızca `record_acik_riza()` ile sunucu saatiyle yazılır | Kendisi, aynı havuzdakiler veya bana bekleyen isteği olan kişi görür; yalnızca kendini günceller. E-posta ve Pro sütunları (`pro_until`, `pro_paid_until`, `pro_trial_started_at`) API'den **okunamaz ve yazılamaz**; Pro durumu yalnızca `my_pro_status()` ile okunur. |
 | `daily_prayers` | SELECT, INSERT, UPDATE, DELETE | Yazma yalnızca kendi satırına. Okuma: kendisi ve aynı havuzdakiler. Tetikleyici `block_male_excused`: erkek olarak işaretli kişinin "Muaf" kaydı boşa çevrilir. |
 | `kaza_prayers` | SELECT, INSERT, UPDATE, DELETE | Yalnızca kendi satırları (ayrıntı aileye açık değil). |
 | `kaza_summary` | SELECT | Kendisi ve aynı havuzdakiler (yalnızca toplam). |
