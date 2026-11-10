@@ -12,7 +12,9 @@ import 'settings.dart';
 /// kendi telefonunda bir kez gösterilir. Aile üyelerine giden bildirimi sunucu üretir
 /// (daily_prayers tetikleyicisi, ALL_PRAYED) — bu sınıf aileye bir şey göndermez.
 class AllPrayed {
-  static const _kSent = 'allPrayed.sent'; // "hesap|gün" — bildirimi gösterilmiş günler
+  // "hesap|gün" — bildirimi gösterilmiş günler. 'cuma.' öneki: çıkışta / hesap silinince telefondan da
+  // silinir (LocalStore.isUserKey), din bilgisi ortaya koyan kayıt telefonda kalmaz.
+  static const _kSent = 'cuma.allPrayed';
   static Timer? _timer;
 
   /// Muaf günler sayılmaz: beş vaktin hepsi "Kıldı" olmalı.
@@ -30,6 +32,12 @@ class AllPrayed {
     });
   }
 
+  /// Hesap değişince / çıkışta bekleyen kontrol iptal edilir (başka hesaba bildirim gitmesin).
+  static void cancel() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   static Future<void> _check(String uid, String day) async {
     try {
       if (!isComplete(LocalStore.day(day))) return;
@@ -39,7 +47,7 @@ class AllPrayed {
       // Önce kaydet: bildirim gösterilirken uygulama kapanırsa ikinci kez gösterilmesin
       await AppSettings.prefs.setStringList(_kSent, [...sent.skip(sent.length > 20 ? sent.length - 20 : 0), id]);
       await Notifications.showSpecial(
-        8700,
+        900, // aile bildirimleri 1000+ aralığında: çakışmasın
         t('Maşallah! 5 vaktin hepsini kıldın 🌟', 'Masha\'Allah! You prayed all 5 prayers 🌟'),
         t('Bugünün bütün namazlarını eda ettin. Allah kabul etsin, istikrarını daim eylesin.',
             'You completed all of today\'s prayers. May Allah accept them and keep you steadfast.'),
