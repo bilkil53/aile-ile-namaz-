@@ -116,7 +116,7 @@ const diniGunler = <DiniGun>[
       eveBefore: true),
   DiniGun('ramazan', 'Ramazan Başlangıcı', '🌙', 1, 9,
       'On bir ayın sultanı Ramazan başlıyor. Kur\'an\'ın indirildiği bu ayda oruç farzdır; teravih, mukabele, '
-      'sadaka ve paylaşma ile değerlendirilir. İlk sahura bu gece kalkılır.'),
+      'sadaka ve paylaşma ile değerlendirilir. İlk sahura ilk oruç gününden önceki gece kalkılır.'),
   DiniGun('kadir', 'Kadir Gecesi', '✨', 27, 9,
       'Kur\'an-ı Kerim\'in indirilmeye başlandığı ve Kadir Sûresi\'nde "bin aydan daha hayırlı" olduğu bildirilen gece. '
       'Namaz, Kur\'an, tövbe ve duayla ihya edilir.',
@@ -230,7 +230,6 @@ class DiniGunler {
     return null;
   }
 
-  /// Bugün idrak edilen (bayram dışı) mübarek gün/gece.
   /// Yaklaşan mübarek gün: [within] gün içindeki en yakın gün ve kalan gün sayısı (1 = yarın).
   /// Bugünün kendisi sayılmaz (o gün bugünkü kart gösterilir).
   static (DiniGun, int)? upcoming(DateTime day, {int within = 1}) {
@@ -251,6 +250,7 @@ class DiniGunler {
   @visibleForTesting
   static void setEventsForTest(List<DiniGunEvent> e) => _events = e;
 
+  /// Bugün idrak edilen (bayram dışı) mübarek gün/gece.
   static DiniGun? specialOn(DateTime day) {
     final d = _d(day);
     return _events.where((e) => !e.gun.bayram && e.date == d).map((e) => e.gun).firstOrNull;

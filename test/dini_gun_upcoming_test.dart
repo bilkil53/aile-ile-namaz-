@@ -18,4 +18,14 @@ void main() {
     DiniGunler.setEventsForTest([]);
     expect(DiniGunler.upcoming(DateTime(2027, 1, 1)), isNull);
   });
+
+  test('Yıl sonu geçişi ve aynı güne denk gelende kandil önceliği', () {
+    final gunduz = diniGunler.firstWhere((g) => !g.eveBefore && !g.bayram);
+    DiniGunler.setEventsForTest([DiniGunEvent(gunduz, DateTime(2027, 1, 1)), DiniGunEvent(mirac, DateTime(2027, 1, 1))]);
+    final u = DiniGunler.upcoming(DateTime(2026, 12, 31, 23, 59));
+    expect(u?.$2, 1);
+    expect(u?.$1.key, 'mirac', reason: 'kandil öne alınır');
+    expect(DiniGunler.upcoming(DateTime(2026, 12, 30)), isNull);
+    DiniGunler.setEventsForTest([]);
+  });
 }
