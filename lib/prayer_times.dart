@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:intl/intl.dart' show DateFormat;
 
 import 'lang.dart';
@@ -140,6 +141,11 @@ class NextPrayer {
 }
 
 class PrayerTimesService {
+  /// Vakit servisine gönderilen koordinat: 2 ondalığa (yaklaşık 1 km) yuvarlanır; tam konum
+  /// telefondan çıkmaz. Önbellek anahtarı da aynı hassasiyettedir.
+  @visibleForTesting
+  static String coord(double v) => v.toStringAsFixed(2);
+
   static String _key(DateTime d, double lat, double lng) =>
       'pt_${DateFormat('yyyy-MM-dd').format(d)}_${lat.toStringAsFixed(2)}_${lng.toStringAsFixed(2)}';
 
@@ -180,7 +186,7 @@ class PrayerTimesService {
       final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
       try {
         final req = await client.getUrl(Uri.parse(
-            'https://api.aladhan.com/v1/calendar/$y/$m?latitude=$lat&longitude=$lng&method=13'));
+            'https://api.aladhan.com/v1/calendar/$y/$m?latitude=${coord(lat)}&longitude=${coord(lng)}&method=13'));
         final res = await req.close().timeout(const Duration(seconds: 10));
         if (res.statusCode != 200) continue;
         final body = jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
@@ -221,7 +227,7 @@ class PrayerTimesService {
   static Future<DayTimes> _fetch(DateTime day, double lat, double lng) async {
     final ds = DateFormat('dd-MM-yyyy').format(day);
     final uri = Uri.parse(
-        'https://api.aladhan.com/v1/timings/$ds?latitude=$lat&longitude=$lng&method=13');
+        'https://api.aladhan.com/v1/timings/$ds?latitude=${coord(lat)}&longitude=${coord(lng)}&method=13');
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
     try {
       final req = await client.getUrl(uri);

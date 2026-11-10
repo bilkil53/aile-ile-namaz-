@@ -27,14 +27,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           # Sabit sürüm: yeni bir Flutter yayınındaki yeni analiz uyarısı derlemeyi habersiz durdurmasın
@@ -414,7 +414,7 @@ jobs:
           cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
           (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: aile-ile-namaz-apk
           path: |
@@ -443,7 +443,7 @@ jobs:
 
       - name: Yayınla (uygulama içi güncelleme buradan okur)
         if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: r${{ env.BUILD_NO }}
           name: ${{ env.RELEASE_TITLE }}
@@ -468,7 +468,7 @@ jobs:
 
       - name: Ekran testi — GitHub emülatörü (Android 11, Türkçe ve İngilizce, misafir akışı + 4 sekme)
         timeout-minutes: 30
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: 30
           target: google_apis
@@ -496,12 +496,12 @@ jobs:
           [ -n "$KEY" ] || { echo '::error::FIREBASE_TESTLAB_KEY yok: Google Test Lab testi yapılamadı (yayın yapıldı, test eksik).'; exit 1; }
           echo 'Test Lab anahtarı hazır'
 
-      - uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
         with:
           credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
 
-      - uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
 
       # Günlük ücretsiz hak (Spark): 5 gerçek + 10 sanal telefon testi.

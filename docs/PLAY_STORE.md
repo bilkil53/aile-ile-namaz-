@@ -24,7 +24,7 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
    - Google Cloud **aile-ile-namaz-d437f** → Credentials → *Android key (auto created by Firebase)* → Android uygulama kısıtlamasına aynı paket + Play SHA-1'ini ekle.
 4. **Veri güvenliği formu** (Data safety):
    - Toplanan: Ad, e-posta (hesap yönetimi) · Uygulama etkinliği: namaz/kaza kayıtları, mesajlar (uygulama işlevi) · Cihaz kimliği: bildirim kimliği (uygulama işlevi) · Uygulama bilgileri ve performansı: çökme/hata raporu — **isteğe bağlı** (yalnızca kullanıcı "Raporu gönder" derse; hesapla ilişkilendirilmez; uygulama işlevi/hata giderme)
-   - Konum: **toplanmıyor** (yalnızca cihazda işleniyor).
+   - Konum: **yaklaşık konum paylaşılıyor, toplanmıyor** — yaklaşık 1 km'ye yuvarlanmış koordinat, kimlik bilgisi olmadan namaz vakti servisine (api.aladhan.com) gönderilir; sunucumuzda saklanmaz. Play formunda "Yaklaşık konum → uygulama işlevi → geçici işleme" olarak beyan edilir.
    - Veriler aktarım sırasında şifreleniyor: Evet · Kullanıcı silme isteyebilir: Evet (uygulama içi + web bağlantısı).
    - Üçüncü taraflarla paylaşım: Hayır (Supabase ve Firebase hizmet sağlayıcıdır).
 5. **İzin beyanları:** Konum (ön planda, vakit hesabı); Bildirim; Kesin alarm (`SCHEDULE_EXACT_ALARM` — namaz vakti hatırlatıcısı, kullanıcı izniyle).

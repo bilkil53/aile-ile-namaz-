@@ -30,6 +30,35 @@ class UpdateChecker {
 
   static bool _checked = false;
 
+  /// Desteklenen en düşük derleme numarası (docs/app.json → GitHub Pages). Bundan eski sürümde
+  /// güncelleme penceresi "Sonra" seçeneği olmadan gösterilir. Okunamazsa 0 (zorlama yok):
+  /// internet yokken uygulama kilitlenmez.
+  static const _configUrl = 'https://bilkil53.github.io/aile-ile-namaz-/app.json';
+
+  @visibleForTesting
+  static int parseMinBuild(String body) {
+    try {
+      final v = (jsonDecode(body) as Map<String, dynamic>)['min_build'];
+      return v is int && v > 0 ? v : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  static Future<int> _minBuild() async {
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
+    try {
+      final req = await client.getUrl(Uri.parse(_configUrl));
+      final res = await req.close().timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) return 0;
+      return parseMinBuild(await res.transform(utf8.decoder).join().timeout(const Duration(seconds: 8)));
+    } catch (_) {
+      return 0;
+    } finally {
+      client.close();
+    }
+  }
+
   /// Bu telefonun işlemci türüne ait APK adresi (arm64-v8a / armeabi-v7a / x86_64).
   static String? _abiUrl() {
     final abi = switch (Abi.current()) {
@@ -167,25 +196,37 @@ class UpdateChecker {
       if (latest <= current) return;
 
       final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
+      // Bu sürüm artık desteklenmiyorsa (ör. gizlilik metni / güvenlik değişikliği) "Sonra" gösterilmez
+      final forced = current < await _minBuild();
       if (!context.mounted) return;
       final ok = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(t('Yeni güncelleme var', 'New update available')),
-          content: Text(
-            t('Aile ile Namaz için yeni bir güncelleme hazır.', 'A new update for Aile ile Namaz is ready.') +
-                (notes.isNotEmpty ? '\n\n$notes' : ''),
+        barrierDismissible: !forced,
+        builder: (ctx) => PopScope(
+          canPop: !forced,
+          child: AlertDialog(
+            title: Text(forced
+                ? t('Güncelleme gerekli', 'Update required')
+                : t('Yeni güncelleme var', 'New update available')),
+            content: Text(
+              (forced
+                      ? t('Bu sürüm artık desteklenmiyor. Devam etmek için uygulamayı güncelle.',
+                          'This version is no longer supported. Please update the app to continue.')
+                      : t('Aile ile Namaz için yeni bir güncelleme hazır.', 'A new update for Aile ile Namaz is ready.')) +
+                  (notes.isNotEmpty ? '\n\n$notes' : ''),
+            ),
+            actions: [
+              if (!forced)
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(t('Sonra', 'Later')),
+                ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(t('Güncelle', 'Update')),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(t('Sonra', 'Later')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(t('Güncelle', 'Update')),
-            ),
-          ],
         ),
       );
       if (ok == true && context.mounted) {

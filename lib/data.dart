@@ -232,7 +232,8 @@ class Repo {
     final rows = await supa
         .from('kaza_summary')
         .select('user_id, owed, completed')
-        .inFilter('user_id', userIds);
+        .inFilter('user_id', userIds)
+        .timeout(const Duration(seconds: 10));
     return {
       for (final r in rows)
         r['user_id'] as String: [
@@ -495,7 +496,8 @@ class Repo {
         .select('prayer_date, fajr, dhuhr, asr, maghrib, isha')
         .eq('user_id', myId)
         .gte('prayer_date', f(from))
-        .lte('prayer_date', f(to));
+        .lte('prayer_date', f(to))
+        .timeout(const Duration(seconds: 12));
     return {
       for (final r in rows)
         r['prayer_date'] as String: {
