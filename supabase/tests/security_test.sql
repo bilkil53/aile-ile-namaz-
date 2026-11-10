@@ -136,6 +136,9 @@ begin
   begin update public.profiles set acik_riza_at = '2000-01-01' where id = u;
     fails := fails || 'acik_riza_elle_yazilabiliyor; ';
   exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform acik_riza_at from public.profiles where id = u; -- rıza tarihi aileye/API'ye görünmez
+    fails := fails || 'acik_riza_okunabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
   reset role;
   set local role anon;
   begin perform public.record_acik_riza(); fails := fails || 'anon_acik_riza_acik; ';

@@ -47,6 +47,8 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
   @override
   void dispose() {
     _authSub?.cancel();
+    // Giriş yapılmadan kapandıysa (gezinti, iptal) işaretlenen kutular sonraki girişe taşınmaz
+    if (Supabase.instance.client.auth.currentUser == null) Kvkk.clearPending();
     super.dispose();
   }
 
@@ -55,13 +57,13 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
     scopes: const ['email', 'profile'],
   );
 
-  /// 1) Telefondaki Google hesaplarından seçtirir (tarayıcı açılmaz).
-  /// 2) Bu yol çalışmazsa (ör. Google Play Hizmetleri yok) tarayıcı girişine düşer.
-  // Giriş yokken Kvkk.given yalnızca bu girişte iki kutu da işaretlendiyse true olur
-  late bool _consent = Kvkk.given; // 1) aydınlatma "okudum" beyanı
-  late bool _riza = Kvkk.given; // 2) açık rıza (özel nitelikli veriler)
+  // Kutular her açılışta BOŞ başlar: açık rıza kullanıcının kendi işaretlemesiyle verilir
+  bool _consent = false; // 1) aydınlatma "okudum" beyanı
+  bool _riza = false; // 2) açık rıza (özel nitelikli veriler)
   bool _consentWarn = false;
 
+  /// 1) Telefondaki Google hesaplarından seçtirir (tarayıcı açılmaz).
+  /// 2) Bu yol çalışmazsa (ör. Google Play Hizmetleri yok) tarayıcı girişine düşer.
   Future<void> _signIn() async {
     if (!_consent || !_riza) {
       setState(() => _consentWarn = true);
@@ -71,7 +73,10 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
     setState(() => _busy = true);
     try {
       final ok = await _nativeSignIn();
-      if (!ok) return; // hesap seçimini kapattı → pencere açık kalır
+      if (!ok) {
+        Kvkk.clearPending(); // hesap seçimini kapattı → pencere açık kalır, kutular yeniden işaretlenir
+        return;
+      }
       await LocalStore.setGuestMode(false);
     } catch (_) {
       try {
@@ -138,6 +143,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
     );
     if (go == null || !mounted) return;
     if (go) {
+      Kvkk.clearPending();
       await LocalStore.setGuestMode(true);
       if (mounted) Navigator.of(context).pop(false);
     } else {
