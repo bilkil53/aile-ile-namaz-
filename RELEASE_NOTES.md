@@ -44,7 +44,7 @@ Büyük yazı desteği (telefonun yazı boyutu ayarı %30'a kadar uygulanır). G
 **Güncelleme ve görünüm**
 - Uygulama simgesi: yeşil zeminde altın minare, hilal ve E harfi.
 - Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; uygulama tek pencerede kalır.
-- Telefonun büyük yazı ayarı uygulamayı büyütmez; ekranlar ve pencereler taşmaz.
+- Telefonun büyük yazı ayarı %30'a kadar uygulanır (daha fazlasında ekranlar taşmasın diye sınırlıdır).
 
 **Güvenlik**
 - APK imza kontrolü: uygulama açılışta kendi imzasının parmak izini (SHA-256) doğrular; başkası APK'yı değiştirip yeniden imzalarsa "Güvenlik uyarısı" gösterilir. Şimdilik yalnızca uyarıdır, uygulamayı kapatmaz.

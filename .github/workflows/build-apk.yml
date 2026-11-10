@@ -42,7 +42,10 @@ jobs:
           cache: true
 
       - name: Android platform dosyalarını oluştur
-        run: flutter create . --org com.bilkil53 --project-name aile_ile_namaz --platforms android
+        run: |
+          flutter create . --org com.bilkil53 --project-name aile_ile_namaz --platforms android
+          # Paket sürümleri sabit kalmalı: bu adım kilit dosyasını değiştirdiyse dur
+          git diff --exit-code pubspec.lock pubspec.yaml || { echo '::error::pubspec.lock / pubspec.yaml değişti (paket sürümleri sabit değil)'; exit 1; }
 
       - name: Kapanma sebebi okuyucu (MainActivity)
         run: |
