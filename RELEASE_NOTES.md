@@ -1,4 +1,4 @@
-Namaz Demo — Büyük yazı desteği (telefonun yazı boyutu ayarı %30'a kadar uygulanır). Gizlilik: namaz vakitleri için konum yaklaşık 1 km'ye yuvarlanarak gönderilir; gizlilik metni buna göre düzeltildi. Sağlamlaştırma: paket sürümleri sabitlendi, zorunlu güncelleme altyapısı, bağlantı zaman aşımları.
+Namaz Demo — 🕯️ Mübarek günler için geri sayım kartı: kandil, bayram ve özel günlere 7 gün kala Bugün ekranında açılır, her gün sayar, günün anlam ve önemini gösterir; 7 gün kala hatırlatma bildirimi de gelir.
 
 ## 🌟 Kullanıcı için
 
@@ -45,12 +45,6 @@ Namaz Demo — Büyük yazı desteği (telefonun yazı boyutu ayarı %30'a kadar
 - Uygulama simgesi: yeşil zeminde altın minare, hilal ve E harfi.
 - Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; uygulama tek pencerede kalır.
 - Telefonun büyük yazı ayarı %30'a kadar uygulanır (daha fazlasında ekranlar taşmasın diye sınırlıdır).
-
-**Pro / Demo sürüm (yeni)**
-- İlk 7 gün reklamsız Pro deneme; süre bitince Demo sürüme düşer.
-- Demo'da kilitli: karne geçmişi (30 gün / 3 ay / aylık takvim), seviyeli rozetler (Bronz/Gümüş/Altın/Elmas) ve mübarek gün rozetleri. Çekirdek ibadet (vakitler, kıldı/kılmadı, kaza, aile havuzu, bildirimler) her zaman ücretsiz.
-- Kilitli özelliğe dokununca "Pro özellik" bilgisi çıkar, Pro kodu ile açılır.
-- Ayarlar → Hesap: Pro/Demo durumu ve kalan gün. (Test için geçici: "Demo süresini bitir" ve "Pro kodu gir" düğmeleri.)
 
 **Güvenlik**
 - APK imza kontrolü: uygulama açılışta kendi imzasının parmak izini (SHA-256) doğrular; başkası APK'yı değiştirip yeniden imzalarsa "Güvenlik uyarısı" gösterilir. Şimdilik yalnızca uyarıdır, uygulamayı kapatmaz.

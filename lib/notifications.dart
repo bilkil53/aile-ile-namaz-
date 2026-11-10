@@ -243,6 +243,14 @@ class Notifications {
             : t('${g.emoji} $when ${g.name}', '${g.emoji} $when: ${g.name}');
         await _schedule(did++, title, g.meaning, at, _contentChannel);
       }
+      // 7 gün kala bir kez: "… · 7 gün kaldı" (uygulamadaki geri sayım kartı o gün açılır)
+      var wid = 350;
+      for (final e in DiniGunler.events) {
+        final at = DateTime(e.date.year, e.date.month, e.date.day, 19).subtract(const Duration(days: 7));
+        if (!at.isAfter(now) || at.difference(now).inDays > 60) continue;
+        final g = e.gun;
+        await _schedule(wid++, t('${g.emoji} ${g.name} · 7 gün kaldı', '${g.emoji} ${g.name} · 7 days left'), g.meaning, at, _contentChannel);
+      }
     } catch (_) {
       // Bildirim izni yoksa vb. sessizce geç.
     }

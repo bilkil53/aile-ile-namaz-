@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:intl/intl.dart';
 
 import 'lang.dart';
@@ -230,6 +231,22 @@ class DiniGunler {
   }
 
   /// Bugün idrak edilen (bayram dışı) mübarek gün/gece.
+  /// Yaklaşan mübarek gün: [within] gün içindeki en yakın gün ve kalan gün sayısı (1 = yarın).
+  /// Bugünün kendisi sayılmaz (o gün bugünkü kart gösterilir).
+  static (DiniGun, int)? upcoming(DateTime day, {int within = 7}) {
+    final d = _d(day);
+    (DiniGun, int)? best;
+    for (final e in _events) {
+      final left = e.date.difference(d).inDays;
+      if (left < 1 || left > within) continue;
+      if (best == null || left < best.$2) best = (e.gun, left);
+    }
+    return best;
+  }
+
+  @visibleForTesting
+  static void setEventsForTest(List<DiniGunEvent> e) => _events = e;
+
   static DiniGun? specialOn(DateTime day) {
     final d = _d(day);
     return _events.where((e) => !e.gun.bayram && e.date == d).map((e) => e.gun).firstOrNull;
