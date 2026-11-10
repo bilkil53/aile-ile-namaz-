@@ -31,7 +31,7 @@
 
 **Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
-**Sürüm:** **v1.0.0, v1.0.1, v1.0.2 …** — son hane her yayında bir artar (yayın başlığında tarih ve saat de yazar). Büyük değişiklikte **v1.1.x / v2.x**'e geçilir. Android'in güncellemeyi tanıdığı derleme numarası = son hane + 1. 10 Kasım 2026'da numaralandırma sıfırlandı: v1.0.0'ı kurmak için eski uygulama (v1.93 ve öncesi) telefondan kaldırılır.
+**Sürüm:** **v1.0.0, v1.0.1, v1.0.2 …** — son hane her yayında bir artar (yayın başlığında tarih ve saat de yazar). Büyük değişiklikte **v1.1.x / v2.x**'e geçilir. Android'in güncellemeyi tanıdığı derleme numarası = son hane + 1. 10 Kasım 2026'da numaralandırma sıfırlandı: v1.0.0'ı kurmak için eski uygulama telefondan kaldırılır.
 
 ---
 
