@@ -81,7 +81,7 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 ## Sunucu güvenlik testi CI'da
 
-- `.github/workflows/build-apk.yml` "Sunucu güvenlik testi" adımı, GitHub gizli ayarı `SUPABASE_DB_URL` tanımlıysa `security_test.sql`'i çalıştırır; "SONUC: OK" yoksa derleme durur. Tanımlı değilse uyarı verip atlar.
+- `.github/workflows/build-apk.yml` "Sunucu güvenlik testi" adımı, GitHub gizli ayarı `SUPABASE_DB_URL` ile `security_test.sql`'i her derlemede zorunlu çalıştırır; "SONUC: OK" yoksa ya da ayar tanımlı değilse derleme ve yayın durur (fail-closed).
 - **Kurulum (proje sahibi yapar, şifre içerir):** Supabase → Project Settings → Database → Connection string → *Session pooler* (5432) adresini kopyalayın, şifreyi yerleştirin; GitHub → Settings → Secrets and variables → Actions → *New repository secret*: ad `SUPABASE_DB_URL`.
 - Test her çalışmada **UYARI** olarak bilinen açığı da raporlar: `test_restart_trial` ve `test_remove_pro` giriş yapmış herkese açık (demo test paneli için bilerek; ücretli Pro'dan önce kapatılacak).
 
@@ -95,7 +95,7 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 ## 6. İstemci tarafı notlar
 
 - **APK imza kontrolü (`lib/integrity.dart`) bir güvenlik sınırı değildir.** İmza uyuşmazsa kullanıcı uyarılır ama uygulama engellenmez; değiştirilmiş bir APK bu kontrolü zaten atlayabilir. Bütün yetkilendirme sunucuda yapılır: RLS politikaları, sütun yetkileri ve `security definer` RPC'ler (bkz. bölüm 2–3, `supabase/tests/security_test.sql`). İstemciden gelen hiçbir bilgiye (imza, Pro durumu, rol) güvenilmez.
-- **Hata raporları:** `crash_reports`'a ve geliştirici mailine gitmeden önce hata metni ve yığın izi `scrubSensitive` ile temizlenir: e-posta, JWT/Bearer, `access_token`/`apikey`/`password` vb. değerleri, `?code=`, uuid, telefon, ortak depolamadaki dosya adları ve 40+ karakterli anahtar benzeri diziler. Hata kodları, satır numaraları ve sunucu adresi korunur. Telefondaki hata kaydı (`Log`) da aynı şekilde temizlenir. Kişi adı gibi serbest metinler otomatik tanınamaz; hata metinlerine ad yazılmamalı.
+- **Hata raporları:** hiçbir şey otomatik gönderilmez; yalnızca kişi pencerede "Raporu gönder" ya da "Mail ile" derse gider. `crash_reports`'a ve geliştirici mailine gitmeden önce hata metni ve yığın izi `scrubSensitive` ile temizlenir: e-posta, JWT/Bearer, `access_token`/`apikey`/`password` vb. değerleri, `?code=`, uuid, telefon, veritabanı hata ayrıntısındaki satır değerleri ("Failing row contains", "Key (…)=" — ad, dua metni), uygulama klasörü yolları (`/data/user/…`), ortak depolamadaki dosya adları ve 40+ karakterli anahtar benzeri diziler. Hata kodları, satır numaraları ve sunucu adresi korunur. Telefondaki hata kaydı (`Log`) da aynı şekilde temizlenir. Kişi adı gibi serbest metinler otomatik tanınamaz; hata metinlerine ad yazılmamalı.
 - **Gezinti (misafir) modu yalnızca görüntüleme:** kayıt yapılmaz, giriş sonrası aktarım yoktur (`Repo.setPrayer`/`saveKaza` misafirde hiçbir şey yazmaz). Sunucuda da misafir (anon) yalnızca anonim hata raporu yazabilir; başka hiçbir tabloya yazamaz. Eski aktarım fonksiyonu `merge_guest_kaza` ve `guest_merges` tablosu migration 32 ile kaldırıldı.
 
 ## 7. Bilinen açık işler

@@ -640,7 +640,9 @@ class Repo {
       resetUserCache();
       // Bekleyen kayıtlar bu hesap adına saklanır ve diske yazılması beklenir. Yazılamazsa kuyruk
       // silinmez (kayıt kaybolmaz); sahibi de durur, başka hesap girerse önce yeniden saklanır.
-      final parked = !keepPending || await LocalStore.parkPending(myId);
+      // Oturum zaten düşmüşse (myId 'local') kayıtlar telefondaki sahibin adına saklanır
+      final uid = myId != 'local' ? myId : (LocalStore.owner ?? '');
+      final parked = !keepPending || LocalStore.pendingCount == 0 || (uid.isNotEmpty && await LocalStore.parkPending(uid));
       if (!parked) Log.warn('hesap', 'bekleyen kayıtlar saklanamadı; kuyruk telefonda bırakıldı');
       LocalStore.wipeUserData(keepQueue: !parked);
       await supa.auth.signOut();

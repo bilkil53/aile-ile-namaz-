@@ -43,9 +43,13 @@ void main() {
     test('Veritabanı satır ayrıntısındaki değerler (ad, dua metni) silinir', () {
       expect(
           scrubSensitive('new row violates check constraint "x" Failing row contains (12, Ayşe Yılmaz, Allah kabul etsin (dua), 2026-11-10).'),
-          'new row violates check constraint "x" Failing row contains ([gizli]).');
+          'new row violates check constraint "x" Failing row contains ([gizli])');
+      // Parantez dengesi bozuk ya da iç içe değerler de sızmaz; sonraki satır (yığın izi) kalır
+      expect(scrubSensitive('Failing row contains (12, Ayşe :), (a (b)), 2026).\n#0 Repo.x (package:a/b.dart:1:2)'),
+          'Failing row contains ([gizli])\n#0 Repo.x (package:a/b.dart:1:2)');
+      expect(scrubSensitive('Key (lower(email))=(x) already exists.'), 'Key (lower(email))=([gizli])');
       expect(scrubSensitive('Key (display_name)=(Erdinç Bilkil) already exists.'),
-          'Key (display_name)=([gizli]) already exists.');
+          'Key (display_name)=([gizli])');
     });
 
     test('Uygulamanın telefondaki klasör yolu silinir', () {
