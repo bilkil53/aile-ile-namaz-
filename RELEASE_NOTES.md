@@ -1,4 +1,4 @@
-🕯️ Mübarek günler için geri sayım kartı: kandil, bayram ve özel günlere 7 gün kala Bugün ekranında açılır, her gün sayar, günün anlam ve önemini gösterir; 7 gün kala hatırlatma bildirimi de gelir.
+🕯️ Mübarek günlerden 1 gün önce Bugün ekranında bilgi kartı açılır: kandil, bayram ve özel günün anlam ve önemini gösterir ("Yarın akşam Miraç Kandili").
 
 ## 🌟 Kullanıcı için
 

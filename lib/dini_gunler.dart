@@ -233,7 +233,7 @@ class DiniGunler {
   /// Bugün idrak edilen (bayram dışı) mübarek gün/gece.
   /// Yaklaşan mübarek gün: [within] gün içindeki en yakın gün ve kalan gün sayısı (1 = yarın).
   /// Bugünün kendisi sayılmaz (o gün bugünkü kart gösterilir).
-  static (DiniGun, int)? upcoming(DateTime day, {int within = 7}) {
+  static (DiniGun, int)? upcoming(DateTime day, {int within = 1}) {
     // Gün farkı UTC tarihleriyle: yaz/kış saati geçişinde bir gün eksik sayılmasın
     final d = DateTime.utc(day.year, day.month, day.day);
     (DiniGun, int)? best;

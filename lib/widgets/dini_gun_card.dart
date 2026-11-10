@@ -125,7 +125,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
     );
   }
 
-  /// Mübarek güne 7 gün kala açılır; her gün geri sayar, anlam ve önemini gösterir.
+  /// Mübarek günden 1 gün önce açılır ("Yarın akşam" / "Yarın"); anlam ve önemini gösterir.
   Widget _upcoming(DiniGun g, int left) {
     final when = left == 1
         ? (g.eveBefore ? t('Yarın akşam', 'Tomorrow evening') : t('Yarın', 'Tomorrow'))
