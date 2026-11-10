@@ -140,7 +140,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
           border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(g.emoji, style: const TextStyle(fontSize: 22)),
             const SizedBox(width: 10),
             Expanded(
