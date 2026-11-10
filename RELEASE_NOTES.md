@@ -46,6 +46,12 @@ Namaz Demo — 🕯️ Mübarek günlerden 1 gün önce Bugün ekranında bilgi 
 - Güncelleme telefonun işlemci türüne uygun küçük APK'yı uygulama içinde indirir; uygulama tek pencerede kalır.
 - Telefonun büyük yazı ayarı %30'a kadar uygulanır (daha fazlasında ekranlar taşmasın diye sınırlıdır).
 
+**Pro / Demo sürüm (yeni)**
+- İlk 7 gün reklamsız Pro deneme; süre bitince Demo sürüme düşer.
+- Demo'da kilitli: karne geçmişi (30 gün / 3 ay / aylık takvim), seviyeli rozetler (Bronz/Gümüş/Altın/Elmas) ve mübarek gün rozetleri. Çekirdek ibadet (vakitler, kıldı/kılmadı, kaza, aile havuzu, bildirimler) her zaman ücretsiz.
+- Kilitli özelliğe dokununca "Pro özellik" bilgisi çıkar, Pro kodu ile açılır.
+- Ayarlar → Hesap: Pro/Demo durumu ve kalan gün. (Test için geçici: "Demo süresini bitir" ve "Pro kodu gir" düğmeleri.)
+
 **Güvenlik**
 - APK imza kontrolü: uygulama açılışta kendi imzasının parmak izini (SHA-256) doğrular; başkası APK'yı değiştirip yeniden imzalarsa "Güvenlik uyarısı" gösterilir. Şimdilik yalnızca uyarıdır, uygulamayı kapatmaz.
 - KVKK: Google ile girişte aydınlatma metni ve yurt dışına aktarım için açık rıza onayı; rıza tarihi hesapta saklanır. Daha önce giriş yapmış kullanıcılara bir kez sorulur.
