@@ -40,7 +40,7 @@ Future<void> showProRequired(BuildContext context, {String? feature}) async {
             Navigator.pop(ctx);
             showProCodeDialog(context);
           },
-          child: Text(t('Pro\'ya geç', 'Get Pro')),
+          child: Text(t('Demo Pro\'ya geç', 'Get Demo Pro')),
         ),
       ],
     ),
@@ -111,7 +111,7 @@ Future<void> showProCodeDialog(BuildContext context) async {
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setLocal) => AlertDialog(
-        title: Text(t('Pro\'ya geç', 'Get Pro')),
+        title: Text(t('Demo Pro\'ya geç', 'Get Demo Pro')),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(t('👨‍👩‍👧 Ailede bir kişinin (Aile Reisi) Pro alması yeterli; aile havuzundaki herkes (en fazla 5 kişi) Pro olur.', '👨‍👩‍👧 It is enough for one person in the family (the head of family) to get Pro; everyone in the family circle (up to 5 people) becomes Pro.'), style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           if (err != null) ...[
@@ -136,15 +136,15 @@ Future<void> showProCodeDialog(BuildContext context) async {
                     if (ok) {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context)
-                          .showSnackBar(SnackBar(content: Text(t('Pro etkinleştirildi 🎉', 'Pro activated 🎉'))));
+                          .showSnackBar(SnackBar(content: Text(t('Demo Pro etkinleştirildi 🎉', 'Demo Pro activated 🎉'))));
                     } else {
                       setLocal(() {
                         busy = false;
-                        err = Pro.lastError ?? t('Pro\'ya geçilemedi. İnternetini kontrol edip tekrar dene.', 'Could not switch to Pro. Check your internet and try again.');
+                        err = Pro.lastError ?? t('Demo Pro\'ya geçilemedi. İnternetini kontrol edip tekrar dene.', 'Could not switch to Demo Pro. Check your internet and try again.');
                       });
                     }
                   },
-            child: Text(busy ? '...' : t('Pro\'ya geç', 'Get Pro')),
+            child: Text(busy ? '...' : t('Demo Pro\'ya geç', 'Get Demo Pro')),
           ),
         ],
       ),

@@ -365,9 +365,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: const TextStyle(fontSize: 13, color: brown)),
                 const SizedBox(height: 10),
                 Wrap(spacing: 8, runSpacing: 8, children: [
-                  btn(reis ? 'Pro\'ya geç' : 'Pro\'ya geç: Pro\'yu reis alır', Icons.workspace_premium,
-                      reis ? Pro.redeem : null),
-                  btn('Pro\'dan düş → Ücretsiz', Icons.close, Pro.expireTest),
+                  // Pro'dayken yalnızca "düş", ücretsizken yalnızca "geç" görünür
+                  if (!Pro.active)
+                    btn(reis ? 'Demo Pro\'ya geç' : 'Demo Pro\'yu reis alır', Icons.workspace_premium,
+                        reis ? Pro.redeem : null),
+                  if (Pro.active) btn('Pro\'dan düş → Ücretsiz', Icons.close, Pro.expireTest),
                   btn('Denemeyi baştan başlat (7 gün)', Icons.play_arrow, Pro.testRestartTrial),
                 ]),
                 const SizedBox(height: 6),
@@ -691,8 +693,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.bold)),
                             ),
                     ),
-                    const SizedBox(height: 8),
-                    _outlineBtn(t('Pro\'ya geç', 'Get Pro'), () => showProCodeDialog(context), icon: Icons.workspace_premium),
+                    // Pro'dayken (deneme, aile ya da alınmış) tekrar "Pro'ya geç" gösterilmez
+                    if (!Pro.active) ...[
+                      const SizedBox(height: 8),
+                      _outlineBtn(t('Demo Pro\'ya geç', 'Get Demo Pro'), () => showProCodeDialog(context), icon: Icons.workspace_premium),
+                    ],
                   ]);
                 },
               ),
@@ -830,7 +835,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Expanded(
                       child: Text(t('Ücretsiz sürümde bildirimler kapalı · Pro ile açılır', 'Notifications are off in the free version · open with Pro'),
                           style: TextStyle(color: Colors.white70, fontSize: 13))),
-                  TextButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
+                  TextButton(onPressed: () => showProCodeDialog(context), child: Text(t('Demo Pro\'ya geç', 'Get Demo Pro'))),
                 ]),
               ),
             ])

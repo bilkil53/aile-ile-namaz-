@@ -98,7 +98,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
+            child: FilledButton(onPressed: () => showProCodeDialog(context), child: Text(t('Demo Pro\'ya geç', 'Get Demo Pro'))),
           ),
         ]),
       ),
@@ -148,8 +148,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   },
                   child: const Text('Reddet'),
                 ),
-                const SizedBox(width: 8),
-                FilledButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
+                if (!Pro.active) ...[
+                  const SizedBox(width: 8),
+                  FilledButton(onPressed: () => showProCodeDialog(context), child: Text(t('Demo Pro\'ya geç', 'Get Demo Pro'))),
+                ],
               ]),
             ]),
           );
