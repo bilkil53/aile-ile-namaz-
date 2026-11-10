@@ -655,6 +655,7 @@ class Repo {
 
   /// Bellekteki hesaba bağlı önbellek ve zamanlayıcıları sıfırlar (hesap değişince / çıkışta).
   static void resetUserCache() {
+    AllPrayed.cancel();
     _myName = null;
     _poolIds = null;
     for (final t in [..._writeTimers.values, ..._announceTimers.values]) {

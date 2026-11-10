@@ -18,12 +18,13 @@ create or replace function private.all_prayed_notify() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare today date := (now() at time zone 'Europe/Istanbul')::date;
 begin
-  -- Yalnızca 5 vaktin hepsi "Kıldı" ise (Muaf günler sayılmaz); eski günler için bildirim yok
+  -- Yalnızca 5 vaktin hepsi "Kıldı" ise (Muaf günler sayılmaz); eski günler için bildirim yok.
+  -- Açık rızası kayıtlı olmayan kişi için aileye bildirim üretilmez (KVKK md. 6, fail-closed).
   if new.fajr = 'PRAYED' and new.dhuhr = 'PRAYED' and new.asr = 'PRAYED'
      and new.maghrib = 'PRAYED' and new.isha = 'PRAYED'
-     and new.prayer_date between today - 1 and today + 1 then
+     and new.prayer_date between today - 1 and today + 1
+     and exists (select 1 from public.profiles pr where pr.id = new.user_id and pr.acik_riza_at is not null) then
     begin
-      delete from private.all_prayed_log where prayer_date < today - 3; -- veri en aza: eski kayıtlar silinir
       insert into private.all_prayed_log(user_id, prayer_date) values (new.user_id, new.prayer_date)
         on conflict do nothing;
       if found then
@@ -42,3 +43,19 @@ revoke all on function private.all_prayed_notify() from public, anon, authentica
 drop trigger if exists daily_prayers_all_prayed on public.daily_prayers;
 create trigger daily_prayers_all_prayed after insert or update on public.daily_prayers
   for each row execute function private.all_prayed_notify();
+
+-- Kurulumdan önce zaten tamamlanmış günler için geç bildirim gitmesin
+insert into private.all_prayed_log(user_id, prayer_date)
+  select user_id, prayer_date from public.daily_prayers
+   where prayer_date >= (now() at time zone 'Europe/Istanbul')::date - 1
+     and fajr = 'PRAYED' and dhuhr = 'PRAYED' and asr = 'PRAYED' and maghrib = 'PRAYED' and isha = 'PRAYED'
+  on conflict do nothing;
+
+-- Gece temizliği: tekrar önleme kaydı yalnızca 3 gün tutulur (veri en aza)
+select cron.unschedule(jobid) from cron.job where jobname = 'aile-cleanup';
+select cron.schedule('aile-cleanup', '30 0 * * *', $job$
+  delete from public.pool_events where created_at < now() - interval '7 days';
+  delete from public.join_requests where status <> 'pending' and created_at < now() - interval '7 days';
+  delete from public.join_attempts where attempted_at < now() - interval '1 day';
+  delete from private.all_prayed_log where prayer_date < (now() at time zone 'Europe/Istanbul')::date - 3;
+$job$);

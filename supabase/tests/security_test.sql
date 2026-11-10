@@ -175,6 +175,33 @@ begin
        and created_at > now() - interval '1 minute') <> n then
     fails := fails || 'all_prayed_eski_gun_bildirildi; ';
   else passed := passed + 1; end if;
+  -- Muaf vakti olan gün ve ileri tarih (bugün+2) bildirilmez
+  insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
+    values (u, (now() at time zone 'Europe/Istanbul')::date + 2, 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED')
+    on conflict (user_id, prayer_date) do update
+      set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'PRAYED', maghrib = 'PRAYED', isha = 'PRAYED';
+  insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
+    values (u, (now() at time zone 'Europe/Istanbul')::date - 1, 'PRAYED', 'PRAYED', 'EXCUSED', 'PRAYED', 'PRAYED')
+    on conflict (user_id, prayer_date) do update
+      set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'EXCUSED', maghrib = 'PRAYED', isha = 'PRAYED';
+  if (select count(*) from public.pool_events where sender_id = u and event_type = 'ALL_PRAYED'
+       and created_at > now() - interval '1 minute') <> n then
+    fails := fails || 'all_prayed_muaf_ya_da_ileri_tarih_bildirildi; ';
+  else passed := passed + 1; end if;
+  -- Tekrar önleme kaydı istemciden okunamaz
+  begin perform 1 from private.all_prayed_log limit 1; fails := fails || 'all_prayed_kaydi_okunabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+  -- Açık rızası kayıtlı değilse aileye bildirim üretilmez
+  update public.profiles set acik_riza_at = null where id = u;
+  delete from private.all_prayed_log where user_id = u;
+  set local role authenticated;
+  update public.daily_prayers set isha = 'NONE' where user_id = u and prayer_date = (now() at time zone 'Europe/Istanbul')::date;
+  update public.daily_prayers set isha = 'PRAYED' where user_id = u and prayer_date = (now() at time zone 'Europe/Istanbul')::date;
+  if (select count(*) from public.pool_events where sender_id = u and event_type = 'ALL_PRAYED'
+       and created_at > now() - interval '1 minute') <> n then
+    fails := fails || 'all_prayed_rizasiz_bildirildi; ';
+  else passed := passed + 1; end if;
   reset role;
 
   if fails = '' then
