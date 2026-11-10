@@ -34,8 +34,8 @@ class Kvkk {
 
   static String get consentText => t('KVKK Aydınlatma Metni\'ni okudum ve anladım.', 'I have read and understood the KVKK Information Notice.');
   static String get rizaText => t(
-      'Açık Rıza Metni\'ni okudum; namaz ve kaza kayıtlarımın ve dua mesajlarımın işlenmesine açık rıza veriyorum.',
-      'I have read the Explicit Consent Text; I give my explicit consent for my prayer and kaza records and dua messages to be processed.');
+      'Açık Rıza Metni\'ni okudum; namaz ve kaza kayıtlarımın, dua ve tebrik mesajlarımın işlenmesine ve aile havuzumdaki kişilere gösterilmesine açık rıza veriyorum.',
+      'I have read the Explicit Consent Text; I give my explicit consent for my prayer and kaza records and my dua and greeting messages to be processed and shown to the people in my family circle.');
 
   static String? get _uid => Supabase.instance.client.auth.currentUser?.id;
   static List<String> get _users => AppSettings.prefs.getStringList(_kUsers) ?? const [];
@@ -53,6 +53,9 @@ class Kvkk {
     final uid = _uid;
     return uid != null && _users.contains(uid) && !_rizaUsers.contains(uid);
   }
+
+  /// Giriş yapılmadan vazgeçildiyse giriş ekranında verilen beyanlar unutulur.
+  static void clearPending() => _pending = false;
 
   /// İki beyan birlikte verilir (iki kutu da işaretlenmeden çağrılmaz).
   static Future<void> give() async {
@@ -109,12 +112,14 @@ class Kvkk {
     final db = Supabase.instance.client;
     if (_users.contains(uid) && !(p.getBool(_kSynced(uid)) ?? false)) {
       try {
-        await db
+        final ack = await db
             .from('profiles')
             .update({'kvkk_consent_at': DateTime.now().toUtc().toIso8601String()})
             .eq('id', uid)
+            .select('id')
             .timeout(const Duration(seconds: 8));
-        if (_uid == uid) await p.setBool(_kSynced(uid), true);
+        // Satır güncellenmediyse (profil yok) yazılmadı say, sonra yeniden dene
+        if (ack.isNotEmpty && _uid == uid) await p.setBool(_kSynced(uid), true);
       } catch (_) {}
     }
     if (_rizaUsers.contains(uid) && !(p.getBool(_kRizaSynced(uid)) ?? false)) {
@@ -175,9 +180,9 @@ class Kvkk {
         ),
       ),
     );
-    if (ok == true) {
-      await give();
-      await syncServer();
+    // Pencere açıkken oturum düştüyse beyan kimseye bağlanmaz (sonraki girişe taşınmasın)
+    if (ok == true && _uid != null) {
+      await give(); // sunucuya yazma home_shell'deki syncServer ile (açılışı bekletmez)
     } else {
       await Push.unregister();
       await Repo.signOut();
