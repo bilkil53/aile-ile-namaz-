@@ -1,4 +1,4 @@
-Namaz Demo — Güvenlik: uygulamanın değiştirilmiş ya da resmi olmayan bir kopyası artık açılmaz (önceden yalnızca uyarı veriyordu); "Resmi sürümü indir" bağlantısı gösterilir. Ayarlar'daki durum yazısı sadeleşti. Test Pro kodu: 1.
+Namaz Demo — Hata olunca artık hiçbir bilgi otomatik gönderilmez: pencerede istersen "Raporu gönder" ya da "Mail ile" seçersin. Hesap değiştirirken bekleyen kayıtlar daha güvenli saklanır. Demo Pro: test hesapları "Demo Pro'ya geç" ile kodsuz geçer.
 
 ## 🌟 Kullanıcı için
 
@@ -39,7 +39,7 @@ Namaz Demo — Güvenlik: uygulamanın değiştirilmiş ya da resmi olmayan bir 
 - Hesap (ad, e-posta, üyelik tarihi, bulut durumu, çıkış), Uygulama (konum, sürüm ve sürüm notları, güncelleme, önbelleği temizle), Diğer (paylaş, öneri yaz, GitHub, gizlilik), Bildirimler, Hesabımı sil.
 
 **Hata bildirimi**
-- Uygulama kullanılırken hata olursa sebebiyle birlikte bir pencere çıkar; istenirse ayrıntılar mail ile gönderilir. Uygulama ekrandayken kapanırsa sebebi bir sonraki açılışta gösterilir. Hata kaydı anonimdir.
+- Uygulama kullanılırken hata olursa sebebiyle birlikte bir pencere çıkar; hiçbir şey otomatik gönderilmez. İstersen **Raporu gönder** (anonim) ya da **Mail ile** diyebilirsin. Uygulama ekrandayken kapanırsa sebebi bir sonraki açılışta gösterilir.
 
 **Güncelleme ve görünüm**
 - Uygulama simgesi: yeşil zeminde altın minare, hilal ve E harfi.
@@ -71,6 +71,6 @@ Namaz Demo — Güvenlik: uygulamanın değiştirilmiş ya da resmi olmayan bir 
 
 **Bildirimler:** Yerel zamanlanmış bildirimler (3 gün ileri; kesin alarm izni varsa `exactAllowWhileIdle`). Aile olayları: `pool_events` tetikleyicisi → Edge Function `push-family` → FCM HTTP v1. Kişiye özel dua `target_id` ile yalnızca alıcıya gider; RLS ile sadece gönderen ve alan görür.
 
-**Hata takibi:** Dart hataları (`FlutterError.onError`, `PlatformDispatcher.onError`) ve Android kapanma sebebi (`ApplicationExitInfo`) + Kotlin çökme izi → anonim `crash_reports` (30 gün).
+**Hata takibi:** Dart hataları (`FlutterError.onError`, `PlatformDispatcher.onError`) ve Android kapanma sebebi (`ApplicationExitInfo`) + Kotlin çökme izi → yalnızca kişi "Raporu gönder" derse anonim `crash_reports` (30 gün); otomatik gönderim yok.
 
 **Derleme:** GitHub Actions: `flutter create` → manifest yaması → imza (GitHub Secrets) → `flutter analyze` → `--obfuscate --split-debug-info` → işlemci türüne göre APK'lar + evrensel APK + Play paketi (AAB). R8 koruma kuralları APK içinde otomatik doğrulanır.

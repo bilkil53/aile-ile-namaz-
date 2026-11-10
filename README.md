@@ -101,16 +101,16 @@
 * **7 günlük deneme:** İlk Google girişinde başlar, kişiye özeldir; Ayarlar'da "🕒 7 günlük deneme: başlangıç – bitiş · N gün kaldı". Her şey açık.
 * **Ücretsiz sürüm (8. gün):** Bugün ve Karne açık; Aile Havuzu ve Kaza **pasif** görünür (sayılar "–", ekran soluk, üstte Pro bilgi kartı), manevi rozetler gizli, **tüm bildirimler kapalı** (Cuma uyarısı dahil). Aile, ücretsiz sürümdeki kişinin namazlarını görmeye devam eder.
 * **Aile Pro'su:** Pro'yu yalnızca **Aile Reisi** alır; reis Pro olunca havuzdaki herkes (en fazla 5 kişi) otomatik Pro olur. Pro reisin hesabına bağlıdır: havuz silinip yeniden kurulsa da yeni üyeler Pro olur; ayrılan / çıkarılan üyenin aile Pro'su biter.
-* **Aile Reisine ilet:** Reis olmayanlarda kod kutusu yerine "📩 Aile Reisine ilet" (günde 1). Reis bildirim ve "📩 Kızın Ayşe Pro istedi" kartı görür; **Reddet** ya da **Pro'ya geç**. Reddedilince isteyene "Aile Reisin şimdilik Pro almadı" bilgisi gider.
+* **Aile Reisine ilet:** Reis olmayanlarda "Demo Pro'ya geç" yerine "📩 Aile Reisine ilet" (günde 1). Reis bildirim ve "📩 Kızın Ayşe Pro istedi" kartı görür; **Reddet** ya da **Demo Pro'ya geç**. Reddedilince isteyene "Aile Reisin şimdilik Pro almadı" bilgisi gider.
 * **Pro'ya geçişte** eski bildirimler topluca gelmez (FCM TTL 1 saat).
-* **Fiyat (plan):** aylık 153 ₺ · yıllık 1.553 ₺ (Google Play aboneliği). Test Pro kodu: `1`.
+* **Fiyat (plan):** aylık 153 ₺ · yıllık 1.553 ₺ (Google Play aboneliği). Test aşamasında kod yok: yalnızca test listesindeki hesaplar "Demo Pro'ya geç" ile Pro olur, "Pro'dan düş" ile ücretsize döner (sunucu denetler).
 * **🧪 Test Paneli** (yalnızca demo): başlıkta durum etiketi (🧪 Deneme · Ücretsiz · Pro); Ayarlar'da denemeyi baştan başlat / bitir, Pro yap / kaldır. Sunucuda `test_restart_trial`, `test_remove_pro`, `expire_pro_test` — Play'e çıkmadan önce kaldırılacak.
 * Sunucu: `profiles.pro_until` (deneme bitişi), `pro_trial_started_at`, `pro_paid_until`; `private.pro_status`, `my_pro_status`, `ensure_pro_trial`, `redeem_pro_code` (yalnızca reis), `request_pro_from_reis`, `decline_pro_request`.
 
 ### 7. 🛟 Hata bildirimi
-* Uygulama kullanılırken beklenmedik bir hata olursa sebebiyle (kod hatası / bellek) bir pencere çıkar; **Mail gönder** ile ayrıntılar hazır mail olarak açılır. İnternet kesintisinde pencere çıkmaz.
-* Uygulama ekrandayken tamamen kapanırsa (bellek doldu, çöktü, dondu, aşırı işlemci kullanımı) bir sonraki açılışta sebebi gösterilir. Arka planda olan kapanmalar kullanıcıyı rahatsız etmeden kaydedilir.
-* Kayıtlar anonimdir (sürüm, Android sürümü, bellek kullanımı, hata ve kod satırları); kişisel veri içermez, 30 gün saklanır.
+* **Hiçbir şey otomatik gönderilmez.** Uygulama kullanılırken beklenmedik bir hata olursa sebebiyle (kod hatası / bellek) bir pencere çıkar; kişi isterse **Raporu gönder** (anonim kayıt) ya da **Mail ile** der, **Kapat** derse hiçbir şey gitmez. İnternet kesintisinde pencere çıkmaz.
+* Uygulama ekrandayken tamamen kapanırsa (bellek doldu, çöktü, dondu, aşırı işlemci kullanımı) bir sonraki açılışta sebebi aynı pencereyle gösterilir. Arka planda olan kapanmalar için pencere de rapor da yoktur.
+* Gönderilen rapor anonimdir (sürüm, Android sürümü, bellek kullanımı, hata ve kod satırları); e-posta, kimlik, telefon, veritabanı satır değerleri (ad, dua metni) ve dosya yolları gönderilmeden önce silinir. 30 gün saklanır.
 
 ### 8. 👀 Gezinti Modu (giriş yapmadan)
 * Gezinti modu **yalnızca bakmak içindir**: bütün ekranlar, Aile Havuzu dahil, görülebilir ama işaretleme ve kayıt yapılmaz.

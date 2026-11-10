@@ -68,7 +68,11 @@ class LocalStore {
     if (owner != null) {
       // Önceki hesabın gönderilmemiş kayıtları silinmez: o hesap adına saklanır (bu hesap göremez,
       // onun adına gönderemez); önceki hesap bu telefonda tekrar girince geri yüklenir.
-      parkPending(owner);
+      // Saklama bellekte hemen olur (silmeden önce); diske yazılamazsa uyarı bırakılır, bellekteki
+      // kopya bu açılış boyunca durur ve sonraki yazmada diske geçer.
+      unawaited(parkPending(owner).then((ok) {
+        if (!ok) Log.warn('hesap', 'önceki hesabın bekleyen kayıtları diske yazılamadı');
+      }));
       wipeUserData();
     }
     unawaited(p.setString(_kOwner, uid));
@@ -93,15 +97,22 @@ class LocalStore {
     }
   }
 
-  static void _saveParked(Map<String, dynamic> m) {
+  /// Saklanan kayıtları diske yazar. Bellekteki kopya çağrı anında güncellenir (sonraki okumalar
+  /// hemen görür); dönüş diske yazılıp yazılmadığıdır.
+  static Future<bool> _saveParked(Map<String, dynamic> m) async {
     final p = AppSettings.prefs;
-    unawaited(m.isEmpty ? p.remove(_kParked) : p.setString(_kParked, jsonEncode(m)));
+    try {
+      return m.isEmpty ? await p.remove(_kParked) : await p.setString(_kParked, jsonEncode(m));
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Bu hesabın gönderilmemiş kayıtlarını telefonda ayrı saklar (çıkışta / hesap değişiminde).
-  static void parkPending(String uid, {DateTime? now}) {
+  /// Dönüş: diske yazıldı mı (saklanacak kayıt yoksa true). Yazılamazsa bir kez daha denenir.
+  static Future<bool> parkPending(String uid, {DateTime? now}) async {
     final q = queue();
-    if (q.isEmpty || uid.isEmpty || uid == 'local') return;
+    if (q.isEmpty || uid.isEmpty || uid == 'local') return true;
     final m = _parked();
     final old = (m[uid] as Map?)?['queue'] as List? ?? const [];
     final at = (now ?? DateTime.now()).toUtc().toIso8601String();
@@ -115,7 +126,9 @@ class LocalStore {
       merged.add({...o, 'pa': at});
     }
     m[uid] = {'queue': merged};
-    _saveParked(m);
+    // İlk yazma çağrısı beklemeden önce yapılır: bellekteki kopya silme işleminden önce hazırdır
+    if (await _saveParked(m)) return true;
+    return _saveParked(m);
   }
 
   static bool _sameTarget(Map<String, dynamic> a, Map<String, dynamic> b) =>
@@ -144,7 +157,7 @@ class LocalStore {
       }
     }
     final entry = m.remove(uid) as Map?;
-    _saveParked(m);
+    unawaited(_saveParked(m));
     final items = (entry?['queue'] as List?)?.cast<Map>() ?? const [];
     if (items.isEmpty) return 0;
     final q = queue();
@@ -166,19 +179,21 @@ class LocalStore {
   /// Hesap silinince o hesabın saklanan kayıtları da silinir.
   static void dropParked(String uid) {
     final m = _parked();
-    if (m.remove(uid) != null) _saveParked(m);
+    if (m.remove(uid) != null) unawaited(_saveParked(m));
   }
 
   static int parkedCount(String uid) => (((_parked()[uid] as Map?)?['queue'] as List?) ?? const []).length;
 
   /// Hesaba ait telefondaki bütün kişisel verileri siler (çıkışta, hesap silmede, hesap değişince).
   /// Bellekteki önbellek hemen güncellenir; diske yazma arka planda tamamlanır.
-  static void wipeUserData() {
+  /// [keepQueue]: bekleyen kayıtlar ayrı saklanamadıysa kuyruk ve sahibi silinmez (fail-closed):
+  /// aynı hesap girince kaldığı yerden gönderilir; başka hesap girerse önce yeniden saklanır.
+  static void wipeUserData({bool keepQueue = false}) {
     final p = AppSettings.prefs;
-    for (final k in p.getKeys().where(isUserKey).toList()) {
+    for (final k in p.getKeys().where(isUserKey).where((k) => !(keepQueue && k == 'queue')).toList()) {
       unawaited(p.remove(k));
     }
-    unawaited(p.remove(_kOwner));
+    if (!keepQueue) unawaited(p.remove(_kOwner));
     clearGuest();
     // Ekran çizimi sırasında çağrılabilir (giriş kapısı): bildirim çizim bitince yapılır
     scheduleMicrotask(() => queueChanged.value++);
