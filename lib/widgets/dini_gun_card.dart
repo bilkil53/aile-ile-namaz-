@@ -9,7 +9,8 @@ import '../dini_gunler.dart';
 import '../theme.dart';
 
 /// Bugün ekranının en üstünde: bayram günlerinde büyük bayram kartı,
-/// kandil / mübarek gün olan günlerde sade bilgi kartı. Başka günlerde hiçbir şey göstermez.
+/// kandil / mübarek gün olan günlerde sade bilgi kartı; mübarek günden 1 gün önce
+/// "yarın" bilgi kartı (bugünkü özel gün kartı varsa onun altında). Başka günlerde hiçbir şey göstermez.
 class DiniGunCard extends StatefulWidget {
   const DiniGunCard({super.key});
 
@@ -26,6 +27,15 @@ class _DiniGunCardState extends State<DiniGunCard> {
     DiniGunler.ensure().then((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _openDiyanet() async {
+    try {
+      final ok = await launchUrl(Uri.parse('https://www.diyanet.gov.tr'), mode: LaunchMode.externalApplication);
+      if (!ok) _toast(t('Bağlantı açılamadı.', 'Could not open the link.'));
+    } catch (_) {
+      _toast(t('Bağlantı açılamadı.', 'Could not open the link.'));
+    }
   }
 
   void _toast(String m) {
@@ -57,9 +67,13 @@ class _DiniGunCardState extends State<DiniGunCard> {
     final b = DiniGunler.bayramOn(now);
     if (b != null) return _bayram(b.$1, b.$2);
     final s = DiniGunler.specialOn(now);
-    if (s != null) return _special(s);
     final u = DiniGunler.upcoming(now);
-    if (u != null) return _upcoming(u.$1, u.$2);
+    // Arefe gibi günlerde bugünkü kartın altında yarınki (ör. bayram) kartı da görünür
+    if (s != null && u != null) {
+      return Column(mainAxisSize: MainAxisSize.min, children: [_special(s), _upcoming(u.$1)]);
+    }
+    if (s != null) return _special(s);
+    if (u != null) return _upcoming(u.$1);
     return const SizedBox.shrink();
   }
 
@@ -126,10 +140,8 @@ class _DiniGunCardState extends State<DiniGunCard> {
   }
 
   /// Mübarek günden 1 gün önce açılır ("Yarın akşam" / "Yarın"); anlam ve önemini gösterir.
-  Widget _upcoming(DiniGun g, int left) {
-    final when = left == 1
-        ? (g.eveBefore ? t('Yarın akşam', 'Tomorrow evening') : t('Yarın', 'Tomorrow'))
-        : t('$left gün kaldı', '$left days left');
+  Widget _upcoming(DiniGun g) {
+    final when = g.eveBefore ? t('Yarın akşam', 'Tomorrow evening') : t('Yarın', 'Tomorrow');
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -160,9 +172,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
           const SizedBox(height: 2),
           Text(g.meaning, style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.textSecondary)),
           InkWell(
-            onTap: () => launchUrl(Uri.parse('https://www.diyanet.gov.tr'), mode: LaunchMode.externalApplication),
+            onTap: _openDiyanet,
             child: Padding(
-              padding: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(t('Tarih Diyanet takvimine göredir · Ayrıntılı bilgi: diyanet.gov.tr', 'Date follows the Diyanet calendar · More: diyanet.gov.tr'),
                   style: TextStyle(fontSize: 11, color: AppColors.emerald, decoration: TextDecoration.underline)),
             ),

@@ -9,7 +9,7 @@
 **Bugün**
 - Konum her açılışta otomatik alınır. Diyanet vakitleri, sıradaki vakit geri sayımı, günün ayeti/hadisi, kıble pusulası.
 - 5 vakit kartı: Kıldı → Kılmadı → Muaf → Bekliyor. Muaf yalnızca kadın ve kız simgeli kişilerde görünür.
-- **Bayram ve kandil kartları:** bayram günlerinde bayram kartı (bayramın anlamı, Bayramlaş, Aileye gönder), kandil ve mübarek günlerde sade bilgi kartı. Diğer günlerde görünmez.
+- **Bayram ve kandil kartları:** bayram günlerinde bayram kartı (bayramın anlamı, Bayramlaş, Aileye gönder), kandil ve mübarek günlerde sade bilgi kartı; mübarek günden 1 gün önce "yarın" bilgi kartı (anlam ve önemi). Diğer günlerde görünmez.
 
 **Aile Havuzu**
 - Davet kodu (**EMB-123456**) paylaşım penceresiyle gönderilir; tek bekleyen istek, 5 dakika onay süresi.
