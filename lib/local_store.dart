@@ -61,10 +61,18 @@ class LocalStore {
   /// bağlar. Başka bir hesabın verisi varsa önce silinir: bir hesabın bekleyen kaydı başka hesaba
   /// yazılamaz, verisi başka hesapta görünmez. Dönüş: önceki hesabın verisi silindi mi.
   /// (Eski sürümden gelen sahipsiz veri bu hesabındır sayılır: güncellemede bekleyen kayıt kaybolmaz.)
+  /// Telefondaki kişisel verinin bağlı olduğu hesap (yoksa null).
+  static String? get owner => AppSettings.prefs.getString(_kOwner);
+
   static bool bindUser(String uid) {
     final p = AppSettings.prefs;
     final owner = p.getString(_kOwner);
-    if (owner == uid) return false;
+    if (owner == uid) {
+      // Aynı hesap: bellekte/diskte bu hesap adına saklanmış kayıt kaldıysa (ör. saklama diske
+      // yazılamadı) kuyruğa geri alınır; telefondaki daha yeni kayıt önce gelir.
+      if (parkedCount(uid) > 0) restoreParked(uid);
+      return false;
+    }
     if (owner != null) {
       // Önceki hesabın gönderilmemiş kayıtları silinmez: o hesap adına saklanır (bu hesap göremez,
       // onun adına gönderemez); önceki hesap bu telefonda tekrar girince geri yüklenir.

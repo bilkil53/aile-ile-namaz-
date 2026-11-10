@@ -71,7 +71,7 @@ class CrashReport {
       final desc = (m['desc'] as String?) ?? '';
       final trace = (m['trace'] as String?) ?? '';
       // Ekrandayken mi kapandı? (100 = ön planda, 200 = görünür). Kullanıcı uygulamayı
-      // kapatırken / arka plandayken olan kapanmalar sadece sessizce raporlanır, popup çıkmaz.
+      // kapatırken / arka plandayken olan kapanmalarda pencere çıkmaz, hiçbir şey gönderilmez.
       final foreground = importance <= 200;
       final info = _exitInfo(reason, foreground: foreground);
       if (info == null) return; // normal kapanış (kullanıcı kapattı, güncelleme…)
@@ -202,8 +202,8 @@ class CrashReport {
                   ScaffoldMessenger.maybeOf(m)?.showSnackBar(SnackBar(
                       content: Text(ok
                           ? t('Rapor gönderildi, teşekkürler 🤲', 'Report sent, thank you 🤲')
-                          : t('Rapor gönderilemedi (internet yok). "Mail ile" seçeneğini deneyebilirsin.',
-                              'Could not send the report (no internet). You can try "By email".'))));
+                          : t('Rapor gönderilemedi. İnternetini kontrol et ya da "Mail ile" seçeneğini dene.',
+                              'Could not send the report. Check your internet or try "By email".'))));
                 }
               },
             ),
