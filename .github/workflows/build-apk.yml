@@ -17,9 +17,10 @@ env:
   APP_MAJOR: "1"
   MINOR_BASE: "12"
 
-# Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın
+# Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın.
+# Tam test (dev, elle başlatma) yayın üretmez: kendi sırasında, yayınla aynı anda çalışır.
 concurrency:
-  group: release-numbering
+  group: ${{ (github.ref_name == 'main' || github.ref_name == 'demo') && 'release-numbering' || format('test-{0}', github.ref_name) }}
   cancel-in-progress: false
 
 jobs:
