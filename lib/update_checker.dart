@@ -88,7 +88,7 @@ class UpdateChecker {
       final body = jsonDecode(await res.transform(utf8.decoder).join().timeout(const Duration(seconds: 15)))
           as Map<String, dynamic>;
       final tag = body['tag_name'] as String? ?? '';
-      final n = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      final n = buildOfTag(tag);
       final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
       return (n, notes);
     } catch (_) {
@@ -130,6 +130,16 @@ class UpdateChecker {
 
   /// Yüklü derleme numarası. İşlemci türüne göre APK'larda Android sürüm kodu
   /// "tür×1000 + derleme" olur (ör. 3011 = arm64, derleme 11); karşılaştırma derleme numarasıyla yapılır.
+  /// Yayın etiketinden derleme numarası: v1.0.0 → 1, v1.0.1-demo → 2, v1.2.57 → 58 (son hane + 1).
+  /// Son hane hiç sıfırlanmaz; her yayında bir artar. Eski "r105" biçimli etiketler yok sayılır (0):
+  /// v1.0.0 öncesi yayınlar bu uygulamaya güncelleme olarak önerilmez.
+  static int buildOfTag(String tag) {
+    final m = RegExp(r'^v\d+\.\d+\.(\d+)(-demo)?$').firstMatch(tag.trim());
+    if (m == null) return 0;
+    final p = int.tryParse(m.group(1)!);
+    return p == null ? 0 : p + 1;
+  }
+
   static int buildOf(String buildNumber) => (int.tryParse(buildNumber) ?? 0) % 1000;
 
   static Future<int> currentBuild() async => buildOf((await PackageInfo.fromPlatform()).buildNumber);
@@ -192,7 +202,7 @@ class UpdateChecker {
       client.close();
 
       final tag = body['tag_name'] as String? ?? '';
-      final latest = int.tryParse(tag.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      final latest = buildOfTag(tag);
       if (latest <= current) return;
 
       final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();

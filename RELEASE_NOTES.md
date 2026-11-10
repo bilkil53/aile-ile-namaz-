@@ -1,4 +1,4 @@
-🕯️ Mübarek günlerden 1 gün önce Bugün ekranında bilgi kartı açılır: kandil, bayram ve özel günün anlam ve önemini gösterir ("Yarın akşam Miraç Kandili").
+🆕 v1.0.0 — sürüm numarası sıfırdan başladı: bu sürümü kurmadan önce eski uygulamayı telefondan kaldırın. 🕯️ Mübarek günlerden 1 gün önce Bugün ekranında bilgi kartı açılır ("Yarın akşam Miraç Kandili").
 
 ## 🌟 Kullanıcı için
 

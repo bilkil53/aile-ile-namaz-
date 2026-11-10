@@ -10,12 +10,13 @@ on:
 permissions:
   contents: write
 
-# Görünen sürüm: v1.<N> (N = derleme 13'ten itibaren 1, 2, 3 …). Büyük değişiklikte APP_MAJOR "2" yapılır.
-# Derleme numarası (BUILD_NO = son r<N> yayını + 1, v1.0 ile 1'den başladı) sadece arka planda:
-# Android versionCode + uygulama içi güncelleme karşılaştırması. Yayın etiketi r<N>.
+# Görünen sürüm ve yayın etiketi: vMAJOR.MINOR.N (v1.0.0, v1.0.1 …; demo: v1.0.N-demo). N her resmi yayında bir artar,
+# hiç sıfırlanmaz. Büyük değişiklikte APP_MINOR / APP_MAJOR elle artırılır.
+# Derleme numarası (BUILD_NO = N + 1): Android versionCode + uygulama içi güncelleme karşılaştırması.
+# 10 Kasım 2026'da numaralandırma sıfırlandı (eski r<N> / v1.<N> yayınları sayılmaz; eski uygulama kaldırılıp kurulur).
 env:
   APP_MAJOR: "1"
-  MINOR_BASE: "12"
+  APP_MINOR: "0"
 
 # Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın.
 # Tam test (dev, elle başlatma) yayın üretmez: kendi sırasında, yayınla aynı anda çalışır.
@@ -330,24 +331,22 @@ jobs:
               echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı; derleme durduruldu."; exit 1 ;;
           esac
 
-      - name: Derleme numarası (r1, r2, r3 … yalnızca resmi yayınlara göre artar)
+      - name: Sürüm numarası (v1.0.0, v1.0.1, v1.0.2 … yalnızca resmi yayınlara göre artar)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Yayınlar ve etiketlerin en büyüğü: bir yayın yanlışlıkla silinse bile numara geri gitmez
-          rel=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName \
-            -q '[.[].tagName | select(test("^r[0-9]+$")) | ltrimstr("r") | tonumber] | max // 0')
-          tag=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/r" --paginate \
-            -q '[.[].ref | ltrimstr("refs/tags/") | select(test("^r[0-9]+$")) | ltrimstr("r") | tonumber] | max // 0')
+          # Etiket vMAJOR.MINOR.N (demo: -demo ekli). N hiç sıfırlanmaz; derleme numarası (Android versionCode) = N + 1.
+          # Yayınlar ve etiketlerin en büyüğü alınır: bir yayın yanlışlıkla silinse bile numara geri gitmez.
+          # Eski r<N> etiketleri (v1.0.0 öncesi) sayılmaz.
+          F='select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-demo)?$")) | sub("-demo$"; "") | split(".") | .[2] | tonumber + 1'
+          rel=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName -q "[.[].tagName | $F] | max // 0")
+          tag=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --paginate \
+            -q "[.[].ref | ltrimstr(\"refs/tags/\") | $F] | max // 0" | sort -n | tail -1)
+          case "$rel$tag" in ''|*[!0-9]*) echo "::error::Sürüm numarası okunamadı (rel='$rel' tag='$tag'); yayın durduruldu."; exit 1 ;; esac
           last=$(( rel > tag ? rel : tag ))
-          # Taban: sürümler/etiketler silinse bile numara 77'nin (silinmeden önceki son yayın) altına düşmesin;
-          # aksi halde Android yeni APK'yı "eski sürüm" sayar ve güncelleme olarak kurmaz.
-          [ "$last" -lt 77 ] && last=77
           echo "BUILD_NO=$((last + 1))" >> "$GITHUB_ENV"
-          # Görünen sürüm: v1.1, v1.2, v1.3 … (derleme 13 = v1.1)
-          minor=$((last + 1 - ${{ env.MINOR_BASE }})); [ "$minor" -lt 0 ] && minor=0
-          echo "APP_VERSION=${{ env.APP_MAJOR }}.$minor" >> "$GITHUB_ENV"
-          echo "Derleme numarası: $((last + 1))"
+          echo "APP_VERSION=${{ env.APP_MAJOR }}.${{ env.APP_MINOR }}.$last" >> "$GITHUB_ENV"
+          echo "Sürüm: v${{ env.APP_MAJOR }}.${{ env.APP_MINOR }}.$last · derleme numarası: $((last + 1))"
 
       - name: İmza kontrolü hazır mı (fail-closed kontrol yanlışlıkla herkesi kilitlemesin)
         run: |
@@ -449,7 +448,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          tag_name: r${{ env.BUILD_NO }}
+          tag_name: v${{ env.APP_VERSION }}
           name: ${{ env.RELEASE_TITLE }}
           body_path: release_body.md
           prerelease: false
@@ -543,7 +542,7 @@ jobs:
           run() {
             gcloud firebase test android run --type robo --app aile-ile-namaz.apk \
               "${DEVICES[@]}" \
-              --timeout 5m --no-auto-google-login --client-details matrixLabel="r${BUILD_NO}-${GITHUB_REF_NAME}" 2>&1 | tee testlab.txt
+              --timeout 5m --no-auto-google-login --client-details matrixLabel="v${APP_VERSION}-${GITHUB_REF_NAME}" 2>&1 | tee testlab.txt
             return ${PIPESTATUS[0]}
           }
           set +e

@@ -31,7 +31,7 @@
 
 **Güncellemeler otomatik:** Uygulama her açılışta GitHub'daki son sürümü kontrol eder. "Güncelle"ye dokununca APK uygulamanın içinde iner ve Android'in kurulum ekranı açılır. Verilerin ve girişin korunur.
 
-**Sürüm:** Her yayın bir artar: **v1.1, v1.2, v1.3 …** (yayın başlığında tarih ve saat de yazar). Büyük bir değişiklikte **v2.x**'e geçilir. Arka planda derleme numarası tutulur (her resmi yayında bir artar; Android güncellemeyi bununla tanır), ekranda görünmez.
+**Sürüm:** **v1.0.0, v1.0.1, v1.0.2 …** — son hane her yayında bir artar (yayın başlığında tarih ve saat de yazar). Büyük değişiklikte **v1.1.x / v2.x**'e geçilir. Android'in güncellemeyi tanıdığı derleme numarası = son hane + 1. 10 Kasım 2026'da numaralandırma sıfırlandı: v1.0.0'ı kurmak için eski uygulama (v1.93 ve öncesi) telefondan kaldırılır.
 
 ---
 
@@ -216,8 +216,8 @@ Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers
 Tüm migration SQL dosyaları `supabase/migrations/` klasöründedir (sunucudaki kayıtla birebir). Tablo yetkileri, RLS politikaları, RPC'ler ve zamanlanmış işlerin özeti: [`docs/guvenlik-ozeti.md`](docs/guvenlik-ozeti.md).
 
 ### Derleme ve dallar
-* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.N — tarih saat*, etiket `r1`, `r2`, …; derleme no = son `r` etiketi + 1) · `demo` → **Namaz Demo** ön sürümü (*v1.N-demo*, `aile-ile-namaz-demo*.apk`, `--dart-define=CHANNEL=demo`; stabil "son sürüm"ü etkilemez, demo uygulaması yalnızca demo ön sürümlerinden güncellenir).
-* Derlemeler sırayla çalışır (aynı sürüm numarası iki kez verilmez); yayınlar/etiketler silinse bile derleme no 77'nin altına düşmez (8 Kasım 2026'da r1–r77 silindi; taban 77). Yalnızca belge (`docs/`, `*.md`) değişince sürüm çıkmaz.
+* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (başlık *v1.0.N — tarih saat*, etiket `v1.0.N`; derleme no = N + 1) · `demo` → **Namaz Demo** ön sürümü (etiket `v1.0.N-demo`, `aile-ile-namaz-demo*.apk`, `--dart-define=CHANNEL=demo`; stabil "son sürüm"ü etkilemez, demo uygulaması yalnızca demo ön sürümlerinden güncellenir).
+* Derlemeler sırayla çalışır (aynı sürüm numarası iki kez verilmez); numara yayınların ve etiketlerin en büyüğünden hesaplanır. Eski `r<N>` yayınları sayılmaz. Yalnızca belge (`docs/`, `*.md`) değişince sürüm çıkmaz.
 * Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
 * İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
 
