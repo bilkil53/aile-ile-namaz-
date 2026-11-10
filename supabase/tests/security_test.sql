@@ -145,6 +145,38 @@ begin
   exception when insufficient_privilege then passed := passed + 1; end;
   reset role;
 
+  -- 8) "5 vaktin hepsini kıldı": sunucu gün başına bir kez aile olayı üretir; uygulama kendisi gönderemez
+  delete from private.all_prayed_log where user_id = u; -- sonunda geri alınır
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin insert into public.pool_events(pool_id, sender_id, event_type) values (p, u, 'ALL_PRAYED');
+    fails := fails || 'all_prayed_istemciden_yazilabiliyor; ';
+  exception when insufficient_privilege or check_violation then passed := passed + 1; end;
+  insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
+    values (u, (now() at time zone 'Europe/Istanbul')::date, 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED')
+    on conflict (user_id, prayer_date) do update
+      set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'PRAYED', maghrib = 'PRAYED', isha = 'PRAYED';
+  select count(*) into n from public.pool_events
+   where sender_id = u and event_type = 'ALL_PRAYED' and created_at > now() - interval '1 minute';
+  if n < 1 then fails := fails || 'all_prayed_olayi_olusmadi; '; else passed := passed + 1; end if;
+  -- İşareti kaldırıp yeniden koymak ikinci bildirim üretmez
+  update public.daily_prayers set isha = 'NONE' where user_id = u and prayer_date = (now() at time zone 'Europe/Istanbul')::date;
+  update public.daily_prayers set isha = 'PRAYED' where user_id = u and prayer_date = (now() at time zone 'Europe/Istanbul')::date;
+  if (select count(*) from public.pool_events where sender_id = u and event_type = 'ALL_PRAYED'
+       and created_at > now() - interval '1 minute') <> n then
+    fails := fails || 'all_prayed_tekrar_gonderildi; ';
+  else passed := passed + 1; end if;
+  -- Eski bir gün tamamlanınca bildirim yok
+  insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
+    values (u, '2000-01-03', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED')
+    on conflict (user_id, prayer_date) do update
+      set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'PRAYED', maghrib = 'PRAYED', isha = 'PRAYED';
+  if (select count(*) from public.pool_events where sender_id = u and event_type = 'ALL_PRAYED'
+       and created_at > now() - interval '1 minute') <> n then
+    fails := fails || 'all_prayed_eski_gun_bildirildi; ';
+  else passed := passed + 1; end if;
+  reset role;
+
   if fails = '' then
     raise exception 'SONUC: OK % test gecti (geri alindi). Atlanan: %. UYARI: %', passed,
       coalesce(nullif(skipped, ''), 'yok'), coalesce(nullif(uyari, ''), 'yok');
