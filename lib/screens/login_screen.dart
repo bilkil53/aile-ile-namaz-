@@ -57,11 +57,13 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
 
   /// 1) Telefondaki Google hesaplarından seçtirir (tarayıcı açılmaz).
   /// 2) Bu yol çalışmazsa (ör. Google Play Hizmetleri yok) tarayıcı girişine düşer.
-  bool _consent = Kvkk.given; // giriş yokken: yalnızca bu girişte işaretlendiyse
+  // Giriş yokken Kvkk.given yalnızca bu girişte iki kutu da işaretlendiyse true olur
+  late bool _consent = Kvkk.given; // 1) aydınlatma "okudum" beyanı
+  late bool _riza = Kvkk.given; // 2) açık rıza (özel nitelikli veriler)
   bool _consentWarn = false;
 
   Future<void> _signIn() async {
-    if (!_consent) {
+    if (!_consent || !_riza) {
       setState(() => _consentWarn = true);
       return;
     }
@@ -196,53 +198,33 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
             text: t('Haftalık başarı oranınız, manevi rozetler ve günün hadisi.', 'Your weekly success rate, spiritual badges and the hadith of the day.'),
           ),
           const SizedBox(height: 8),
-          // KVKK aydınlatma: "okudum" beyanı işaretlenmeden giriş yapılamaz (açık rıza değil)
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            SizedBox(
-              width: 32,
-              height: 32,
-              child: Checkbox(
-                value: _consent,
-                activeColor: AppColors.emerald,
-                onChanged: (v) => setState(() {
-                  _consent = v ?? false;
-                  if (_consent) _consentWarn = false;
-                }),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                GestureDetector(
-                  onTap: () => setState(() {
-                    _consent = !_consent;
-                    if (_consent) _consentWarn = false;
-                  }),
-                  child: Text(Kvkk.consentText,
-                      style: TextStyle(
-                          fontSize: 11,
-                          height: 1.35,
-                          color: _consentWarn ? AppColors.missed : AppColors.textSecondary)),
-                ),
-                InkWell(
-                  onTap: Kvkk.openText,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Text(t('Aydınlatma metnini oku', 'Read the information notice'),
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.emerald,
-                            decoration: TextDecoration.underline)),
-                  ),
-                ),
-              ]),
-            ),
-          ]),
+          // KVKK: aydınlatma beyanı ve açık rıza AYRI kutular; ikisi de işaretlenmeden giriş yapılamaz
+          ConsentBox(
+            value: _consent,
+            warn: _consentWarn,
+            text: Kvkk.consentText,
+            link: t('Aydınlatma metnini oku', 'Read the information notice'),
+            onLink: Kvkk.openText,
+            onChanged: (v) => setState(() {
+              _consent = v;
+              if (_consent && _riza) _consentWarn = false;
+            }),
+          ),
+          ConsentBox(
+            value: _riza,
+            warn: _consentWarn,
+            text: Kvkk.rizaText,
+            link: t('Açık rıza metnini oku', 'Read the explicit consent text'),
+            onLink: Kvkk.openRiza,
+            onChanged: (v) => setState(() {
+              _riza = v;
+              if (_consent && _riza) _consentWarn = false;
+            }),
+          ),
           if (_consentWarn)
             Padding(
               padding: EdgeInsets.only(bottom: 6),
-              child: Text(t('Google ile giriş için "okudum" kutusunu işaretle.', 'Tick the "I have read" box to sign in with Google.'),
+              child: Text(t('Google ile giriş için iki kutuyu da işaretle.', 'Tick both boxes to sign in with Google.'),
                   style: TextStyle(fontSize: 11, color: AppColors.missed, fontWeight: FontWeight.bold)),
             ),
           const SizedBox(height: 6),

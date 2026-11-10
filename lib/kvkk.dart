@@ -8,35 +8,53 @@ import 'push.dart';
 import 'settings.dart';
 import 'theme.dart';
 
-/// KVKK aydınlatma: giriş öncesi Aydınlatma Metni'nin okunduğu beyanı alınır (açık rıza DEĞİL).
-/// Kurul'un 2026/347 sayılı İlke Kararı: işleme açık rıza dışındaki bir sebebe (sözleşmenin ifası,
-/// meşru menfaat) dayanıyorsa ayrıca rıza istenmez, aydınlatma için yalnızca "okudum" beyanı alınır.
-/// Beyan tarihi telefonda ve kullanıcının profilinde (kvkk_consent_at alanı) saklanır.
+/// KVKK: giriş öncesi İKİ AYRI beyan alınır (Kurul'un 2026/347 sayılı İlke Kararı: aydınlatma ve
+/// açık rıza ayrı metinlerle, ayrı onaylarla alınır):
+///  1) Aydınlatma Metni'nin okunduğu beyanı ("okudum ve anladım") — rıza DEĞİL; tarih: kvkk_consent_at.
+///  2) Açık rıza — namaz/kaza kayıtları ve dua mesajları dini inancı ortaya koyabildiği için özel
+///     nitelikli kişisel veridir (Kanun md. 6/3-a); tarih: acik_riza_at (yalnızca sunucu saatiyle yazılır).
+/// İkisi de verilmeden giriş yapılamaz.
 class Kvkk {
-  // Beyan HESAP başına tutulur: aynı telefonda ikinci bir hesap açılınca ona da sorulur.
+  // Beyanlar HESAP başına tutulur: aynı telefonda ikinci bir hesap açılınca ona da sorulur.
   static const _kUsers = 'kvkk.users'; // "okudum" beyanı vermiş hesaplar (bu telefonda)
+  static const _kRizaUsers = 'riza.users'; // açık rıza vermiş hesaplar (bu telefonda)
   // Giriş ekranında verildi, hesap henüz belli değil. Yalnızca bellekte: giriş iptal olursa ya da
   // uygulama kapanırsa kalmaz, bir sonraki (belki başka kişinin) girişine geçmez.
   static bool _pending = false;
   static String _kSynced(String uid) => 'kvkk.synced.$uid';
+  static String _kRizaSynced(String uid) => 'riza.synced.$uid';
   static const _kLegacyGiven = 'kvkk.consent', _kLegacySynced = 'kvkk.synced';
+  static String get _page => Lang.isEn
+      ? 'https://bilkil53.github.io/aile-ile-namaz-/privacy-en.html'
+      : 'https://bilkil53.github.io/aile-ile-namaz-/privacy.html';
   /// Gizlilik / aydınlatma sayfası, uygulama dilinde
-  static String get url => Lang.isEn
-      ? 'https://bilkil53.github.io/aile-ile-namaz-/privacy-en.html#kvkk'
-      : 'https://bilkil53.github.io/aile-ile-namaz-/privacy.html#kvkk';
+  static String get url => '$_page#kvkk';
+  /// Açık Rıza Metni (aynı sayfada ayrı bölüm), uygulama dilinde
+  static String get rizaUrl => '$_page#acik-riza';
 
   static String get consentText => t('KVKK Aydınlatma Metni\'ni okudum ve anladım.', 'I have read and understood the KVKK Information Notice.');
+  static String get rizaText => t(
+      'Açık Rıza Metni\'ni okudum; namaz ve kaza kayıtlarımın ve dua mesajlarımın işlenmesine açık rıza veriyorum.',
+      'I have read the Explicit Consent Text; I give my explicit consent for my prayer and kaza records and dua messages to be processed.');
 
   static String? get _uid => Supabase.instance.client.auth.currentUser?.id;
   static List<String> get _users => AppSettings.prefs.getStringList(_kUsers) ?? const [];
+  static List<String> get _rizaUsers => AppSettings.prefs.getStringList(_kRizaUsers) ?? const [];
 
-  /// Bu hesap "okudum" beyanı verdi mi? Giriş yokken: giriş ekranında kutu işaretlendi mi.
+  /// Bu hesap iki beyanı da verdi mi? Giriş yokken: giriş ekranında iki kutu da işaretlendi mi.
   static bool get given {
     final uid = _uid;
     final pending = _pending;
-    return uid == null ? pending : (_users.contains(uid) || pending);
+    return uid == null ? pending : ((_users.contains(uid) && _rizaUsers.contains(uid)) || pending);
   }
 
+  /// Bu hesap yalnızca eski "okudum" beyanını vermiş (açık rıza henüz yok) → "metin güncellendi" denir.
+  static bool get _onlyAck {
+    final uid = _uid;
+    return uid != null && _users.contains(uid) && !_rizaUsers.contains(uid);
+  }
+
+  /// İki beyan birlikte verilir (iki kutu da işaretlenmeden çağrılmaz).
   static Future<void> give() async {
     final uid = _uid;
     if (uid == null) {
@@ -47,70 +65,113 @@ class Kvkk {
   }
 
   static Future<void> _addUser(String uid) async {
-    if (!_users.contains(uid)) await AppSettings.prefs.setStringList(_kUsers, [..._users, uid]);
-    await AppSettings.prefs.setBool(_kSynced(uid), false);
+    final p = AppSettings.prefs;
+    if (!_users.contains(uid)) {
+      await p.setStringList(_kUsers, [..._users, uid]);
+      await p.setBool(_kSynced(uid), false);
+    }
+    if (!_rizaUsers.contains(uid)) {
+      await p.setStringList(_kRizaUsers, [..._rizaUsers, uid]);
+      await p.setBool(_kRizaSynced(uid), false);
+    }
   }
 
-  /// Girişten sonra çağrılır: giriş ekranında verilen beyanı (ya da eski sürümün telefon başına
-  /// kaydını, bir kez) bu hesaba bağlar.
+  /// Girişten sonra çağrılır: giriş ekranında verilen beyanları bu hesaba bağlar. Eski sürümün telefon
+  /// başına kaydı yalnızca "okudum" beyanı olarak taşınır; açık rıza yeniden sorulur.
   static Future<void> attach() async {
     final uid = _uid;
     if (uid == null) return;
     final p = AppSettings.prefs;
     final legacy = p.getBool(_kLegacyGiven) ?? false;
-    if (_pending || legacy) {
+    if (_pending) {
       await _addUser(uid);
-      if (legacy && (p.getBool(_kLegacySynced) ?? false)) await p.setBool(_kSynced(uid), true);
       _pending = false;
-      await p.remove('kvkk.pending'); // önceki derlemede diske yazılmış olabilir
+    } else if (legacy && !_users.contains(uid)) {
+      await p.setStringList(_kUsers, [..._users, uid]);
+      await p.setBool(_kSynced(uid), p.getBool(_kLegacySynced) ?? false);
+    }
+    if (legacy) {
       await p.remove(_kLegacyGiven);
       await p.remove(_kLegacySynced);
     }
+    await p.remove('kvkk.pending'); // önceki derlemede diske yazılmış olabilir
   }
 
   static Future<void> openText() => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  static Future<void> openRiza() => launchUrl(Uri.parse(rizaUrl), mode: LaunchMode.externalApplication);
 
-  /// Beyan tarihini profile yazar (hesap başına bir kez; alan adı kvkk_consent_at).
+  /// Beyan ve rıza tarihlerini profile yazar (hesap başına bir kez). Açık rıza tarihi sunucu saatiyle
+  /// yazılır (record_acik_riza); başarısız olursa bir sonraki açılışta yeniden denenir.
   static Future<void> syncServer() async {
     final uid = _uid;
-    if (uid == null || !_users.contains(uid) || (AppSettings.prefs.getBool(_kSynced(uid)) ?? false)) return;
-    try {
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'kvkk_consent_at': DateTime.now().toUtc().toIso8601String()})
-          .eq('id', uid)
-          .timeout(const Duration(seconds: 8));
-      await AppSettings.prefs.setBool(_kSynced(uid), true);
-    } catch (_) {}
+    if (uid == null) return;
+    final p = AppSettings.prefs;
+    final db = Supabase.instance.client;
+    if (_users.contains(uid) && !(p.getBool(_kSynced(uid)) ?? false)) {
+      try {
+        await db
+            .from('profiles')
+            .update({'kvkk_consent_at': DateTime.now().toUtc().toIso8601String()})
+            .eq('id', uid)
+            .timeout(const Duration(seconds: 8));
+        if (_uid == uid) await p.setBool(_kSynced(uid), true);
+      } catch (_) {}
+    }
+    if (_rizaUsers.contains(uid) && !(p.getBool(_kRizaSynced(uid)) ?? false)) {
+      try {
+        final at = await db.rpc('record_acik_riza').timeout(const Duration(seconds: 8));
+        // Profil satırı yoksa tarih dönmez → yazılmadı say, sonra yeniden dene
+        if (at != null && _uid == uid) await p.setBool(_kRizaSynced(uid), true);
+      } catch (_) {}
+    }
   }
 
-  /// Giriş yapmış ama henüz "okudum" beyanı vermemiş kullanıcıya bir kez sorulur.
-  /// Vazgeçerse oturum kapatılır (gezinti moduyla devam edebilir).
+  /// Giriş yapmış ama iki beyanı birden vermemiş kullanıcıya bir kez sorulur (ör. açık rıza
+  /// eklenmeden önce giriş yapmış olanlar). Vazgeçerse oturum kapatılır (gezinti moduyla devam edebilir).
   static Future<void> askIfNeeded(BuildContext context) async {
     if (given) return;
+    final updated = _onlyAck;
+    var ack = false, riza = false;
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => PopScope(
         canPop: false,
-        child: AlertDialog(
-          icon: const Icon(Icons.verified_user_outlined, color: AppColors.emerald, size: 30),
-          title: Text(t('Kişisel verilerin korunması (KVKK)', 'Protection of personal data (KVKK)')),
-          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(t('Uygulamayı kullanmadan önce, kişisel verilerinizin nasıl işlendiğini anlatan Aydınlatma Metni\'ni okuyun.',
-                'Before using the app, please read the Information Notice explaining how your personal data are processed.')),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              style: TextButton.styleFrom(padding: EdgeInsets.zero),
-              onPressed: openText,
-              icon: const Icon(Icons.open_in_new, size: 16),
-              label: Text(t('Aydınlatma metnini oku', 'Read the information notice')),
+        child: StatefulBuilder(
+          builder: (ctx, setD) => AlertDialog(
+            icon: const Icon(Icons.verified_user_outlined, color: AppColors.emerald, size: 30),
+            title: Text(t('Kişisel verilerin korunması (KVKK)', 'Protection of personal data (KVKK)')),
+            content: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(updated
+                    ? t('Gizlilik metnimiz güncellendi. Devam etmek için iki metni de okuyup işaretleyin. Vazgeçerseniz oturumunuz kapatılır; uygulamayı gezinti modunda görüntüleyebilirsiniz.',
+                        'Our privacy texts have been updated. To continue, please read and tick both texts. If you cancel, you will be signed out; you can still view the app in browsing mode.')
+                    : t('Devam etmek için iki metni de okuyup işaretleyin. Vazgeçerseniz oturumunuz kapatılır; uygulamayı gezinti modunda görüntüleyebilirsiniz.',
+                        'To continue, please read and tick both texts. If you cancel, you will be signed out; you can still view the app in browsing mode.')),
+                const SizedBox(height: 8),
+                ConsentBox(
+                  value: ack,
+                  text: consentText,
+                  link: t('Aydınlatma metnini oku', 'Read the information notice'),
+                  onLink: openText,
+                  onChanged: (v) => setD(() => ack = v),
+                ),
+                ConsentBox(
+                  value: riza,
+                  text: rizaText,
+                  link: t('Açık rıza metnini oku', 'Read the explicit consent text'),
+                  onLink: openRiza,
+                  onChanged: (v) => setD(() => riza = v),
+                ),
+              ]),
             ),
-          ]),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t('Okudum, devam et', 'I have read it, continue'))),
-          ],
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
+              FilledButton(
+                  onPressed: ack && riza ? () => Navigator.pop(ctx, true) : null,
+                  child: Text(t('Devam et', 'Continue'))),
+            ],
+          ),
         ),
       ),
     );
@@ -121,5 +182,53 @@ class Kvkk {
       await Push.unregister();
       await Repo.signOut();
     }
+  }
+}
+
+/// İşaret kutusu + metin + "oku" bağlantısı (giriş ekranı ve güncelleme penceresi ortak).
+class ConsentBox extends StatelessWidget {
+  final bool value;
+  final bool warn;
+  final String text, link;
+  final VoidCallback onLink;
+  final ValueChanged<bool> onChanged;
+  const ConsentBox({
+    super.key,
+    required this.value,
+    required this.text,
+    required this.link,
+    required this.onLink,
+    required this.onChanged,
+    this.warn = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(
+        width: 32,
+        height: 32,
+        child: Checkbox(value: value, activeColor: AppColors.emerald, onChanged: (v) => onChanged(v ?? false)),
+      ),
+      const SizedBox(width: 4),
+      Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          GestureDetector(
+            onTap: () => onChanged(!value),
+            child: Text(text,
+                style: TextStyle(fontSize: 11, height: 1.35, color: warn && !value ? AppColors.missed : AppColors.textSecondary)),
+          ),
+          InkWell(
+            onTap: onLink,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(link,
+                  style: TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.emerald, decoration: TextDecoration.underline)),
+            ),
+          ),
+        ]),
+      ),
+    ]);
   }
 }

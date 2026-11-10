@@ -127,6 +127,19 @@ begin
   if (select lang from public.devices where fcm_token = 'ci-dil-testi-varsayilan-00000000000000002') is distinct from 'tr' then
     fails := fails || 'cihaz_dili_varsayilan_tr_degil; ';
   else passed := passed + 1; end if;
+
+  -- 7) Açık rıza tarihi: yalnızca sunucu saatiyle, yalnızca kendi kaydına yazılır; elle tarih yazılamaz
+  begin
+    if public.record_acik_riza() between now() - interval '1 minute' and now() + interval '1 minute'
+    then passed := passed + 1; else fails := fails || 'acik_riza_tarihi_yanlis; '; end if;
+  exception when others then fails := fails || 'acik_riza_kaydi: ' || sqlerrm || '; '; end;
+  begin update public.profiles set acik_riza_at = '2000-01-01' where id = u;
+    fails := fails || 'acik_riza_elle_yazilabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+  set local role anon;
+  begin perform public.record_acik_riza(); fails := fails || 'anon_acik_riza_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
   reset role;
 
   if fails = '' then
