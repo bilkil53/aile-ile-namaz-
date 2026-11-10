@@ -30,4 +30,14 @@ void main() {
     expect(UpdateChecker.parseMinBuild('<html>404</html>'), 0);
     expect(UpdateChecker.parseMinBuild(''), 0);
   });
+
+  test('Yayın etiketinden derleme numarası: v1.0.N → N + 1, eski r etiketleri yok sayılır', () {
+    expect(UpdateChecker.buildOfTag('v1.0.0'), 1);
+    expect(UpdateChecker.buildOfTag('v1.0.1-demo'), 2);
+    expect(UpdateChecker.buildOfTag('v1.2.57'), 58);
+    expect(UpdateChecker.buildOfTag('r105'), 0);
+    expect(UpdateChecker.buildOfTag('v1.93'), 0);
+    expect(UpdateChecker.buildOfTag(''), 0);
+    expect(UpdateChecker.buildOfTag('v1.0.0-beta'), 0);
+  });
 }
