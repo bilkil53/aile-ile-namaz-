@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data.dart';
@@ -289,7 +290,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await Repo.deleteMyAccount();
       if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
-    } catch (_) {
+    } on PostgrestException catch (e) {
+      // Sunucu isteği aldı ama silme tamamlanamadı: bağlantı sorunu gibi gösterilmez
+      Log.warn('hesap silme', e);
+      _toast(t('Sunucuda bir hata oluştu, hesabın silinmedi. Biraz sonra tekrar dene; sürerse "Hesap silme" sayfasındaki e-posta adresine yaz.',
+          'A server error occurred and your account was not deleted. Try again later; if it continues, email the address on the "Delete account" page.'));
+    } catch (e) {
+      Log.warn('hesap silme', e);
       _toast(t('Silinemedi. İnternet bağlantını kontrol edip tekrar dene.', 'Could not delete. Check your internet connection and try again.'));
     }
   }
