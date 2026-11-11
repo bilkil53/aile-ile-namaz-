@@ -476,9 +476,13 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Ekran testi — GitHub emülatörü (Android 11, Türkçe ve İngilizce, misafir akışı + 4 sekme)
-        timeout-minutes: 30
+      - name: Ekran testi — GitHub emülatörü (Android 11, Türkçe ve İngilizce, misafir + giriş yapılmış akış)
+        timeout-minutes: 40
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        env:
+          # Giriş yapılmış akış yalnızca test hesabı gizli ayarları varsa çalışır (Supabase'de e-posta+şifre test kullanıcısı)
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
         with:
           api-level: 30
           target: google_apis
@@ -487,7 +491,7 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
-          script: bash -c 'set -o pipefail; for L in tr en; do echo "=== Ekran testi dili $L ==="; flutter test integration_test/app_test.dart --dart-define=UI_TEST=true --dart-define=TEST_LANG=$L -d emulator-5554 --reporter expanded 2>&1 | tee -a ui-test.txt || exit 1; done'
+          script: bash -c 'set -o pipefail; for L in tr en; do echo "=== Ekran testi dili $L ==="; flutter test integration_test/app_test.dart --dart-define=UI_TEST=true --dart-define=TEST_LANG=$L -d emulator-5554 --reporter expanded 2>&1 | tee -a ui-test.txt || exit 1; done; if [ -n "$TEST_EMAIL" ] && [ -n "$TEST_PASSWORD" ]; then echo "=== Giriş yapılmış akış (tr) ==="; flutter test integration_test/signed_in_test.dart --dart-define=UI_TEST=true --dart-define=TEST_LANG=tr --dart-define=TEST_EMAIL="$TEST_EMAIL" --dart-define=TEST_PASSWORD="$TEST_PASSWORD" -d emulator-5554 --reporter expanded 2>&1 | tee -a ui-test.txt || exit 1; else echo "::warning::TEST_EMAIL ve TEST_PASSWORD yok, giriş yapılmış akış atlandı"; fi'
 
       - name: Ekran testi sonucu (özet)
         if: always()
