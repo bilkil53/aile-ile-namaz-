@@ -1,4 +1,4 @@
-Namaz Demo — ⚙️ Ayarlar yeniden sıralandı: Uygulama, Hesap, Bildirimler, Diğer; "Verilerimi indir" ve "Hesabımı sil" en altta. 🧪 Mübarek gün kartı önizlemesi artık internete bağlı değil; listeden gün seçince hemen açılır.
+Namaz Demo — ⚙️ Ayarlar yeniden sıralandı: Hesap, Uygulama, Bildirimler, Diğer; "Verilerimi indir" ve "Hesabımı sil" en altta. 🧪 Mübarek gün kartı önizlemesi internete bağlı değil.
 
 ## 🌟 Kullanıcı için
 

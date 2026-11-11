@@ -728,7 +728,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 1) Uygulama
+            // 1) Hesap
+            _bigCard([
+              _title(t('Hesap', 'Account')),
+              _divider(),
+              Row(children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: Colors.white.withValues(alpha: 0.18),
+                  child: Icon(guest ? Icons.person_outline : Icons.person, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(guest ? t('Gezinti modu', 'Browsing mode') : (name.isEmpty ? t('Google hesabı', 'Google account') : name),
+                        style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold)),
+                    if (!guest && email.isNotEmpty)
+                      Text(email, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
+                    if (!guest && _fmtDate(user?.createdAt).isNotEmpty)
+                      Text(
+                          t('Üyelik: ${_fmtDate(user?.createdAt)}', 'Member since: ${_fmtDate(user?.createdAt)}') +
+                              (_fmtDate(user?.lastSignInAt).isEmpty
+                                  ? ''
+                                  : t(' · Son giriş: ${_fmtDate(user?.lastSignInAt)}',
+                                      ' · Last sign-in: ${_fmtDate(user?.lastSignInAt)}')),
+                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
+                  ]),
+                ),
+              ]),
+              const SizedBox(height: 10),
+              if (guest)
+                Text(syncText, style: const TextStyle(fontSize: 13, color: AppColors.prayedMint, fontWeight: FontWeight.w600))
+              else
+                _dataBox(email),
+              const SizedBox(height: 6),
+              if (guest)
+                _whiteBtn(t('Google ile Giriş Yap', 'Sign in with Google'), () async {
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                  await LocalStore.setGuestMode(false);
+                }, icon: Icons.login)
+              else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _outlineBtn(t('Çıkış Yap', 'Sign Out'), _signOut, icon: Icons.logout),
+                ),
+              if (!guest) ...[
+                _divider(),
+                ValueListenableBuilder<int>(
+                  valueListenable: Pro.changed,
+                  builder: (_, __, ___) {
+                    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      // Satırların kendi simgesi var (🕒 / 🔒 / ⭐); ayrıca simge gösterilmez
+                      Text(
+                        Pro.statusText(),
+                        style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                      ValueListenableBuilder<Map<String, DateTime>>(
+                        valueListenable: Pro.requests,
+                        builder: (_, reqs, __) => reqs.isEmpty || Pro.source == 'paid'
+                            ? const SizedBox.shrink()
+                            : Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text('📩 Pro istedi: ${reqs.keys.map((id) => Pro.requestNames[id] ?? 'Aile ferdin').join(', ')}',
+                                    style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.bold)),
+                              ),
+                      ),
+                      // Pro'dayken (deneme, aile ya da alınmış) tekrar "Pro'ya geç" gösterilmez
+                      if (!Pro.active) ...[
+                        const SizedBox(height: 8),
+                        _outlineBtn(t('Demo Pro\'ya geç', 'Get Demo Pro'), () => showProCodeDialog(context), icon: Icons.workspace_premium),
+                      ],
+                    ]);
+                  },
+                ),
+              ],
+              const SizedBox(height: 6),
+            ]),
+            const SizedBox(height: 14),
+            // 2) Uygulama
             _bigCard([
               _title(t('Uygulama', 'App')),
               _divider(),
@@ -817,83 +894,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _divider(),
               _tapRow(t('Önbelleği temizle', 'Clear cache'), Icons.cleaning_services_outlined, _clearCache,
                   sub: t('Vakitler ve aile özeti yeniden alınır · kayıtların silinmez', 'Prayer times and family summary are reloaded · your records are kept')),
-              const SizedBox(height: 6),
-            ]),
-            const SizedBox(height: 14),
-            // 2) Hesap
-            _bigCard([
-              _title(t('Hesap', 'Account')),
-              _divider(),
-              Row(children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: Colors.white.withValues(alpha: 0.18),
-                  child: Icon(guest ? Icons.person_outline : Icons.person, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(guest ? t('Gezinti modu', 'Browsing mode') : (name.isEmpty ? t('Google hesabı', 'Google account') : name),
-                        style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold)),
-                    if (!guest && email.isNotEmpty)
-                      Text(email, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
-                    if (!guest && _fmtDate(user?.createdAt).isNotEmpty)
-                      Text(
-                          t('Üyelik: ${_fmtDate(user?.createdAt)}', 'Member since: ${_fmtDate(user?.createdAt)}') +
-                              (_fmtDate(user?.lastSignInAt).isEmpty
-                                  ? ''
-                                  : t(' · Son giriş: ${_fmtDate(user?.lastSignInAt)}',
-                                      ' · Last sign-in: ${_fmtDate(user?.lastSignInAt)}')),
-                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
-                  ]),
-                ),
-              ]),
-              const SizedBox(height: 10),
-              if (guest)
-                Text(syncText, style: const TextStyle(fontSize: 13, color: AppColors.prayedMint, fontWeight: FontWeight.w600))
-              else
-                _dataBox(email),
-              const SizedBox(height: 6),
-              if (guest)
-                _whiteBtn(t('Google ile Giriş Yap', 'Sign in with Google'), () async {
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                  await LocalStore.setGuestMode(false);
-                }, icon: Icons.login)
-              else
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _outlineBtn(t('Çıkış Yap', 'Sign Out'), _signOut, icon: Icons.logout),
-                ),
-              if (!guest) ...[
-                _divider(),
-                ValueListenableBuilder<int>(
-                  valueListenable: Pro.changed,
-                  builder: (_, __, ___) {
-                    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      // Satırların kendi simgesi var (🕒 / 🔒 / ⭐); ayrıca simge gösterilmez
-                      Text(
-                        Pro.statusText(),
-                        style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600),
-                      ),
-                      ValueListenableBuilder<Map<String, DateTime>>(
-                        valueListenable: Pro.requests,
-                        builder: (_, reqs, __) => reqs.isEmpty || Pro.source == 'paid'
-                            ? const SizedBox.shrink()
-                            : Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text('📩 Pro istedi: ${reqs.keys.map((id) => Pro.requestNames[id] ?? 'Aile ferdin').join(', ')}',
-                                    style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.bold)),
-                              ),
-                      ),
-                      // Pro'dayken (deneme, aile ya da alınmış) tekrar "Pro'ya geç" gösterilmez
-                      if (!Pro.active) ...[
-                        const SizedBox(height: 8),
-                        _outlineBtn(t('Demo Pro\'ya geç', 'Get Demo Pro'), () => showProCodeDialog(context), icon: Icons.workspace_premium),
-                      ],
-                    ]);
-                  },
-                ),
-              ],
               const SizedBox(height: 6),
             ]),
             const SizedBox(height: 14),
