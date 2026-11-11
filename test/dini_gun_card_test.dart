@@ -59,4 +59,19 @@ void main() {
     expect(find.text('Yarın akşam'), findsNothing);
     expect(find.text('Anlamı ve önemi'), findsNothing);
   });
+
+  testWidgets('Önizleme: takvim boşken de 1 gün önce ve o gün kartı çizilir', (t) async {
+    DiniGunler.setEventsForTest([]);
+    await t.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: SingleChildScrollView(
+                child: Column(children: [
+      DiniGunCard(preview: gun('mirac'), previewTomorrow: true),
+      DiniGunCard(preview: gun('mirac')),
+    ])))));
+    await t.pump();
+    expect(find.text('Yarın akşam'), findsOneWidget);
+    expect(find.textContaining('Miraç Kandili'), findsWidgets);
+    expect(find.text('Anlamı ve önemi'), findsOneWidget);
+  });
 }

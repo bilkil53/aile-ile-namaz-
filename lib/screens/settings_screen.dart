@@ -593,54 +593,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 1) Hesap
-            _bigCard([
-              _title(t('Hesap', 'Account')),
-              _divider(),
-              Row(children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: Colors.white.withValues(alpha: 0.18),
-                  child: Icon(guest ? Icons.person_outline : Icons.person, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(guest ? t('Gezinti modu', 'Browsing mode') : (name.isEmpty ? t('Google hesabı', 'Google account') : name),
-                        style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold)),
-                    if (!guest && email.isNotEmpty)
-                      Text(email, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
-                    if (!guest && _fmtDate(user?.createdAt).isNotEmpty)
-                      Text(
-                          t('Üyelik: ${_fmtDate(user?.createdAt)}', 'Member since: ${_fmtDate(user?.createdAt)}') +
-                              (_fmtDate(user?.lastSignInAt).isEmpty
-                                  ? ''
-                                  : t(' · Son giriş: ${_fmtDate(user?.lastSignInAt)}',
-                                      ' · Last sign-in: ${_fmtDate(user?.lastSignInAt)}')),
-                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
-                  ]),
-                ),
-              ]),
-              const SizedBox(height: 10),
-              if (guest)
-                Text(syncText, style: const TextStyle(fontSize: 13, color: AppColors.prayedMint, fontWeight: FontWeight.w600))
-              else
-                _dataBox(email),
-              const SizedBox(height: 6),
-              if (guest)
-                _whiteBtn(t('Google ile Giriş Yap', 'Sign in with Google'), () async {
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                  await LocalStore.setGuestMode(false);
-                }, icon: Icons.login)
-              else
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _outlineBtn(t('Çıkış Yap', 'Sign Out'), _signOut, icon: Icons.logout),
-                ),
-              const SizedBox(height: 6),
-            ]),
-            const SizedBox(height: 14),
-            // 2) Uygulama
+            // 1) Uygulama
             _bigCard([
               _title(t('Uygulama', 'App')),
               _divider(),
@@ -732,30 +685,113 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 6),
             ]),
             const SizedBox(height: 14),
-            // 3) Diğer
+            // 2) Hesap
             _bigCard([
-              _title(t('Diğer', 'Other')),
+              _title(t('Hesap', 'Account')),
               _divider(),
-              _tapRow(t('Uygulamayı paylaş', 'Share the app'), Icons.share, () async {
-                // Telefonun paylaşım penceresi: WhatsApp, Gmail, Mesajlar, Telegram…
-                await Share.share(
-                  t('🕌 Aile ile Namaz — ailenle birlikte namaz takibi, kaza takibi ve aile havuzu.\n\n'
-                      'Android için indir: $_repo/releases/latest/download/aile-ile-namaz.apk',
-                    '🕌 Aile ile Namaz — prayer tracking, kaza tracking and a family circle, together with your family.\n\n'
-                      'Download for Android: $_repo/releases/latest/download/aile-ile-namaz.apk'),
-                  subject: t('Aile ile Namaz uygulaması', 'Aile ile Namaz app'),
-                );
-              }),
-              _tapRow(t('Öneri yaz', 'Send feedback'), Icons.mail_outline, _mail, sub: t('Mail uygulaması açılır', 'Opens your email app')),
-              _tapRow('GitHub', Icons.star_rounded, () => _open(_repo),
-                  sub: t('Kaynak kod · Yıldız ver ⭐', 'Source code · Give a star ⭐'),
-                  trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
-              _tapRow(t('Gizlilik politikası', 'Privacy policy'), Icons.privacy_tip_outlined,
-                  () => _open(t('https://bilkil53.github.io/aile-ile-namaz-/privacy.html',
-                      'https://bilkil53.github.io/aile-ile-namaz-/privacy-en.html')),
-                  trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
+              Row(children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: Colors.white.withValues(alpha: 0.18),
+                  child: Icon(guest ? Icons.person_outline : Icons.person, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(guest ? t('Gezinti modu', 'Browsing mode') : (name.isEmpty ? t('Google hesabı', 'Google account') : name),
+                        style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold)),
+                    if (!guest && email.isNotEmpty)
+                      Text(email, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8))),
+                    if (!guest && _fmtDate(user?.createdAt).isNotEmpty)
+                      Text(
+                          t('Üyelik: ${_fmtDate(user?.createdAt)}', 'Member since: ${_fmtDate(user?.createdAt)}') +
+                              (_fmtDate(user?.lastSignInAt).isEmpty
+                                  ? ''
+                                  : t(' · Son giriş: ${_fmtDate(user?.lastSignInAt)}',
+                                      ' · Last sign-in: ${_fmtDate(user?.lastSignInAt)}')),
+                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
+                  ]),
+                ),
+              ]),
+              const SizedBox(height: 10),
+              if (guest)
+                Text(syncText, style: const TextStyle(fontSize: 13, color: AppColors.prayedMint, fontWeight: FontWeight.w600))
+              else
+                _dataBox(email),
+              const SizedBox(height: 6),
+              if (guest)
+                _whiteBtn(t('Google ile Giriş Yap', 'Sign in with Google'), () async {
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                  await LocalStore.setGuestMode(false);
+                }, icon: Icons.login)
+              else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _outlineBtn(t('Çıkış Yap', 'Sign Out'), _signOut, icon: Icons.logout),
+                ),
               const SizedBox(height: 6),
             ]),
+            // 3) Verilerimi indir + hesabı sil
+            if (!guest) ...[
+              const SizedBox(height: 18),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.black12),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: _exporting ? null : _exportData,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(children: [
+                      Icon(Icons.download, color: AppColors.textSecondary, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(t('Verilerimi indir', 'Download my data'),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          Text(t('Namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada', 'Your prayer records, kaza counts and memberships in one file'),
+                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        ]),
+                      ),
+                      _exporting
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                    ]),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: _deleteAccount,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(children: [
+                      const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data'),
+                              style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
+                          Text(t('Tüm kayıtların kalıcı olarak silinir', 'All your records are permanently deleted'),
+                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        ]),
+                      ),
+                      Icon(Icons.chevron_right, color: AppColors.missed.withValues(alpha: 0.7)),
+                    ]),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             // 4) Bildirimler
             _bigCard([
@@ -829,67 +865,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               const SizedBox(height: 6),
             ]),
-            // 5) Verilerimi indir + hesabı sil (en altta)
-            if (!guest) ...[
-              const SizedBox(height: 18),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.black12),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: _exporting ? null : _exportData,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    child: Row(children: [
-                      Icon(Icons.download, color: AppColors.textSecondary, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(t('Verilerimi indir', 'Download my data'),
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                          Text(t('Namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada', 'Your prayer records, kaza counts and memberships in one file'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                        ]),
-                      ),
-                      _exporting
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                          : Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                    ]),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: _deleteAccount,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    child: Row(children: [
-                      const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data'),
-                              style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
-                          Text(t('Tüm kayıtların kalıcı olarak silinir', 'All your records are permanently deleted'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                        ]),
-                      ),
-                      Icon(Icons.chevron_right, color: AppColors.missed.withValues(alpha: 0.7)),
-                    ]),
-                  ),
-                ),
-              ),
-            ],
+            const SizedBox(height: 14),
+            // 5) Diğer
+            _bigCard([
+              _title(t('Diğer', 'Other')),
+              _divider(),
+              _tapRow(t('Uygulamayı paylaş', 'Share the app'), Icons.share, () async {
+                // Telefonun paylaşım penceresi: WhatsApp, Gmail, Mesajlar, Telegram…
+                await Share.share(
+                  t('🕌 Aile ile Namaz — ailenle birlikte namaz takibi, kaza takibi ve aile havuzu.\n\n'
+                      'Android için indir: $_repo/releases/latest/download/aile-ile-namaz.apk',
+                    '🕌 Aile ile Namaz — prayer tracking, kaza tracking and a family circle, together with your family.\n\n'
+                      'Download for Android: $_repo/releases/latest/download/aile-ile-namaz.apk'),
+                  subject: t('Aile ile Namaz uygulaması', 'Aile ile Namaz app'),
+                );
+              }),
+              _tapRow(t('Öneri yaz', 'Send feedback'), Icons.mail_outline, _mail, sub: t('Mail uygulaması açılır', 'Opens your email app')),
+              _tapRow('GitHub', Icons.star_rounded, () => _open(_repo),
+                  sub: t('Kaynak kod · Yıldız ver ⭐', 'Source code · Give a star ⭐'),
+                  trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
+              _tapRow(t('Gizlilik politikası', 'Privacy policy'), Icons.privacy_tip_outlined,
+                  () => _open(t('https://bilkil53.github.io/aile-ile-namaz-/privacy.html',
+                      'https://bilkil53.github.io/aile-ile-namaz-/privacy-en.html')),
+                  trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
+              const SizedBox(height: 6),
+            ]),
             const SizedBox(height: 12),
           ],
         ),
