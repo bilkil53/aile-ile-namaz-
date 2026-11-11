@@ -11,7 +11,7 @@
 // SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY Supabase tarafından otomatik sağlanır.
 
 // Tam sürüm sabit: her dağıtım aynı bağımlılığı çözer (sürüm yükseltmesi bilerek ve test edilerek yapılır).
-import { createClient } from "jsr:@supabase/supabase-js@2.119.0";
+import { createClient } from "jsr:@supabase/supabase-js@2.118.0";
 
 const POSSESSIVE: Record<string, string> = {
   "Eşi": "Eşin", "Oğlu": "Oğlun", "Kızı": "Kızın", "Annesi": "Annen", "Babası": "Baban",
