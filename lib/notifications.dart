@@ -172,8 +172,40 @@ class Notifications {
 
   static bool _exact = false;
 
-  /// Önümüzdeki 3 günün hatırlatmalarını yeniden kurar.
+  /// Bu sınıfın kurduğu hatırlatma kimlikleri: 1–99 vakit, 100–199 günün içeriği, 300–399 mübarek gün.
+  /// Yeniden kurarken yalnızca bunlar iptal edilir (başka bildirimlere dokunulmaz).
+  static bool isManagedId(int id) => (id >= 1 && id <= 199) || (id >= 300 && id <= 399);
+
+  static Future<void>? _running;
+
+  /// Önümüzdeki 10 günün hatırlatmalarını yeniden kurar. Aynı anda iki kez çalışmaz (çağrılar sıraya girer).
   static Future<void> reschedule() async {
+    final prev = _running;
+    final done = () async {
+      if (prev != null) {
+        try {
+          await prev;
+        } catch (_) {}
+      }
+      await _rescheduleNow();
+    }();
+    _running = done;
+    try {
+      await done;
+    } finally {
+      if (identical(_running, done)) _running = null;
+    }
+  }
+
+  /// Önce yeni plan eksiksiz hazırlanır; hazırlanırken hata olursa (vakit servisi, bozuk önbellek)
+  /// mevcut hatırlatmalara DOKUNULMAZ. Plan hazırsa yalnızca bu sınıfın kimlikleri iptal edilip yenileri kurulur.
+  static Future<void> _rescheduleNow() async {
+    final plan = <(int, String, String, DateTime, AndroidNotificationDetails)>[];
+    if (Pro.isDemo) {
+      // demo: vakit/günün ayeti/mübarek gün hatırlatmaları kurulmaz; eskiden kalan varsa kaldırılır
+      await _apply(plan);
+      return;
+    }
     try {
       await init();
       final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
@@ -184,8 +216,6 @@ class Notifications {
       } catch (e) {
         Log.warn('vakit', e);
       }
-      await _plugin.cancelAll();
-      if (Pro.isDemo) return; // demo: vakit/günün ayeti/mübarek gün hatırlatmaları kurulmaz
       final now = DateTime.now();
       final lead = AppSettings.reminderMinutes;
       var id = 1;
@@ -217,7 +247,7 @@ class Notifications {
                   ? t('Abdestini tazeleyip Cuma namazı ve hutbeye yetişmek için camiye hazırlanmayı unutma. 🤲',
                       "Don't forget to renew your wudu and get ready to reach the mosque for the Friday prayer and khutbah. 🤲")
                   : t('Haydi namaza 🤲', 'Come to prayer 🤲');
-              await _schedule(id, title, '$lead2\n\n${q.title}: ${q.text}\n— ${q.source}', at, _prayerChannel);
+              plan.add((id, title, '$lead2\n\n${q.title}: ${q.text}\n— ${q.source}', at, _prayerChannel));
             }
             id++;
           }
@@ -226,12 +256,16 @@ class Notifications {
           final at = DateTime(day.year, day.month, day.day, 12);
           if (at.isAfter(now)) {
             final q = dailyQuotes(day)[d % 2]; // ayet / hadis dönüşümlü
-            await _schedule(100 + d, q.title, q.text, at, _contentChannel);
+            plan.add((100 + d, q.title, q.text, at, _contentChannel));
           }
         }
       }
       // Mübarek günler: 1 gün kala akşam 19:00'da açıklamalı hatırlatma (önümüzdeki 60 gün)
-      await DiniGunler.ensure();
+      try {
+        await DiniGunler.ensure().timeout(const Duration(seconds: 30));
+      } catch (e) {
+        Log.warn('mübarek günler', e); // eldeki liste ile devam
+      }
       var did = 300;
       for (final e in DiniGunler.events) {
         final at = DateTime(e.date.year, e.date.month, e.date.day, 19).subtract(const Duration(days: 1));
@@ -241,10 +275,36 @@ class Notifications {
         final title = g.bayram
             ? t('${g.emoji} $when ${g.name} · Bayramınız mübarek olsun!', '${g.emoji} $when: ${g.name} · Eid Mubarak!')
             : t('${g.emoji} $when ${g.name}', '${g.emoji} $when: ${g.name}');
-        await _schedule(did++, title, g.meaning, at, _contentChannel);
+        plan.add((did++, title, g.meaning, at, _contentChannel));
       }
-    } catch (_) {
-      // Bildirim izni yoksa vb. sessizce geç.
+    } catch (e) {
+      // Plan hazırlanamadı: kurulu hatırlatmalar yerinde kalır, bir sonraki açılışta yeniden denenir
+      Log.warn('hatırlatma planı', e);
+      return;
+    }
+    await _apply(plan);
+  }
+
+  /// Planı uygular: önce yeniler kurulur (aynı kimlik eskisinin üzerine yazar), sonra planda olmayan
+  /// eski hatırlatmalar iptal edilir. Böylece kurma yarıda kesilse bile telefon hatırlatmasız kalmaz.
+  static Future<void> _apply(List<(int, String, String, DateTime, AndroidNotificationDetails)> plan) async {
+    try {
+      for (final (id, title, text, at, channel) in plan) {
+        await _schedule(id, title, text, at, channel);
+      }
+    } catch (e) {
+      // Bildirim izni yoksa vb.: eskiler yerinde kalır
+      Log.warn('hatırlatma kurma', e);
+      return;
+    }
+    try {
+      final keep = {for (final p in plan) p.$1};
+      final pending = await _plugin.pendingNotificationRequests();
+      for (final r in pending) {
+        if (isManagedId(r.id) && !keep.contains(r.id)) await _plugin.cancel(r.id);
+      }
+    } catch (e) {
+      Log.warn('eski hatırlatma temizliği', e);
     }
   }
 

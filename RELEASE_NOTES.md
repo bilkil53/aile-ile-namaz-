@@ -1,4 +1,4 @@
-Namaz Demo — ⚙️ Ayarlar yeniden sıralandı: Hesap, Uygulama, Bildirimler, Diğer; "Verilerimi indir" ve "Hesabımı sil" en altta. 🧪 Mübarek gün kartı önizlemesi internete bağlı değil.
+Namaz Demo — ⏰ Namaz hatırlatmaları daha sağlam: vakit servisine ulaşılamazsa ya da kayıtlı vakit bozuksa kurulu hatırlatmalar artık silinmiyor; yeni plan hazır olunca değiştiriliyor.
 
 ## 🌟 Kullanıcı için
 

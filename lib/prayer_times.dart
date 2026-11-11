@@ -91,6 +91,14 @@ class DayTimes {
     required this.fromDiyanet,
   });
 
+  static final _hhmm = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
+
+  /// "SS:dd" biçiminde geçerli saat mi (servisten ya da önbellekten gelen bozuk değer alarm kurmasın).
+  static bool validTime(String v) => _hhmm.hasMatch(v);
+
+  /// Altı vaktin hepsi geçerli saat mi.
+  bool get isValid => [imsak, gunes, ogle, ikindi, aksam, yatsi].every(validTime);
+
   /// daily_prayers anahtarına göre vakit saati.
   String timeFor(String key) => switch (key) {
         'fajr' => imsak,
@@ -156,10 +164,16 @@ class PrayerTimesService {
     final key = _key(day, lat, lng);
     final cached = AppSettings.prefs.getString(key);
     if (cached != null) {
-      return DayTimes.fromJson(day, jsonDecode(cached) as Map<String, dynamic>, true);
+      // Bozuk önbellek (yarım yazılmış / geçersiz saat) atılır; ağdan ya da yerel hesaptan devam edilir
+      try {
+        final c = DayTimes.fromJson(day, jsonDecode(cached) as Map<String, dynamic>, true);
+        if (c.isValid) return c;
+      } catch (_) {}
+      await AppSettings.prefs.remove(key);
     }
     try {
       final t = await _fetch(day, lat, lng);
+      if (!t.isValid) throw const FormatException('geçersiz vakit');
       await AppSettings.prefs.setString(key, jsonEncode(t.toJson()));
       return t;
     } catch (_) {
