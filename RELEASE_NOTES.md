@@ -1,4 +1,4 @@
-Namaz Demo — 🔒 Namaz işaretleri yalnızca bugün ve dün için değiştirilebilir; aile de birbirinin yalnızca bugün ve dün kaydını görür. 🛠️ Kaza kaydı olan hesaplar artık silinebiliyor.
+Namaz Demo — 🔒 Aile bildirimleri telefon kilitliyken artık varsayılan olarak gizli: kilit ekranında yalnızca "yeni bildirim" görünür, yazı kilit açılınca okunur (Ayarlar'dan değiştirilebilir).
 
 ## 🌟 Kullanıcı için
 

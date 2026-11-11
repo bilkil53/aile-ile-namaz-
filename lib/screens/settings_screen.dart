@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../data.dart';
 import '../data_export.dart';
+import '../dini_gunler.dart';
 import '../local_store.dart';
 import '../log.dart';
 import '../location.dart';
@@ -22,6 +23,7 @@ import '../settings.dart';
 import '../theme.dart';
 import '../update_checker.dart';
 import '../pro.dart';
+import '../widgets/dini_gun_card.dart';
 import '../widgets/pro_lock.dart';
 import 'notify_health_screen.dart';
 
@@ -418,6 +420,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (Pro.active) btn('Pro\'dan düş → Ücretsiz', Icons.close, Pro.expireTest),
                   btn('Denemeyi baştan başlat (7 gün)', Icons.play_arrow, Pro.testRestartTrial),
                 ]),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _previewDiniGun,
+                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  label: const Text('Mübarek gün kartını önizle', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
                 const SizedBox(height: 6),
                 const Text('Bu panel yalnızca test sürümünde görünür; gerçek kullanıcılar görmez.',
                     style: TextStyle(fontSize: 11, color: brown)),
@@ -426,6 +434,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       );
+
+  /// Test paneli: yaklaşan mübarek günlerden birini seçip kartın 1 gün önce ve o gün nasıl
+  /// göründüğünü önizler (tarihi beklemeden). Gerçek kayıtlara ve bildirimlere dokunmaz.
+  Future<void> _previewDiniGun() async {
+    await DiniGunler.ensure();
+    if (!mounted) return;
+    final today = DateTime.now();
+    final start = DateTime(today.year, today.month, today.day);
+    final list = DiniGunler.events.where((e) => !e.date.isBefore(start)).take(12).toList();
+    if (list.isEmpty) {
+      _toast('Mübarek gün listesi yüklenemedi. İnternetini kontrol edip tekrar dene.');
+      return;
+    }
+    final pick = await showDialog<DiniGunEvent>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Hangi günü önizleyelim?'),
+        children: [
+          for (final e in list)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, e),
+              child: Text('${e.gun.emoji} ${e.gun.nameTr} — ${DateFormat('d MMMM y', Lang.code).format(e.date)}'),
+            ),
+        ],
+      ),
+    );
+    if (pick == null || !mounted) return;
+    final d = DateTime(pick.date.year, pick.date.month, pick.date.day, 12);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${pick.gun.nameTr} (önizleme)'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Önizleme: düğmeler çalışmaz, aileye bir şey gönderilmez.', style: TextStyle(fontSize: 11)),
+              const SizedBox(height: 8),
+              const Text('1 gün önce:', style: TextStyle(fontWeight: FontWeight.bold)),
+              IgnorePointer(child: DiniGunCard(now: d.subtract(const Duration(days: 1)))),
+              const SizedBox(height: 12),
+              const Text('O gün:', style: TextStyle(fontWeight: FontWeight.bold)),
+              IgnorePointer(child: DiniGunCard(now: d)),
+            ]),
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kapat'))],
+      ),
+    );
+  }
 
   Widget _divider() => Divider(color: Colors.white.withValues(alpha: 0.18), height: 18);
 

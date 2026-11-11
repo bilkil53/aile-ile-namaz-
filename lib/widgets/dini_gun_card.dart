@@ -12,7 +12,10 @@ import '../theme.dart';
 /// kandil / mübarek gün olan günlerde sade bilgi kartı; mübarek günden 1 gün önce
 /// "yarın" bilgi kartı (bugünkü özel gün kartı varsa onun altında). Başka günlerde hiçbir şey göstermez.
 class DiniGunCard extends StatefulWidget {
-  const DiniGunCard({super.key});
+  /// [now]: yalnızca önizleme/test için başka bir günü göstermek (verilmezse bugün).
+  const DiniGunCard({super.key, this.now});
+
+  final DateTime? now;
 
   @override
   State<DiniGunCard> createState() => _DiniGunCardState();
@@ -63,7 +66,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = widget.now ?? DateTime.now();
     final b = DiniGunler.bayramOn(now);
     if (b != null) return _bayram(b.$1, b.$2);
     final s = DiniGunler.specialOn(now);
