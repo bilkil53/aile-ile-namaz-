@@ -1,4 +1,4 @@
-Namaz Demo — 🆕 Sürüm numarası sıfırdan başladı (v1.0.x): bu sürümü kurmadan önce eski uygulamayı telefondan kaldırın. 🕯️ Mübarek günlerden 1 gün önce Bugün ekranında bilgi kartı açılır ("Yarın akşam Miraç Kandili").
+Namaz Demo — 📥 Ayarlar'a "Verilerimi indir" eklendi: namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada; kaydedebilir ya da paylaşabilirsin.
 
 ## 🌟 Kullanıcı için
 
