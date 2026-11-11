@@ -75,6 +75,24 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 - **Veri azaltma:** `profiles.email`, `daily_prayers.note`, `daily_prayers.updated_at` kaldırıldı; e-posta yalnızca Supabase Auth'ta durur.
 - **İstemci (r80/r81):** telefondaki kişisel veriler tek hesaba bağlı (hesap değişince/çıkışta silinir), KVKK onayı hesap başına.
 
+## Yapılan sıkılaştırma (migration 36–40, 10–11 Kasım 2026)
+
+- **KVKK iki ayrı onay:** aydınlatma beyanı (`kvkk_consent_at`) ve açık rıza (`acik_riza_at`) ayrı kaydedilir. Açık rıza yalnızca `record_acik_riza()` ile ve sunucu saatiyle yazılır; istemci bu sütunu okuyamaz ve elle yazamaz. Beyan tarihi de sunucu saatine çevrilir (migration 38). Açık iş: rızası olmayan hesabın kaydını sunucuda da aileye kapatmak ve rıza metni sürüm numarası (bkz. bölüm 7).
+- **"5 vaktin hepsini kıldı" bildirimi (migration 37):** yalnızca sunucu tetikleyicisi üretir (istemci `ALL_PRAYED` yazamaz); açık rızası olan hesap için, kişi/gün başına bir kez.
+- **Hesap silme (migration 39):** kaza kaydı olan hesap silinemiyordu (özet tetikleyicisi silinen profil için yeniden yazmaya çalışıyordu); düzeltildi. Aynı kişinin eşzamanlı kaza yazımları kişi başına kilitle sırayla toplanır. Uygulama dışı silme talebi herkese açık GitHub yerine e-postayla alınır (`docs/delete-account*.html`).
+- **Namaz kayıtlarında zaman penceresi (migration 40):** kişi kendi kaydını yalnızca İstanbul gününe göre 2 gün geri – 1 gün ileri aralığında ekler/değiştirir/siler (uygulama bugün ve dünü yazar); geçmiş kayıtlar kilitlidir. Aile üyeleri birbirinin kaydını yalnızca aynı aralıkta görür; kişi kendi geçmişinin tamamını görür.
+- **Görev günlüğü ve indeks (migration 38):** `cron.job_run_details` 7 günden eski satırları her gece silinir; `join_requests(user_id)` indeksi.
+- **İstemci:** aile bildirimleri kilit ekranında varsayılan olarak gizli (yalnızca "yeni bildirim"); "Verilerimi indir" yalnızca kişinin kendi satırlarını dışa aktarır (bildirim adresi ve başkasının verisi dosyaya girmez; çıkışta dosya silinir); konum 2 ondalığa yuvarlanarak vakit servisine gider.
+
+## Yayın hattı ve depo (11 Kasım 2026)
+
+- **Sıra:** değişiklik önce demo sürümünde yayınlanır ve emülatör + Test Lab'dan geçer; geçerse kararlı sürüm yayınlanır. Kararlı sürüm yayından sonra arka planda emülatör, Test Lab ve Google Play paketi (AAB) derlemesini çalıştırır.
+- **Zorunlu kontroller (yayından önce, fail-closed):** kod analizi, birim testleri, sunucu güvenlik testi, imza. Biri başarısızsa hiçbir şey yayınlanmaz.
+- **Depo:** `main` ve `demo` dalları silmeye ve üzerine yazmaya (force push) karşı korumalı. İş akışlarındaki eylemler sabit sürüme (commit SHA) bağlı; paket sürümleri `pubspec.lock` ile kilitli (`--enforce-lockfile`).
+- **Sürüm:** etiket `v1.0.N` (demo `v1.0.N-demo`), derleme numarası N+1; yayın etiketi derlenen commit'e konur.
+- **Yedekler:** imza anahtarının şifreli yedeği proje sahibinde (iş: `keystore-backup.yml`). Veritabanı: Supabase ücretsiz planda otomatik yedek yok; Play'e çıkarken ücretli plana geçilecek.
+- **Bildirim fonksiyonu bağımlılığı:** `push-family` Supabase istemcisini tam sürümle içe aktarır (kaynakta sabit); bir sonraki dağıtımda bu sürüm kullanılır.
+
 ## Gönderilmemiş kayıtlar ve hesap değişimi
 
 - Çıkışta ya da aynı telefonda başka hesap girince, önceki hesabın gönderilmemiş kayıtları **silinmez**: o hesap adına telefonda ayrı saklanır (`parked.v1`, en fazla 30 gün). Diğer hesap bunları göremez ve onun adına gönderemez; aynı hesap tekrar girince kuyruğa geri yüklenir ve otomatik gönderilir. Hesap silinirse saklananlar da silinir. Çıkışta bekleyen kayıt varsa kullanıcıya bu bilgi gösterilir.
@@ -83,22 +101,28 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 - `.github/workflows/build-apk.yml` "Sunucu güvenlik testi" adımı, GitHub gizli ayarı `SUPABASE_DB_URL` ile `security_test.sql`'i her derlemede zorunlu çalıştırır; "SONUC: OK" yoksa ya da ayar tanımlı değilse derleme ve yayın durur (fail-closed).
 - **Kurulum (proje sahibi yapar, şifre içerir):** Supabase → Project Settings → Database → Connection string → *Session pooler* (5432) adresini kopyalayın, şifreyi yerleştirin; GitHub → Settings → Secrets and variables → Actions → *New repository secret*: ad `SUPABASE_DB_URL`.
-- Test her çalışmada **UYARI** olarak bilinen açığı da raporlar: `test_restart_trial` ve `test_remove_pro` giriş yapmış herkese açık (demo test paneli için bilerek; ücretli Pro'dan önce kapatılacak).
+- Pro test fonksiyonları (`test_restart_trial`, `test_remove_pro`, `expire_pro_test`, `redeem_pro_code`) yalnızca sunucudaki izin listesinde (`private.pro_testers`, migration 35) olan hesaplara açıktır; listede olmayan hesap ve misafir reddedilir (test bunu doğrular). Play'e çıkmadan önce tamamen kaldırılacak.
 
 ## İmza kontrolü (fail-closed)
 
 - `lib/integrity.dart`: GitHub'dan dağıtılan sürümlerde (stabil ve demo) uygulama açılışta kendi imzasının SHA-256'sını beklenenle karşılaştırır. **Tutmazsa ya da okunamazsa uygulama açılmaz**: kapatılamayan pencerede yalnızca "Resmi sürümü indir" ve "Kapat" vardır; kontrol bütün açılış işlerinden önce çalışır.
 - Google Play sürümünde (`STORE=play`) bu kontrol yapılmaz: Play uygulamayı kendi anahtarıyla yeniden imzalar, kontrol gerçek kullanıcıları kilitlerdi. Play'e çıkışta doğru yöntem **Play Integrity API** + sunucu tarafı doğrulamadır.
 - Kendini kilitleme koruması: CI, `MainActivity` imza okuyucusunu içermiyorsa ya da beklenen imza (`EXPECTED_SIG`) main/demo'da boşsa yayını durdurur. Karar mantığı `test/integrity_test.dart` ile sınanır.
-- Sınır: değiştirilmiş bir APK bu kontrolü de silebilir; bu yüzden yetki kontrolü her zaman sunucuda (RLS, sütun yetkileri, RPC'ler; 20 kontrollük test) yapılır.
+- Sınır: değiştirilmiş bir APK bu kontrolü de silebilir; bu yüzden yetki kontrolü her zaman sunucuda (RLS, sütun yetkileri, RPC'ler; `security_test.sql`, 45 kontrol) yapılır.
 
 ## 6. İstemci tarafı notlar
 
-- **APK imza kontrolü (`lib/integrity.dart`) bir güvenlik sınırı değildir.** İmza uyuşmazsa kullanıcı uyarılır ama uygulama engellenmez; değiştirilmiş bir APK bu kontrolü zaten atlayabilir. Bütün yetkilendirme sunucuda yapılır: RLS politikaları, sütun yetkileri ve `security definer` RPC'ler (bkz. bölüm 2–3, `supabase/tests/security_test.sql`). İstemciden gelen hiçbir bilgiye (imza, Pro durumu, rol) güvenilmez.
+- **APK imza kontrolü (`lib/integrity.dart`) bir güvenlik sınırı değildir.** İmza uyuşmazsa uygulama açılmaz (yukarıdaki "İmza kontrolü" bölümü), ama değiştirilmiş bir APK bu kontrolü de silebilir. Bütün yetkilendirme sunucuda yapılır: RLS politikaları, sütun yetkileri ve `security definer` RPC'ler (bkz. bölüm 2–3, `supabase/tests/security_test.sql`). İstemciden gelen hiçbir bilgiye (imza, Pro durumu, rol) güvenilmez.
 - **Hata raporları:** hiçbir şey otomatik gönderilmez; yalnızca kişi pencerede "Raporu gönder" ya da "Mail ile" derse gider. `crash_reports`'a ve geliştirici mailine gitmeden önce hata metni ve yığın izi `scrubSensitive` ile temizlenir: e-posta, JWT/Bearer, `access_token`/`apikey`/`password` vb. değerleri, `?code=`, uuid, telefon, veritabanı hata ayrıntısındaki satır değerleri ("Failing row contains", "Key (…)=" — ad, dua metni), uygulama klasörü yolları (`/data/user/…`), ortak depolamadaki dosya adları ve 40+ karakterli anahtar benzeri diziler. Hata kodları, satır numaraları ve sunucu adresi korunur. Telefondaki hata kaydı (`Log`) da aynı şekilde temizlenir. Kişi adı gibi serbest metinler otomatik tanınamaz; hata metinlerine ad yazılmamalı.
 - **Gezinti (misafir) modu yalnızca görüntüleme:** kayıt yapılmaz, giriş sonrası aktarım yoktur (`Repo.setPrayer`/`saveKaza` misafirde hiçbir şey yazmaz). Sunucuda da misafir (anon) yalnızca anonim hata raporu yazabilir; başka hiçbir tabloya yazamaz. Eski aktarım fonksiyonu `merge_guest_kaza` ve `guest_merges` tablosu migration 32 ile kaldırıldı.
 
 ## 7. Bilinen açık işler
 
-1. **Play'e çıkmadan önce (ücretli Pro başlamadan) silinecek TEST fonksiyonları — öncelikli.** Şu an her giriş yapmış kullanıcı deneme süresini sıfırlayıp "1" koduyla Pro alabilir. Fonksiyonlar: `test_restart_trial`, `test_remove_pro`, `expire_pro_test`. `redeem_pro_code` ("1" kodu) yerine Google Play ödeme doğrulaması gelecek.
-2. **Testler (eklendi, 08.11.2026).** `test/` altındaki birim testleri CI'da her derlemede çalışır; biri başarısız olursa yayın çıkmaz. `supabase/tests/security_test.sql` sunucu kurallarını (anon yetkileri, `pool_events` sütun yetkisi, hız sınırı, misafirin kayıt yazamaması, gizlilik, erkek üyede "Muaf" kuralı) geri alınarak sınar; her sunucu değişikliğinden sonra çalıştırılmalı. Eksik: ekran (widget) testleri.
+1. **Play'e çıkmadan önce (ücretli Pro başlamadan) silinecek TEST fonksiyonları — öncelikli.** Şu an yalnızca izin listesindeki test hesapları (`private.pro_testers`) deneme süresini sıfırlayıp "1" koduyla Pro alabilir. Fonksiyonlar: `test_restart_trial`, `test_remove_pro`, `expire_pro_test`. `redeem_pro_code` ("1" kodu) yerine Google Play ödeme doğrulaması gelecek.
+2. **Testler (eklendi, 08.11.2026).** `test/` altındaki birim testleri CI'da her derlemede çalışır; biri başarısız olursa yayın çıkmaz. `supabase/tests/security_test.sql` sunucu kurallarını (anon yetkileri, `pool_events` sütun yetkisi, hız sınırı, misafirin kayıt yazamaması, gizlilik, erkek üyede "Muaf" kuralı) geri alınarak sınar; her sunucu değişikliğinden sonra çalıştırılmalı. Ekran testleri: `test/` altında widget testleri; her yayında emülatörde misafir akışı (TR+EN) ve giriş yapılmış akış (`integration_test/signed_in_test.dart`, test hesabı gizli ayarlarla; sunucuda e-posta girişi kapalıysa atlanır) ve Google Test Lab.
+3. **Açık rızanın sunucuda zorunlu kılınması.** Rızası olmayan hesabın namaz/kaza/dua kaydı şu an sunucuda aileye kapatılmıyor (yalnızca "5 vakit" bildirimi rızaya bağlı). Bütün hesaplar rıza verdikten sonra RLS'e eklenecek; rıza metni sürüm numarası da kaydedilecek.
+4. **Bildirim kuyruğu:** bir cihaza gidip diğerine geçici hatayla gidemeyen olay "gönderildi" sayılıyor; cihaz başına yeniden deneme eklenecek.
+5. **Güncelleyici:** indirme tek bir yayın nesnesine (etiket + dosya + özet) bağlanacak; kurulumdan önce paket adı ve sürüm kodu doğrulanacak.
+6. **Vakit servisi / alarmlar:** servis hatasında kurulu alarmlar silinmeyecek; yanıt boyut ve süre sınırı.
+7. **Davet:** onaydan önce havuz ve reis adı gösterilmeyecek.
+8. **Play öncesi:** Play Integrity, Play Billing, Supabase ücretli plan (yedek), temiz kurulumda açık yetkiler (grant) ve ortama özel bildirim adresi, demo için ayrı paket/ortam.
