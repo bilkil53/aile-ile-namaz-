@@ -115,16 +115,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Gizle', 'Hide'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t('Göster', 'Show'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(t('Göster', 'Show')),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(t('Gizle (önerilen)', 'Hide (recommended)')),
             ),
           ],
         ),
       );
-      await AppSettings.setNotify('lockScreen', show ?? true);
+      await AppSettings.setNotify('lockScreen', show ?? false);
       await p.setBool('askedLockScreen', true);
       unawaited(Push.register());
     }

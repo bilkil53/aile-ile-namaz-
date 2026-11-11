@@ -34,7 +34,8 @@ class AppSettings {
   static bool get notifyPrayer => _p.getBool('notifyPrayer') ?? true;
   static bool get notifyKaza => _p.getBool('notifyKaza') ?? true;
   static bool get notifyDua => _p.getBool('notifyDua') ?? true;
-  static bool get lockScreen => _p.getBool('lockScreen') ?? true;
+  // Varsayılan gizli: kilit ekranında yalnızca "yeni bildirim" görünür, ayrıntı kilit açılınca
+  static bool get lockScreen => _p.getBool('lockScreen') ?? false;
   static Future<void> setNotify(String key, bool v) => _p.setBool(key, v);
 
   static int get reminderMinutes => _p.getInt('reminderMinutes') ?? 11;
