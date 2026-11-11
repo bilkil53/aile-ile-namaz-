@@ -413,22 +413,9 @@ jobs:
           done
           ls -la aile-ile-namaz*.apk
 
-      - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
-        if: env.PLAY_BUNDLE == 'true'
+      - name: Hata ayıklama sembolleri (çökme kayıtlarını çözmek için; her yayında)
         run: |
-          python3 - <<'PY'
-          p = 'android/app/src/main/AndroidManifest.xml'
-          s = open(p, encoding='utf-8').read()
-          if 'xmlns:tools' not in s:
-              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
-          s = s.replace('<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>',
-                        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>')
-          open(p, 'w', encoding='utf-8').write(s)
-          PY
-          flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
-            --dart-define=STORE=play --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
-          cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
-          (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
+          (cd build && zip -qr ../debug-symbols.zip $(ls -d symbols symbols-abi 2>/dev/null))
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
