@@ -54,3 +54,17 @@ Map<String, dynamic>? latestKazaOp(List<Map<String, dynamic>> queue, String type
   }
   return null;
 }
+
+
+/// Sunucu kuralıyla aynı: namaz kaydı yalnızca İstanbul gününe göre 2 gün geri ile 1 gün ileri
+/// arasında yazılabilir (uygulama bugün/dün yazar; pay saat dilimi ve kısa çevrimdışı süre için).
+/// Daha eski bir tarih kuyrukta kalırsa sunucu reddeder; gönderilmeden kuyruktan çıkarılır.
+bool isPrayerDateWritable(String date, DateTime now) {
+  final d = DateTime.tryParse(date);
+  if (d == null) return false;
+  final ist = now.toUtc().add(const Duration(hours: 3));
+  final today = DateTime.utc(ist.year, ist.month, ist.day);
+  final day = DateTime.utc(d.year, d.month, d.day);
+  final diff = day.difference(today).inDays;
+  return diff >= -2 && diff <= 1;
+}

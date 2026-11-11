@@ -1,4 +1,4 @@
-Namaz Demo — 🛠️ Kaza kaydı olan hesaplar "Hesabımı sil" ile silinemiyordu; düzeltildi. Sunucu hatası artık bağlantı hatası gibi gösterilmiyor.
+Namaz Demo — 🔒 Namaz işaretleri yalnızca bugün ve dün için değiştirilebilir; aile de birbirinin yalnızca bugün ve dün kaydını görür. 🛠️ Kaza kaydı olan hesaplar artık silinebiliyor.
 
 ## 🌟 Kullanıcı için
 

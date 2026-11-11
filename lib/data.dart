@@ -432,6 +432,13 @@ class Repo {
         i++;
         continue;
       }
+      // Düzenleme süresi geçmiş gün (uzun çevrimdışı kalma): sunucu kabul etmez, beklemeden çıkarılır
+      if (o['t'] == 'prayer' && !isPrayerDateWritable(o['date'] as String, DateTime.now())) {
+        await LocalStore.removeOp(o);
+        i++;
+        rejectNotice.value++;
+        continue;
+      }
       try {
         if (o['t'] == 'prayer') {
           await supa.from('daily_prayers').upsert(
