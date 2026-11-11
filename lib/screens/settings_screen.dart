@@ -10,6 +10,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data.dart';
+import '../data_export.dart';
 import '../local_store.dart';
 import '../location.dart';
 import '../notifications.dart';
@@ -195,6 +196,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _toast(ok ? t('Konum güncellendi: $msg', 'Location updated: $msg') : msg);
     if (ok) {
       await Notifications.reschedule();
+    }
+  }
+
+  bool _exporting = false;
+
+  /// Sunucudaki kendi kayıtlarını dosya olarak hazırlar ve paylaşım ekranını açar (kaydet / e-posta / Drive).
+  Future<void> _exportData() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final (file, missing) = await DataExport.create(appVersion: _version);
+      if (!mounted) return;
+      if (missing.isNotEmpty) {
+        _toast(t('Bazı bölümler okunamadı, dosyada eksik olarak belirtildi. Sonra tekrar dene.',
+            'Some sections could not be read and are marked as missing in the file. Try again later.'));
+      }
+      await Share.shareXFiles([XFile(file.path, mimeType: 'application/json')],
+          subject: t('Aile İle Namaz — verilerim', 'Aile İle Namaz — my data'));
+    } catch (_) {
+      if (mounted) {
+        _toast(t('Veriler hazırlanamadı. İnternet bağlantını kontrol edip tekrar dene.',
+            'Could not prepare your data. Check your internet connection and try again.'));
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
     }
   }
 
@@ -777,9 +803,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             const SizedBox(height: 6),
           ]),
-          // 5) Hesabı sil (en altta)
+          // 5) Verilerimi indir + hesabı sil (en altta)
           if (!guest) ...[
             const SizedBox(height: 18),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.black12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: _exporting ? null : _exportData,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(children: [
+                    Icon(Icons.download, color: AppColors.textSecondary, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(t('Verilerimi indir', 'Download my data'),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        Text(t('Namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada', 'Your prayer records, kaza counts and memberships in one file'),
+                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                      ]),
+                    ),
+                    _exporting
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                  ]),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
