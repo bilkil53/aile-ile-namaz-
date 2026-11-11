@@ -136,6 +136,12 @@ begin
   begin update public.profiles set acik_riza_at = '2000-01-01' where id = u;
     fails := fails || 'acik_riza_elle_yazilabiliyor; ';
   exception when insufficient_privilege then passed := passed + 1; end;
+  -- "Okudum" beyan tarihi de sunucu saatiyle yazılır (gönderilen tarih yok sayılır)
+  update public.profiles set kvkk_consent_at = '2000-01-01' where id = u;
+  reset role;
+  if (select kvkk_consent_at from public.profiles where id = u) between now() - interval '1 minute' and now() + interval '1 minute'
+  then passed := passed + 1; else fails := fails || 'beyan_tarihi_elle_yazilabiliyor; '; end if;
+  set local role authenticated;
   begin perform acik_riza_at from public.profiles where id = u; -- rıza tarihi aileye/API'ye görünmez
     fails := fails || 'acik_riza_okunabiliyor; ';
   exception when insufficient_privilege then passed := passed + 1; end;
