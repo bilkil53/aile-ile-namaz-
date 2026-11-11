@@ -1,4 +1,4 @@
-Namaz Demo — 📥 Ayarlar'a "Verilerimi indir" eklendi: namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada; kaydedebilir ya da paylaşabilirsin.
+Namaz Demo — 🛠️ Kaza kaydı olan hesaplar "Hesabımı sil" ile silinemiyordu; düzeltildi. Sunucu hatası artık bağlantı hatası gibi gösterilmiyor.
 
 ## 🌟 Kullanıcı için
 
