@@ -119,66 +119,70 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(t('Bildirim izinleri', 'Notification permissions'))),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        children: [
-          Text(t('🔔 Bildirimlerin düzgün gelmesi için', '🔔 For notifications to arrive reliably'),
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          const SizedBox(height: 4),
-          Text(t('Vakit hatırlatmaları ve aile bildirimleri için üç ayarın da ✅ olması gerekir.', 'All three settings must be ✅ for prayer reminders and family notifications.'),
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-          const SizedBox(height: 14),
-          _row(t('Bildirim izni', 'Notification permission'), t('Uygulama bildirim gösterebilsin', 'Let the app show notifications'), _notif, () async {
-            await Notifications.requestPermission();
-            if (!await Notifications.enabled()) await NotifyHealth.openNotificationSettings();
-          }),
-          _row(t('Kesin alarm', 'Exact alarms'), t('Vakit hatırlatması dakikası dakikasına gelsin', 'Prayer reminders arrive on the minute'), _exact, Notifications.requestExact),
-          _row(t('Pil tasarrufu muafiyeti', 'Battery optimization exemption'), t('Telefon uygulamayı uyutup bildirimleri geciktirmesin', 'So the phone does not put the app to sleep and delay notifications'), _battery,
-              NotifyHealth.openBatterySettings),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(16)),
-            child: Text(
-              t(
-                  'ℹ️ Samsung kullanıyorsan: Ayarlar → Pil → Arka plan kullanım sınırları → '
-                      '"Uyku moduna alınan uygulamalar" listesinde bu uygulama varsa çıkar.\n\n'
-                      'Pil tasarrufu sayfasında listeden bu uygulamayı bulup "Optimize etme" / "Kısıtlama yok" seç.',
-                  'ℹ️ On Samsung: Settings → Battery → Background usage limits → '
-                      'remove this app from "Sleeping apps" if it is there.\n\n'
-                      'On the battery optimization page, find this app and choose "Don\'t optimize" / "Unrestricted".'),
-              style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
-            ),
-          ),
-          if (Log.last('bildirim') != null || Log.last('aile') != null) ...[
-            const SizedBox(height: 12),
+      // Alt gezinme çubuğu / hareket çizgisi olan telefonlarda son öğe çubuğun altında kalmasın
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            Text(t('🔔 Bildirimlerin düzgün gelmesi için', '🔔 For notifications to arrive reliably'),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const SizedBox(height: 4),
+            Text(t('Vakit hatırlatmaları ve aile bildirimleri için üç ayarın da ✅ olması gerekir.', 'All three settings must be ✅ for prayer reminders and family notifications.'),
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+            const SizedBox(height: 14),
+            _row(t('Bildirim izni', 'Notification permission'), t('Uygulama bildirim gösterebilsin', 'Let the app show notifications'), _notif, () async {
+              await Notifications.requestPermission();
+              if (!await Notifications.enabled()) await NotifyHealth.openNotificationSettings();
+            }),
+            _row(t('Kesin alarm', 'Exact alarms'), t('Vakit hatırlatması dakikası dakikasına gelsin', 'Prayer reminders arrive on the minute'), _exact, Notifications.requestExact),
+            _row(t('Pil tasarrufu muafiyeti', 'Battery optimization exemption'), t('Telefon uygulamayı uyutup bildirimleri geciktirmesin', 'So the phone does not put the app to sleep and delay notifications'), _battery,
+                NotifyHealth.openBatterySettings),
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.cardBorder),
-              ),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: AppColors.goldContainer, borderRadius: BorderRadius.circular(16)),
               child: Text(
-                [
-                  if (Log.last('bildirim') != null) t('Son bildirim hatası: ', 'Last notification error: ') + '${Log.last('bildirim')}',
-                  if (Log.last('aile') != null) t('Son aile gönderim hatası: ', 'Last family send error: ') + '${Log.last('aile')}',
-                ].join('\n'),
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                t(
+                    'ℹ️ Samsung kullanıyorsan: Ayarlar → Pil → Arka plan kullanım sınırları → '
+                        '"Uyku moduna alınan uygulamalar" listesinde bu uygulama varsa çıkar.\n\n'
+                        'Pil tasarrufu sayfasında listeden bu uygulamayı bulup "Optimize etme" / "Kısıtlama yok" seç.',
+                    'ℹ️ On Samsung: Settings → Battery → Background usage limits → '
+                        'remove this app from "Sleeping apps" if it is there.\n\n'
+                        'On the battery optimization page, find this app and choose "Don\'t optimize" / "Unrestricted".'),
+                style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
               ),
+            ),
+            if (Log.last('bildirim') != null || Log.last('aile') != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Text(
+                  [
+                    if (Log.last('bildirim') != null) t('Son bildirim hatası: ', 'Last notification error: ') + '${Log.last('bildirim')}',
+                    if (Log.last('aile') != null) t('Son aile gönderim hatası: ', 'Last family send error: ') + '${Log.last('aile')}',
+                  ].join('\n'),
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () async {
+                await Notifications.showTest();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(t('Test bildirimi gönderildi. Bildirim çubuğuna bak.', 'Test notification sent. Check your notification bar.'))));
+              },
+              icon: const Icon(Icons.notifications_active_outlined),
+              label: Text(t('🔔 Test bildirimi gönder', '🔔 Send test notification')),
             ),
           ],
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () async {
-              await Notifications.showTest();
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(t('Test bildirimi gönderildi. Bildirim çubuğuna bak.', 'Test notification sent. Check your notification bar.'))));
-            },
-            icon: const Icon(Icons.notifications_active_outlined),
-            label: Text(t('🔔 Test bildirimi gönder', '🔔 Send test notification')),
-          ),
-        ],
+        ),
       ),
     );
   }

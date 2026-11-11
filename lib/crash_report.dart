@@ -166,6 +166,7 @@ class CrashReport {
       showDialog<void>(
         context: ctx,
         builder: (c) => AlertDialog(
+          scrollable: true, // küçük ekran / büyük yazıda taşmasın
           icon: const Icon(Icons.error_outline, color: Colors.redAccent, size: 36),
           title: Text(title, textAlign: TextAlign.center),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [

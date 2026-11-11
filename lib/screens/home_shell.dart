@@ -99,6 +99,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
+          scrollable: true, // küçük ekran / büyük yazıda taşmasın
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           icon: const Icon(Icons.lock_outline, color: AppColors.emerald, size: 32),
           title: Text(t('Telefon kilitliyken bildirimler', 'Notifications on the lock screen'), style: const TextStyle(fontSize: 17)),

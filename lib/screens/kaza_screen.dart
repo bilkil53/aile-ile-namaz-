@@ -108,6 +108,7 @@ class _KazaScreenState extends State<KazaScreen> {
     final first = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true, // küçük ekran / büyük yazıda taşmasın
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         icon: const Icon(Icons.restart_alt, color: AppColors.missed, size: 32),
         title: Text(t('Kaza kayıtları sıfırlansın mı?', 'Reset kaza records?')),
@@ -128,6 +129,7 @@ class _KazaScreenState extends State<KazaScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
+          scrollable: true, // küçük ekran / büyük yazıda taşmasın
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(t('Son onay', 'Final confirmation')),
           content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [

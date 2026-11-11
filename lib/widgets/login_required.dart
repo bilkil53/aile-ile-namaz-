@@ -10,6 +10,7 @@ Future<void> showLoginRequired(BuildContext context, String what) async {
   final go = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
+      scrollable: true, // küçük ekran / büyük yazıda taşmasın
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       icon: const Text('🔐', style: TextStyle(fontSize: 34)),
       title: Text(t('Google Girişi Gerekir', 'Google Sign-in Required'),

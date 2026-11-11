@@ -67,6 +67,7 @@ class Integrity {
       builder: (ctx) => PopScope(
         canPop: false,
         child: AlertDialog(
+          scrollable: true, // küçük ekran / büyük yazıda taşmasın
           icon: const Icon(Icons.gpp_bad_outlined, color: AppColors.missed, size: 34),
           title: Text(t('Bu kopya doğrulanamadı', 'This copy could not be verified')),
           content: Text(
