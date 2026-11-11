@@ -1,4 +1,4 @@
-Namaz Demo — 📱 Ayarlar sayfasının en altındaki düğmeler (Verilerimi indir, Hesabımı sil) bazı telefonlarda sistem çubuğunun altında kalıyordu; düzeltildi. Bu sürümde giriş yapılmış ekranlar da otomatik test ediliyor.
+Namaz Demo — ⚙️ Ayarlar yeniden sıralandı: Uygulama, Hesap, Verilerim, Bildirimler, Diğer (Test Paneli en altta). 🧪 Mübarek gün kartı önizlemesi artık internete bağlı değil; listeden gün seçince hemen açılır.
 
 ## 🌟 Kullanıcı için
 

@@ -13,9 +13,14 @@ import '../theme.dart';
 /// "yarın" bilgi kartı (bugünkü özel gün kartı varsa onun altında). Başka günlerde hiçbir şey göstermez.
 class DiniGunCard extends StatefulWidget {
   /// [now]: yalnızca önizleme/test için başka bir günü göstermek (verilmezse bugün).
-  const DiniGunCard({super.key, this.now});
+  const DiniGunCard({super.key, this.now, this.preview, this.previewTomorrow = false});
 
   final DateTime? now;
+
+  /// Önizleme (test paneli): takvime ve internete bakmadan bu günün kartını çizer.
+  /// [previewTomorrow] doğruysa "1 gün önce" kartı, değilse o günün kartı.
+  final DiniGun? preview;
+  final bool previewTomorrow;
 
   @override
   State<DiniGunCard> createState() => _DiniGunCardState();
@@ -66,6 +71,11 @@ class _DiniGunCardState extends State<DiniGunCard> {
 
   @override
   Widget build(BuildContext context) {
+    final pv = widget.preview;
+    if (pv != null) {
+      if (widget.previewTomorrow) return _upcoming(pv);
+      return pv.bayram ? _bayram(pv, 1) : _special(pv);
+    }
     final now = widget.now ?? DateTime.now();
     final b = DiniGunler.bayramOn(now);
     if (b != null) return _bayram(b.$1, b.$2);
