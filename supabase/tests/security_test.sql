@@ -105,9 +105,9 @@ begin
   else
     perform set_config('request.jwt.claims', json_build_object('sub', male, 'role', 'authenticated')::text, true);
     set local role authenticated;
-    insert into public.daily_prayers(user_id, prayer_date, fajr) values (male, '2000-01-01', 'EXCUSED')
+    insert into public.daily_prayers(user_id, prayer_date, fajr) values (male, (now() at time zone 'Europe/Istanbul')::date, 'EXCUSED')
       on conflict (user_id, prayer_date) do update set fajr = excluded.fajr;
-    if (select fajr from public.daily_prayers where user_id = male and prayer_date = '2000-01-01') <> 'NONE' then
+    if (select fajr from public.daily_prayers where user_id = male and prayer_date = (now() at time zone 'Europe/Istanbul')::date) <> 'NONE' then
       fails := fails || 'erkek_muaf_kaydedildi; ';
     else passed := passed + 1; end if;
     reset role;
@@ -173,19 +173,26 @@ begin
     fails := fails || 'all_prayed_tekrar_gonderildi; ';
   else passed := passed + 1; end if;
   -- Eski bir gün tamamlanınca bildirim yok
-  insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
-    values (u, '2000-01-03', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED')
-    on conflict (user_id, prayer_date) do update
-      set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'PRAYED', maghrib = 'PRAYED', isha = 'PRAYED';
+  -- (Geçmiş gün artık yazılamaz; yazılabilseydi de bildirim olmamalı)
+  begin
+    insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
+      values (u, '2000-01-03', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED')
+      on conflict (user_id, prayer_date) do update
+        set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'PRAYED', maghrib = 'PRAYED', isha = 'PRAYED';
+    fails := fails || 'gecmis_gun_yazilabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
   if (select count(*) from public.pool_events where sender_id = u and event_type = 'ALL_PRAYED'
        and created_at > now() - interval '1 minute') <> n then
     fails := fails || 'all_prayed_eski_gun_bildirildi; ';
   else passed := passed + 1; end if;
   -- Muaf vakti olan gün ve ileri tarih (bugün+2) bildirilmez
-  insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
-    values (u, (now() at time zone 'Europe/Istanbul')::date + 2, 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED')
-    on conflict (user_id, prayer_date) do update
-      set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'PRAYED', maghrib = 'PRAYED', isha = 'PRAYED';
+  begin
+    insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
+      values (u, (now() at time zone 'Europe/Istanbul')::date + 2, 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED', 'PRAYED')
+      on conflict (user_id, prayer_date) do update
+        set fajr = 'PRAYED', dhuhr = 'PRAYED', asr = 'PRAYED', maghrib = 'PRAYED', isha = 'PRAYED';
+    fails := fails || 'ileri_tarih_yazilabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
   insert into public.daily_prayers(user_id, prayer_date, fajr, dhuhr, asr, maghrib, isha)
     values (u, (now() at time zone 'Europe/Istanbul')::date - 1, 'PRAYED', 'PRAYED', 'EXCUSED', 'PRAYED', 'PRAYED')
     on conflict (user_id, prayer_date) do update
