@@ -731,69 +731,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               const SizedBox(height: 6),
             ]),
-            // 3) Verilerimi indir + hesabı sil
-            if (!guest) ...[
-              const SizedBox(height: 18),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.black12),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: _exporting ? null : _exportData,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    child: Row(children: [
-                      Icon(Icons.download, color: AppColors.textSecondary, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(t('Verilerimi indir', 'Download my data'),
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                          Text(t('Namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada', 'Your prayer records, kaza counts and memberships in one file'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                        ]),
-                      ),
-                      _exporting
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                          : Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                    ]),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: _deleteAccount,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    child: Row(children: [
-                      const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data'),
-                              style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
-                          Text(t('Tüm kayıtların kalıcı olarak silinir', 'All your records are permanently deleted'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                        ]),
-                      ),
-                      Icon(Icons.chevron_right, color: AppColors.missed.withValues(alpha: 0.7)),
-                    ]),
-                  ),
-                ),
-              ),
-            ],
             const SizedBox(height: 14),
-            // 4) Bildirimler
+            // 3) Bildirimler
             _bigCard([
               _title(t('Bildirimler', 'Notifications')),
               _divider(),
@@ -866,7 +805,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 6),
             ]),
             const SizedBox(height: 14),
-            // 5) Diğer
+            // 4) Diğer
             _bigCard([
               _title(t('Diğer', 'Other')),
               _divider(),
@@ -890,6 +829,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
               const SizedBox(height: 6),
             ]),
+            // 5) Verilerimi indir + hesabı sil (en altta)
+            if (!guest) ...[
+              const SizedBox(height: 18),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.black12),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: _exporting ? null : _exportData,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(children: [
+                      Icon(Icons.download, color: AppColors.textSecondary, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(t('Verilerimi indir', 'Download my data'),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          Text(t('Namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada', 'Your prayer records, kaza counts and memberships in one file'),
+                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        ]),
+                      ),
+                      _exporting
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                    ]),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: _deleteAccount,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(children: [
+                      const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data'),
+                              style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
+                          Text(t('Tüm kayıtların kalıcı olarak silinir', 'All your records are permanently deleted'),
+                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        ]),
+                      ),
+                      Icon(Icons.chevron_right, color: AppColors.missed.withValues(alpha: 0.7)),
+                    ]),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
           ],
         ),
