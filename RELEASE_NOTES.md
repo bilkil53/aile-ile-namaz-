@@ -1,4 +1,4 @@
-📱 Ayarlar sayfasının en altındaki düğmeler (Verilerimi indir, Hesabımı sil) bazı telefonlarda sistem çubuğunun altında kalıyordu; düzeltildi. Bu sürümde giriş yapılmış ekranlar da otomatik test ediliyor.
+⚙️ Ayarlar yeniden sıralandı: Hesap, Uygulama, Bildirimler, Diğer; "Verilerimi indir" ve "Hesabımı sil" en altta.
 
 ## 🌟 Kullanıcı için
 
