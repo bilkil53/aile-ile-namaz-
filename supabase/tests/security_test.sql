@@ -210,6 +210,21 @@ begin
   else passed := passed + 1; end if;
   reset role;
 
+  -- 9) Kaza kaydı olan hesap silinebilir (özet tetikleyicisi silmeyi bozmaz); en sonda, geri alınır
+  insert into public.kaza_prayers(user_id, prayer_type, owed_count, completed_count) values (u, 'ASR', 2, 1)
+    on conflict (user_id, prayer_type) do update set owed_count = excluded.owed_count + 1;
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.delete_my_account();
+    reset role;
+    if exists (select 1 from public.profiles where id = u) or exists (select 1 from public.kaza_summary where user_id = u)
+    then fails := fails || 'hesap_silme_veri_kaldi; '; else passed := passed + 1; end if;
+  exception when others then
+    reset role;
+    fails := fails || 'kazali_hesap_silinemiyor(' || sqlstate || '); ';
+  end;
+
   if fails = '' then
     raise exception 'SONUC: OK % test gecti (geri alindi). Atlanan: %. UYARI: %', passed,
       coalesce(nullif(skipped, ''), 'yok'), coalesce(nullif(uyari, ''), 'yok');
