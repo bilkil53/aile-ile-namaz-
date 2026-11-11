@@ -232,6 +232,7 @@ class UpdateChecker {
         builder: (ctx) => PopScope(
           canPop: !forced,
           child: AlertDialog(
+            scrollable: true, // küçük ekran / büyük yazıda taşmasın
             title: Text(forced
                 ? t('Güncelleme gerekli', 'Update required')
                 : t('Yeni güncelleme var', 'New update available')),

@@ -1,4 +1,4 @@
-Namaz Demo — 🔒 Aile bildirimleri telefon kilitliyken artık varsayılan olarak gizli: kilit ekranında yalnızca "yeni bildirim" görünür, yazı kilit açılınca okunur (Ayarlar'dan değiştirilebilir).
+Namaz Demo — 📱 Ayarlar sayfasının en altındaki düğmeler (Verilerimi indir, Hesabımı sil) bazı telefonlarda sistem çubuğunun altında kalıyordu; düzeltildi. Uzun pencereler artık kaydırılabiliyor.
 
 ## 🌟 Kullanıcı için
 

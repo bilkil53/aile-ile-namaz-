@@ -465,6 +465,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
+          scrollable: true, // küçük ekran / büyük yazıda taşmasın
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           icon: const Icon(Icons.warning_amber_rounded, color: AppColors.missed, size: 32),
           title: Text(title, style: const TextStyle(fontSize: 15)),

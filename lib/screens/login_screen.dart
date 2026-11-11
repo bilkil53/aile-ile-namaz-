@@ -116,6 +116,7 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
     final go = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true, // küçük ekran / büyük yazıda taşmasın
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         icon: Container(
           width: 56,
