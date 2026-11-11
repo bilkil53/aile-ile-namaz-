@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../config.dart';
@@ -12,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data.dart';
 import '../data_export.dart';
 import '../local_store.dart';
+import '../log.dart';
 import '../location.dart';
 import '../notifications.dart';
 import '../push.dart';
@@ -218,18 +220,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
-      final (file, missing) = await DataExport.create(appVersion: _version);
+      final (File, List<String>) res;
+      try {
+        res = await DataExport.create(appVersion: _version);
+      } catch (e) {
+        Log.warn('verilerimi indir', e);
+        if (mounted) {
+          _toast(t('Veriler hazırlanamadı. İnternet bağlantını kontrol edip tekrar dene.',
+              'Could not prepare your data. Check your internet connection and try again.'));
+        }
+        return;
+      }
+      final (file, missing) = res;
       if (!mounted) return;
       if (missing.isNotEmpty) {
         _toast(t('Bazı bölümler okunamadı, dosyada eksik olarak belirtildi. Sonra tekrar dene.',
             'Some sections could not be read and are marked as missing in the file. Try again later.'));
       }
-      await Share.shareXFiles([XFile(file.path, mimeType: 'application/json')],
-          subject: t('Aile İle Namaz — verilerim', 'Aile İle Namaz — my data'));
-    } catch (_) {
-      if (mounted) {
-        _toast(t('Veriler hazırlanamadı. İnternet bağlantını kontrol edip tekrar dene.',
-            'Could not prepare your data. Check your internet connection and try again.'));
+      try {
+        await Share.shareXFiles([XFile(file.path, mimeType: 'application/json')],
+            subject: t('Aile İle Namaz — verilerim', 'Aile İle Namaz — my data'));
+      } catch (e) {
+        Log.warn('verilerimi indir (paylaşım)', e);
+        if (mounted) _toast(t('Paylaşım ekranı açılamadı. Tekrar dene.', 'Could not open the share screen. Try again.'));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
