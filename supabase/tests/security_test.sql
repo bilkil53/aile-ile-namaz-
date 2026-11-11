@@ -210,6 +210,24 @@ begin
   else passed := passed + 1; end if;
   reset role;
 
+  -- 10) Aile üyesi başkasının yalnızca bugün/dün kaydını görür, eski geçmişini göremez
+  select m2.user_id into male from public.pool_members m2 where m2.pool_id = p and m2.user_id <> u limit 1;
+  if male is null then
+    skipped := skipped || 'aile_gecmisi(ikinci uye yok); ';
+  else
+    insert into public.daily_prayers(user_id, prayer_date, fajr) values
+      (male, (now() at time zone 'Europe/Istanbul')::date, 'PRAYED'), (male, '2001-01-01', 'PRAYED')
+      on conflict (user_id, prayer_date) do update set fajr = 'PRAYED';
+    perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+    if (select count(*) from public.daily_prayers where user_id = male and prayer_date = '2001-01-01') <> 0 then
+      fails := fails || 'aile_eski_gecmisi_gorunuyor; ';
+    elsif (select count(*) from public.daily_prayers where user_id = male and prayer_date = (now() at time zone 'Europe/Istanbul')::date) <> 1 then
+      fails := fails || 'aile_bugunu_goremiyor; ';
+    else passed := passed + 1; end if;
+    reset role;
+  end if;
+
   -- 9) Kaza kaydı olan hesap silinebilir (özet tetikleyicisi silmeyi bozmaz); en sonda, geri alınır
   insert into public.kaza_prayers(user_id, prayer_type, owed_count, completed_count) values (u, 'ASR', 2, 1)
     on conflict (user_id, prayer_type) do update set owed_count = excluded.owed_count + 1;
