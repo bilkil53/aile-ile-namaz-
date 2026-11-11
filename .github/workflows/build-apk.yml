@@ -17,9 +17,9 @@ permissions:
 env:
   APP_MAJOR: "1"
   APP_MINOR: "0"
-  # Google Play paketi (AAB) derlensin mi? Play'e çıkış hazırlığına kadar kapalı (yayını uzatmasın).
-  # Play'e çıkarken "true" yapılır.
-  PLAY_BUNDLE: "false"
+  # Google Play paketi (AAB): kararlı sürümde (ve dev tam testinde) yayından ve ekran testlerinden SONRA,
+  # arka planda derlenir; yayını geciktirmez. Kararlı sürümde pakete yayına eklenir.
+  PLAY_BUNDLE: "true"
 
 # Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın.
 # Tam test (dev, elle başlatma) yayın üretmez: kendi sırasında, yayınla aynı anda çalışır.
@@ -409,22 +409,9 @@ jobs:
           done
           ls -la aile-ile-namaz*.apk
 
-      - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
-        if: env.PLAY_BUNDLE == 'true'
+      - name: Hata ayıklama sembolleri (çökme kayıtlarını çözmek için; her yayında)
         run: |
-          python3 - <<'PY'
-          p = 'android/app/src/main/AndroidManifest.xml'
-          s = open(p, encoding='utf-8').read()
-          if 'xmlns:tools' not in s:
-              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
-          s = s.replace('<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>',
-                        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>')
-          open(p, 'w', encoding='utf-8').write(s)
-          PY
-          flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
-            --dart-define=STORE=play --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
-          cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
-          (cd build && zip -qr ../debug-symbols.zip symbols symbols-play symbols-abi)
+          (cd build && zip -qr ../debug-symbols.zip $(ls -d symbols symbols-abi 2>/dev/null))
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -469,7 +456,6 @@ jobs:
             aile-ile-namaz-arm64-v8a.apk
             aile-ile-namaz-armeabi-v7a.apk
             aile-ile-namaz-x86_64.apk
-            aile-ile-namaz.aab
 
       # ── TEST ORTAMI 1: GitHub emülatörü ── gerçek uygulama bir Android emülatöründe açılır,
       # misafir akışı parmakla dokunur gibi denenir. YAYINDAN SONRA çalışır: başarısızsa çalışma kırmızı olur,
@@ -594,3 +580,29 @@ jobs:
           done
           echo "Test Lab deposu: $LIMIT öncesine ait $n eski test klasörü silindi"
           echo "Test Lab deposu: $n eski rapor silindi (son 7 gün saklanıyor)" >> "$GITHUB_STEP_SUMMARY"
+
+      # ── PLAY HAZIRLIĞI (arka planda, en sonda) ── Play paketi derlenebiliyor mu; kararlıda yayına eklenir
+      - name: Google Play paketi (AAB) — yayından sonra, arka planda
+        if: ${{ !cancelled() && env.PLAY_BUNDLE == 'true' && (github.ref_name == 'main' || github.ref_name == 'dev') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          if 'xmlns:tools' not in s:
+              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
+          s = s.replace('<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>',
+                        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>')
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          flutter build appbundle --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
+            --dart-define=STORE=play --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-play
+          cp build/app/outputs/bundle/release/app-release.aab aile-ile-namaz.aab
+          (cd build && zip -qr ../debug-symbols-play.zip symbols-play)
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
+            gh release upload "v${{ env.APP_VERSION }}" aile-ile-namaz.aab debug-symbols-play.zip --clobber -R "$GITHUB_REPOSITORY"
+            echo "Play paketi yayına eklendi: v${{ env.APP_VERSION }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Play paketi derlendi (dev: yayına eklenmedi)" >> "$GITHUB_STEP_SUMMARY"
+          fi
