@@ -84,8 +84,17 @@ void main() {
     await settle(t, 4);
 
     final auth = Supabase.instance.client.auth;
-    final res = await auth.signInWithPassword(email: email, password: password);
-    expect(res.session, isNotNull, reason: 'Test hesabıyla giriş yapılamadı');
+    try {
+      final res = await auth.signInWithPassword(email: email, password: password);
+      expect(res.session, isNotNull, reason: 'Test hesabıyla giriş yapılamadı');
+    } on AuthException catch (e) {
+      // Sunucuda e-posta ile giriş kapalıysa test atlanır (ayar açılınca kendiliğinden çalışır)
+      if (e.code == 'email_provider_disabled') {
+        markTestSkipped('Supabase: e-posta ile giriş kapalı (Authentication → Sign In / Providers → Email)');
+        return;
+      }
+      rethrow;
+    }
 
     final bar = find.byType(BottomNavigationBar);
     await passStartupDialogs(t, bar);
