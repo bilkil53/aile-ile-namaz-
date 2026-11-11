@@ -10,7 +10,8 @@
 // Gizli ayar: FCM_SERVICE_ACCOUNT (Firebase hizmet hesabı JSON'u, Supabase Edge Function secret).
 // SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY Supabase tarafından otomatik sağlanır.
 
-import { createClient } from "jsr:@supabase/supabase-js@2";
+// Tam sürüm sabit: her dağıtım aynı bağımlılığı çözer (sürüm yükseltmesi bilerek ve test edilerek yapılır).
+import { createClient } from "jsr:@supabase/supabase-js@2.119.0";
 
 const POSSESSIVE: Record<string, string> = {
   "Eşi": "Eşin", "Oğlu": "Oğlun", "Kızı": "Kızın", "Annesi": "Annen", "Babası": "Baban",
