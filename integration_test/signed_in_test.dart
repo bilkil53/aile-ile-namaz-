@@ -39,9 +39,11 @@ void noErrorDialog(String where) {
 /// Açılışta çıkabilecek pencereleri (KVKK onayı, bildirim ayarı) kapatır; ana ekran görünene kadar.
 Future<void> passStartupDialogs(WidgetTester t, Finder home) async {
   final kvkk = find.text(L('Kişisel verilerin korunması (KVKK)', 'Protection of personal data (KVKK)'));
-  final end = DateTime.now().add(const Duration(seconds: 60));
+  final end = DateTime.now().add(const Duration(seconds: 90));
+  DateTime? quiet; // ana ekran açık ve pencere yokken geçen süre (pencereler sırayla, gecikmeli açılabilir)
   while (DateTime.now().isBefore(end)) {
     await t.pump(const Duration(milliseconds: 250));
+    if (find.byType(AlertDialog).evaluate().isNotEmpty) quiet = null;
     if (kvkk.evaluate().isNotEmpty) {
       // İki kutuyu da işaretle, "Devam et"
       final boxes = find.descendant(of: find.byType(AlertDialog), matching: find.byType(Checkbox));
@@ -65,7 +67,10 @@ Future<void> passStartupDialogs(WidgetTester t, Finder home) async {
       }
       continue;
     }
-    if (home.evaluate().isNotEmpty) return;
+    if (home.evaluate().isNotEmpty) {
+      quiet ??= DateTime.now();
+      if (DateTime.now().difference(quiet) > const Duration(seconds: 5)) return;
+    }
   }
   throw TestFailure('Giriş sonrası ana ekran açılmadı');
 }
