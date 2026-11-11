@@ -1,4 +1,4 @@
-📱 Ayarlar sayfasının en altındaki düğmeler (Verilerimi indir, Hesabımı sil) bazı telefonlarda sistem çubuğunun altında kalıyordu; düzeltildi. Uzun pencereler artık kaydırılabiliyor.
+📱 Ayarlar sayfasının en altındaki düğmeler (Verilerimi indir, Hesabımı sil) bazı telefonlarda sistem çubuğunun altında kalıyordu; düzeltildi. Bu sürümde giriş yapılmış ekranlar da otomatik test ediliyor.
 
 ## 🌟 Kullanıcı için
 
