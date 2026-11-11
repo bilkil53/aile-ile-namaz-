@@ -17,6 +17,9 @@ permissions:
 env:
   APP_MAJOR: "1"
   APP_MINOR: "0"
+  # Google Play paketi (AAB) derlensin mi? Play'e çıkış hazırlığına kadar kapalı (yayını uzatmasın).
+  # Play'e çıkarken "true" yapılır.
+  PLAY_BUNDLE: "false"
 
 # Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın.
 # Tam test (dev, elle başlatma) yayın üretmez: kendi sırasında, yayınla aynı anda çalışır.
@@ -407,6 +410,7 @@ jobs:
           ls -la aile-ile-namaz*.apk
 
       - name: Google Play paketi (AAB) — Play güncellemesi, APK kurma izni yok
+        if: env.PLAY_BUNDLE == 'true'
         run: |
           python3 - <<'PY'
           p = 'android/app/src/main/AndroidManifest.xml'
