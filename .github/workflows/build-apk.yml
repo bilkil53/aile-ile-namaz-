@@ -429,6 +429,7 @@ jobs:
             aile-ile-namaz*.apk
             aile-ile-namaz.aab
             debug-symbols.zip
+          retention-days: 14
 
       - name: Sürüm notlarını hazırla (RELEASE_NOTES.md + teknik ayrıntılar)
         if: github.ref == 'refs/heads/main'

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'all_prayed.dart';
 import 'cuma_reminder.dart';
+import 'data_export.dart';
 import 'lang.dart';
 import 'local_store.dart';
 import 'log.dart';
@@ -642,6 +643,7 @@ class Repo {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
       resetUserCache();
+      await DataExport.cleanup(); // dışa aktarılmış veri dosyası başka hesaba kalmasın
       // Bekleyen kayıtlar bu hesap adına saklanır ve diske yazılması beklenir. Yazılamazsa kuyruk
       // silinmez (kayıt kaybolmaz); sahibi de durur, başka hesap girerse önce yeniden saklanır.
       // Oturum zaten düşmüşse (myId 'local') kayıtlar telefondaki sahibin adına saklanır
