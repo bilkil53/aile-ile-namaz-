@@ -217,6 +217,35 @@ begin
   else passed := passed + 1; end if;
   reset role;
 
+  -- 10) Bildirim teslim kaydı (41) ve rıza durumu (41, 42)
+  set local role anon;
+  begin perform public.my_consent_status(); fails := fails || 'anon_riza_durumu_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.push_delivered_tokens(0); fails := fails || 'anon_teslim_listesi_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin perform public.push_delivered_tokens(0); fails := fails || 'uye_teslim_listesi_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.mark_push_delivered(0, array['x']); fails := fails || 'uye_teslim_yazabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform 1 from private.push_deliveries limit 1; fails := fails || 'teslim_tablosu_okunabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin update public.profiles set acik_riza_version = 99 where id = u; fails := fails || 'riza_surumu_yazilabiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin
+    if (public.my_consent_status()->>'profil') = 'true' and (public.my_consent_status() ? 'riza_at')
+    then passed := passed + 1; else fails := fails || 'riza_durumu_eksik_alan; '; end if;
+  exception when others then fails := fails || 'riza_durumu_hata(' || sqlstate || '); '; end;
+  perform set_config('request.jwt.claims', json_build_object('sub', gen_random_uuid(), 'role', 'authenticated')::text, true);
+  if (public.my_consent_status()->>'profil') = 'false' then passed := passed + 1;
+  else fails := fails || 'profilsiz_hesap_ayirt_edilmiyor; '; end if;
+  reset role;
+  if has_column_privilege('authenticated', 'public.profiles', 'acik_riza_at', 'select')
+  then uyari := uyari || 'riza_sutunu_dogrudan_okunabiliyor(Verilerimi indir icin izin eklendiyse beklenen); ';
+  else passed := passed + 1; end if;
+
   -- 9) Kaza kaydı olan hesap silinebilir (özet tetikleyicisi silmeyi bozmaz); en sonda, geri alınır
   insert into public.kaza_prayers(user_id, prayer_type, owed_count, completed_count) values (u, 'ASR', 2, 1)
     on conflict (user_id, prayer_type) do update set owed_count = excluded.owed_count + 1;
