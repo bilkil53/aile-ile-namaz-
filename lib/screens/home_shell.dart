@@ -19,6 +19,7 @@ import '../push.dart';
 
 import '../theme.dart';
 import '../ui_test_mode.dart';
+import '../widgets/pro_lock.dart';
 import 'karne_screen.dart';
 import 'kaza_screen.dart';
 import 'login_screen.dart';
@@ -28,6 +29,11 @@ import 'settings_screen.dart';
 import 'today_screen.dart';
 
 /// Ana iskelet: yeşil üst bar + alt menü (Bugün, Aile Havuzu, Kaza, Karne).
+/// Ücretsiz sürümde (deneme bitti, Pro yok) yalnızca Bugün sekmesi açılır; diğerleri Pro penceresi gösterir.
+abstract final class HomeShellTabs {
+  static bool locked(int i, {required bool demo}) => demo && i != 0;
+}
+
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -37,6 +43,16 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _tab = 0;
+
+  void _selectTab(int i) {
+    if (HomeShellTabs.locked(i, demo: Pro.isDemo)) {
+      final names = [t('Bugün', 'Today'), t('Aile Havuzu', 'Family'), t('Kaza', 'Kaza'), t('Karne', 'Report')];
+      unawaited(showProRequired(context, feature: names[i]));
+      return;
+    }
+    setState(() => _tab = i);
+  }
+
 
   RealtimeChannel? _events;
   final Map<String, String> _names = {};
@@ -165,7 +181,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   /// Pro ↔ Demo değişince: kilitli sekmeden çık, bildirimleri aç/kapat.
   void _onProChanged() {
     if (!mounted) return;
-    setState(() {});
+    // Pro süresi açıkken bitti: kilitli sekmede kalınmaz, Bugün'e dönülür
+    setState(() {
+      if (HomeShellTabs.locked(_tab, demo: Pro.isDemo)) _tab = 0;
+    });
     unawaited(Push.register()); // demo'da kaydı siler, Pro'da yeniden kaydeder
     unawaited(Notifications.reschedule()); // demo'da hepsini iptal eder
   }
@@ -342,7 +361,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           ),
           child: BottomNavigationBar(
             currentIndex: _tab,
-            onTap: (i) => setState(() => _tab = i),
+            onTap: _selectTab,
             type: BottomNavigationBarType.fixed,
             backgroundColor: AppColors.white,
             selectedItemColor: AppColors.emerald,
