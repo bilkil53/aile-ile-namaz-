@@ -124,6 +124,13 @@ void main() {
       await pumpUntil(t, f);
       await t.tap(f);
       await settle(t, 14);
+      // Test hesabı ücretsiz sürümdeyse kilitli sekme Pro penceresi açar: pencere kapatılır, devam edilir
+      final proDlg = find.text(L('Pro özellik', 'Pro feature'));
+      if (proDlg.evaluate().isNotEmpty) {
+        await t.tap(find.text(L('Kapat', 'Close')).last);
+        await settle(t, 4);
+        expect(proDlg, findsNothing, reason: '$tab: Pro penceresi kapanmadı');
+      }
       noErrorDialog('$tab sekmesi');
       expect(t.takeException(), isNull, reason: '$tab sekmesinde hata');
     }
