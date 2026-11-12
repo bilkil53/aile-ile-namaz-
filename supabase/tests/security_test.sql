@@ -218,9 +218,13 @@ begin
   reset role;
 
   -- 10) Bildirim teslim kaydı (41) ve rıza durumu (41, 42)
+  perform set_config('request.jwt.claims', '', true); -- kimliksiz: yalnızca izin hatası kabul edilir
   set local role anon;
   begin perform public.my_consent_status(); fails := fails || 'anon_riza_durumu_acik; ';
-  exception when insufficient_privilege then passed := passed + 1; end;
+  exception when insufficient_privilege then
+    if sqlerrm like 'permission denied%' then passed := passed + 1;
+    else fails := fails || 'anon_riza_durumu_izin_yerine_fonksiyon_icinde_durdu; '; end if;
+  end;
   begin perform public.push_delivered_tokens(0); fails := fails || 'anon_teslim_listesi_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
   reset role;
@@ -234,16 +238,21 @@ begin
   exception when insufficient_privilege then passed := passed + 1; end;
   begin update public.profiles set acik_riza_version = 99 where id = u; fails := fails || 'riza_surumu_yazilabiliyor; ';
   exception when insufficient_privilege then passed := passed + 1; end;
+  -- Bölüm 7'de beyan tarihi yazıldı, bölüm 8'de açık rıza silindi: tarih dolu, rıza yok dönmeli
   begin
-    if (public.my_consent_status()->>'profil') = 'true' and (public.my_consent_status() ? 'riza_at')
-    then passed := passed + 1; else fails := fails || 'riza_durumu_eksik_alan; '; end if;
+    if (public.my_consent_status()->>'profil') = 'true' and (public.my_consent_status()->>'beyan_at') is not null
+       and (public.my_consent_status()->>'riza') = 'false' and (public.my_consent_status()->>'riza_at') is null
+    then passed := passed + 1; else fails := fails || 'riza_durumu_yanlis; '; end if;
   exception when others then fails := fails || 'riza_durumu_hata(' || sqlstate || '); '; end;
   perform set_config('request.jwt.claims', json_build_object('sub', gen_random_uuid(), 'role', 'authenticated')::text, true);
-  if (public.my_consent_status()->>'profil') = 'false' then passed := passed + 1;
-  else fails := fails || 'profilsiz_hesap_ayirt_edilmiyor; '; end if;
+  begin
+    if (public.my_consent_status()->>'profil') = 'false' then passed := passed + 1;
+    else fails := fails || 'profilsiz_hesap_ayirt_edilmiyor; '; end if;
+  exception when others then fails := fails || 'profilsiz_riza_durumu_hata(' || sqlstate || '); '; end;
   reset role;
+  -- Rıza tarihleri doğrudan okunamaz (yalnızca kişinin kendi rıza durumu işlevinden)
   if has_column_privilege('authenticated', 'public.profiles', 'acik_riza_at', 'select')
-  then uyari := uyari || 'riza_sutunu_dogrudan_okunabiliyor(Verilerimi indir icin izin eklendiyse beklenen); ';
+  then fails := fails || 'riza_sutunu_dogrudan_okunabiliyor; ';
   else passed := passed + 1; end if;
 
   -- 9) Kaza kaydı olan hesap silinebilir (özet tetikleyicisi silmeyi bozmaz); en sonda, geri alınır
