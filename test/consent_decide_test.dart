@@ -19,4 +19,11 @@ void main() {
     expect(d(true, false, false, false), ConsentAction.ask);
     expect(d(false, true, true, true), ConsentAction.ask); // "okudum" beyanı eksik
   });
+  test('Rıza eski metne verildiyse (bu arada metin yenilendi) yeniden gönderilmez, yeniden sorulur', () {
+    ConsentAction v(int lv, int rv) => Kvkk.decide(
+        serverBeyan: true, serverRiza: false, localGiven: true, localSynced: false, localVersion: lv, requiredVersion: rv);
+    expect(v(1, 2), ConsentAction.ask);
+    expect(v(2, 2), ConsentAction.resend);
+    expect(v(3, 2), ConsentAction.resend);
+  });
 }

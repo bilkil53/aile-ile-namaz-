@@ -8,7 +8,7 @@
 do $$
 declare
   u uuid; p uuid; male uuid;
-  fails text := ''; passed int := 0; skipped text := ''; uyari text := '';
+  fails text := ''; passed int := 0; skipped text := ''; uyari text := ''; rv int;
   n int;
 begin
   -- Aile görünürlüğü testleri ikinci bir üye ister: en az iki üyeli bir havuz seçilir (yoksa test başarısız)
@@ -154,6 +154,22 @@ begin
   reset role;
   set local role anon;
   begin perform public.record_acik_riza(); fails := fails || 'anon_acik_riza_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+  -- 7b) Rıza, okunan metnin sürümüyle yazılır: güncelden eski sürümle kayıt yazılmaz (46)
+  rv := private.riza_version();
+  set local role authenticated;
+  if public.record_acik_riza(rv - 1) is null then passed := passed + 1;
+  else fails := fails || 'eski_metne_riza_yazildi; '; end if;
+  if public.record_acik_riza(null::int) is null then passed := passed + 1;
+  else fails := fails || 'surumsuz_riza_yazildi; '; end if;
+  begin
+    if public.record_acik_riza(rv) between now() - interval '1 minute' and now() + interval '1 minute'
+    then passed := passed + 1; else fails := fails || 'guncel_metne_riza_yazilmadi; '; end if;
+  exception when others then fails := fails || 'riza_surumlu_kayit: ' || sqlerrm || '; '; end;
+  reset role;
+  set local role anon;
+  begin perform public.record_acik_riza(1); fails := fails || 'anon_surumlu_riza_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
   reset role;
 

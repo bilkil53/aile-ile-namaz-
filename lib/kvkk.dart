@@ -23,6 +23,16 @@ class Kvkk {
   static bool _pending = false;
   static String _kSynced(String uid) => 'kvkk.synced.$uid';
   static String _kRizaSynced(String uid) => 'riza.synced.$uid';
+  // Bu hesabın onayladığı açık rıza metninin sürümü (eski kayıtlarda yok → 1. sürüm)
+  static String _kRizaVer(String uid) => 'riza.version.$uid';
+
+  /// Bu uygulamanın gösterdiği Açık Rıza Metni sürümü. Metin değişince birlikte artırılır
+  /// (sunucuda private.riza_version() de aynı anda yükseltilir).
+  static const rizaTextVersion = 1;
+
+  /// Sunucunun istediği metin sürümü (son kontrolde öğrenilen). Bu uygulamanınkinden yeniyse
+  /// pencere rıza almak yerine "uygulamayı güncelleyin" der: eski metne verilen rıza geçersizdir.
+  static int _requiredVersion = 0;
   static const _kLegacyGiven = 'kvkk.consent', _kLegacySynced = 'kvkk.synced';
   static String get _page => Lang.isEn
       ? 'https://bilkil53.github.io/aile-ile-namaz-/privacy-en.html'
@@ -76,8 +86,11 @@ class Kvkk {
     if (!_rizaUsers.contains(uid)) {
       await p.setStringList(_kRizaUsers, [..._rizaUsers, uid]);
       await p.setBool(_kRizaSynced(uid), false);
+      await p.setInt(_kRizaVer(uid), rizaTextVersion);
     }
   }
+
+  static int _localVersion(String uid) => AppSettings.prefs.getInt(_kRizaVer(uid)) ?? 1;
 
   /// Girişten sonra çağrılır: giriş ekranında verilen beyanları bu hesaba bağlar. Eski sürümün telefon
   /// başına kaydı yalnızca "okudum" beyanı olarak taşınır; açık rıza yeniden sorulur.
@@ -124,8 +137,11 @@ class Kvkk {
     }
     if (_rizaUsers.contains(uid) && !(p.getBool(_kRizaSynced(uid)) ?? false)) {
       try {
-        final at = await db.rpc('record_acik_riza').timeout(const Duration(seconds: 8));
-        // Profil satırı yoksa tarih dönmez → yazılmadı say, sonra yeniden dene
+        // Okunan metnin sürümü gönderilir: sunucuda metin bu arada yenilendiyse kayıt yazılmaz
+        final at = await db
+            .rpc('record_acik_riza', params: {'p_version': _localVersion(uid)})
+            .timeout(const Duration(seconds: 8));
+        // Profil satırı yoksa ya da metin eskimişse tarih dönmez → yazılmadı say
         if (at != null && _uid == uid) await p.setBool(_kRizaSynced(uid), true);
       } catch (_) {}
     }
@@ -137,9 +153,12 @@ class Kvkk {
     required bool serverRiza,
     required bool localGiven,
     required bool localSynced,
+    int localVersion = 1,
+    int requiredVersion = 1,
   }) {
     if (serverBeyan && serverRiza) return ConsentAction.adopt; // başka telefonda verilmiş de olabilir
-    if (localGiven && !localSynced) return ConsentAction.resend; // verilmiş, henüz yazılamamış
+    // Verilmiş ama henüz yazılamamış: yalnızca okunan metin hâlâ güncelse yeniden gönderilir
+    if (localGiven && !localSynced && localVersion >= requiredVersion) return ConsentAction.resend;
     return ConsentAction.ask; // sunucuda geçerli rıza yok (hiç verilmemiş ya da metin sürümü eski)
   }
 
@@ -156,6 +175,8 @@ class Kvkk {
         if (j is! Map || _uid != uid) return false;
         // Profil satırı yoksa kayıt yazılamaz: sormak sonsuz pencereye döner, bu durumda engellenmez
         if (j['profil'] == false) return false;
+        final required = (j['gerekli_version'] as num?)?.toInt() ?? 1;
+        _requiredVersion = required;
         final localGiven = _users.contains(uid) && _rizaUsers.contains(uid);
         final localSynced = (p.getBool(_kSynced(uid)) ?? false) && (p.getBool(_kRizaSynced(uid)) ?? false);
         switch (decide(
@@ -163,12 +184,15 @@ class Kvkk {
           serverRiza: j['riza'] == true,
           localGiven: localGiven,
           localSynced: localSynced,
+          localVersion: _localVersion(uid),
+          requiredVersion: required,
         )) {
           case ConsentAction.adopt:
             if (!_users.contains(uid)) await p.setStringList(_kUsers, [..._users, uid]);
             if (!_rizaUsers.contains(uid)) await p.setStringList(_kRizaUsers, [..._rizaUsers, uid]);
             await p.setBool(_kSynced(uid), true);
             await p.setBool(_kRizaSynced(uid), true);
+            await p.setInt(_kRizaVer(uid), (j['riza_version'] as num?)?.toInt() ?? required);
             return false;
           case ConsentAction.resend:
             if (round == 1) return false; // yazılamadı (ör. bağlantı): sonraki açılışta yeniden denenir
@@ -181,6 +205,7 @@ class Kvkk {
             }
             await p.setStringList(_kRizaUsers, _rizaUsers.where((u) => u != uid).toList());
             await p.remove(_kRizaSynced(uid));
+            await p.remove(_kRizaVer(uid));
             return true;
         }
       }
@@ -192,6 +217,27 @@ class Kvkk {
   /// eklenmeden önce giriş yapmış olanlar). Vazgeçerse oturum kapatılır (gezinti moduyla devam edebilir).
   static Future<void> askIfNeeded(BuildContext context) async {
     if (given) return;
+    if (_requiredVersion > rizaTextVersion) {
+      // Sunucudaki metin bu uygulamadakinden yeni: eski metne rıza alınmaz, güncelleme istenir
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            icon: const Icon(Icons.system_update, color: AppColors.emerald, size: 30),
+            title: Text(t('Uygulamayı güncelleyin', 'Please update the app')),
+            content: Text(t(
+                'Gizlilik metinlerimiz güncellendi. Yeni metni okuyup onaylayabilmek için uygulamanın son sürümünü kurun. Şimdilik oturumunuz kapatılır; uygulamayı gezinti modunda görüntüleyebilirsiniz.',
+                'Our privacy texts have been updated. Please install the latest version of the app to read and accept the new text. For now you will be signed out; you can still view the app in browsing mode.')),
+            actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(t('Tamam', 'OK')))],
+          ),
+        ),
+      );
+      await Push.unregister();
+      await Repo.signOut();
+      return;
+    }
     final updated = _onlyAck;
     var ack = false, riza = false;
     final ok = await showDialog<bool>(

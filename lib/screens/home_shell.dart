@@ -131,6 +131,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       // Kayıt daha önce silinmiş ama pencere gösterilememişse (ekran o an kapalıydı) şimdi sorulur
       if (Kvkk.given) await Kvkk.syncServer();
       final ask = await Kvkk.needsServerConsent() || !Kvkk.given;
+      // Üstte başka bir pencere ya da sayfa açıksa (ör. Pro, ayarlar) onun üstüne binmesin:
+      // kapanmasını bekle. Bu arada sunucu, rızası geçerli olmayanın bilgisini aileye zaten göstermez.
+      while (ask && mounted && !isGuest && !(ModalRoute.of(context)?.isCurrent ?? true)) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      }
       if (ask && mounted && !isGuest) {
         await Kvkk.askIfNeeded(context);
         if (!isGuest) await Kvkk.syncServer();
