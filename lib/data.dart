@@ -12,6 +12,7 @@ import 'log.dart';
 import 'settings.dart';
 import 'sync_logic.dart';
 import 'models.dart';
+import 'privacy.dart';
 
 SupabaseClient get supa => Supabase.instance.client;
 
@@ -56,7 +57,9 @@ class Repo {
         .select('user_id, role_title, icon, gender, profiles(display_name)')
         .eq('pool_id', poolId)
         .order('joined_at');
-    return rows.map<Member>((r) => Member.fromMap(r)).toList();
+    final list = rows.map<Member>((r) => Member.fromMap(r)).toList();
+    rememberNames(rows.map((r) => (r['profiles'] as Map?)?['display_name'] as String?)); // hata raporunda silinsin
+    return list;
   }
 
   static Future<List<JoinRequest>> pendingRequests(String poolId) async {
@@ -67,6 +70,7 @@ class Repo {
         .eq('status', 'pending')
         .gte('created_at', DateTime.now().toUtc().subtract(const Duration(minutes: 5)).toIso8601String())
         .order('created_at');
+    rememberNames(rows.map((r) => (r['profiles'] as Map?)?['display_name'] as String?)); // hata raporunda silinsin
     return rows.map<JoinRequest>((r) => JoinRequest.fromMap(r)).toList();
   }
 
@@ -166,11 +170,14 @@ class Repo {
           .timeout(const Duration(seconds: 6));
       final n = (p?['display_name'] as String? ?? '').trim();
       _myName = n.isNotEmpty ? n : (supa.auth.currentUser?.email ?? '').split('@').first;
+      rememberNames([_myName, supa.auth.currentUser?.userMetadata?['full_name'] as String?]);
       await AppSettings.prefs.setString('myName', _myName!);
       return _myName!;
     } catch (_) {
       // Çevrimdışı: son bilinen ad
-      return AppSettings.prefs.getString('myName') ?? '';
+      final cached = AppSettings.prefs.getString('myName') ?? '';
+      rememberNames([cached]);
+      return cached;
     }
   }
 

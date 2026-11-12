@@ -1,0 +1,48 @@
+name: Sunucu güvenlik testi
+
+# Sunucu dosyaları (veritabanı değişiklikleri, sunucu işlevleri, güvenlik testi) değişince yalnızca
+# güvenlik testi çalışır; APK derlenmez, yayın yapılmaz. Ayrıca her gece kendiliğinden çalışır:
+# bir kayıt yanlışlıkla "[skip ci]" ile gönderilse bile en geç ertesi sabah denetlenir.
+on:
+  push:
+    branches: [main, demo, dev, 'check/**']
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/server-security.yml'
+  schedule:
+    - cron: '17 1 * * *' # her gece 04:17 (Türkiye)
+  workflow_dispatch:
+
+concurrency:
+  group: server-security-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sunucu güvenlik testi (canlı veritabanında, sonunda her şey geri alınır)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          # Zorunlu (fail-closed): bağlantı bilgisi yoksa test sessizce atlanmaz, iş başarısız olur
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı."
+            exit 1
+          fi
+          command -v psql >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q postgresql-client; }
+          out=$(psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/tests/security_test.sql 2>&1 || true)
+          res=$(echo "$out" | grep -oE 'SONUC: .*' | head -1)
+          echo "$res"
+          { echo '## Sunucu güvenlik testi'; echo '```'; echo "${res:-sonuç okunamadı}"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          uy=$(echo "$res" | sed -n 's/.*UYARI: //p')
+          if [ -n "$uy" ] && [ "$uy" != "yok" ]; then echo "::warning::Sunucu güvenlik testi uyarısı: $uy"; fi
+          case "$res" in
+            "SONUC: OK"*) ;;
+            *)
+              echo "$out" | sed "s#${SUPABASE_DB_URL}#***#g; s#postgres[a-z]*://[^ ]*#***#g" | head -15
+              echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı."; exit 1 ;;
+          esac

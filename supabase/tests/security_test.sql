@@ -11,8 +11,10 @@ declare
   fails text := ''; passed int := 0; skipped text := ''; uyari text := '';
   n int;
 begin
-  select m.user_id, m.pool_id into u, p from public.pool_members m limit 1;
-  if u is null then raise exception 'SONUC: HATA test icin havuz uyesi yok'; end if;
+  -- Aile görünürlüğü testleri ikinci bir üye ister: en az iki üyeli bir havuz seçilir (yoksa test başarısız)
+  select m.user_id, m.pool_id into u, p from public.pool_members m
+   where (select count(*) from public.pool_members m2 where m2.pool_id = m.pool_id) >= 2 limit 1;
+  if u is null then raise exception 'SONUC: HATA test icin en az iki uyeli havuz yok (aile gorunurlugu sinanamaz)'; end if;
   -- Olay testleri rızası olan kişiyle yapılır (rızasız kişinin olayları sunucuda düşürülür, değişiklik 44)
   update public.profiles set acik_riza_at = now(), acik_riza_version = private.riza_version() where id = u;
 
@@ -270,7 +272,7 @@ begin
   exception when others then fails := fails || 'rizasiz_olay_hata(' || sqlstate || '); '; end;
   reset role;
   if male is null then
-    skipped := skipped || 'rizasiz_gorunurluk(ikinci uye yok); ';
+    fails := fails || 'rizasiz_gorunurluk_sinanamadi(ikinci uye yok); ';
   else
     perform set_config('request.jwt.claims', json_build_object('sub', male, 'role', 'authenticated')::text, true);
     set local role authenticated;

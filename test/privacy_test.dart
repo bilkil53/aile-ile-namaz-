@@ -72,4 +72,26 @@ void main() {
       }
     });
   });
+
+  group('Bilinen kişi adları silinir', () {
+    tearDown(forgetNames);
+
+    test('Kendi adı ve aile üyelerinin adı serbest metinde geçerse silinir (Türkçe harf farkı gözetilmez)', () {
+      rememberNames(['Zeynep Yıldırım', 'İsmail', null, '  ']);
+      expect(scrubSensitive('Hata: Zeynep için kayıt yok'), 'Hata: [ad] için kayıt yok');
+      expect(scrubSensitive('YILDIRIM ailesi / yıldırım / ismail / İSMAİL'), '[ad] ailesi / [ad] / [ad] / [ad]');
+      expect(scrubSensitive("Exception: ad='Zeynep Yıldırım' bulunamadı"), "Exception: ad='[ad] [ad]' bulunamadı");
+    });
+
+    test('Ad başka bir kelimenin parçasıysa dokunulmaz; kısa parçalar alınmaz', () {
+      rememberNames(['Can De']);
+      expect(scrubSensitive('Cancel / canlı / Can geldi / de facto'), 'Cancel / canlı / [ad] geldi / de facto');
+    });
+
+    test('Yığın izi ve hata kodu bozulmaz', () {
+      rememberNames(['Elif']);
+      const st = '#0      Repo.flushQueue (package:aile_ile_namaz/data.dart:445:11)';
+      expect(scrubSensitive(st), st);
+    });
+  });
 }

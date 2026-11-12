@@ -34,14 +34,41 @@ final List<(RegExp, String)> _rules = [
   (RegExp(r'[A-Za-z0-9_\-:]{40,}'), '[gizli]'),
 ];
 
-/// Metindeki e-posta, oturum anahtarı, kimlik, telefon, gizli parametre ve dosya adlarını maskeler.
+// Kişi adları genel bir kalıpla bulunamaz: uygulamanın bildiği adlar (kendi adı, aile üyeleri,
+// katılım isteği gönderenler) yüklendikçe buraya eklenir ve hata metninde geçerse silinir.
+final Set<String> _knownNames = {};
+
+/// Ad ve soyad parçalarını hatırlar (3 harften kısa parçalar alınmaz: "Ali" alınır, "de" alınmaz).
+void rememberNames(Iterable<String?> names) {
+  for (final n in names) {
+    for (final part in (n ?? '').trim().split(RegExp(r'\s+'))) {
+      if (part.runes.length >= 3) _knownNames.add(part);
+    }
+  }
+}
+
+/// Testler için: hatırlanan adları temizler.
+void forgetNames() => _knownNames.clear();
+
+/// Metindeki e-posta, oturum anahtarı, kimlik, telefon, gizli parametre, dosya adı ve bilinen kişi
+/// adlarını maskeler.
 String scrubSensitive(String text) {
   var s = text;
   for (final (re, rep) in _rules) {
     s = s.replaceAllMapped(re, (m) => _expand(rep, m));
   }
+  for (final name in _knownNames) {
+    // Büyük/küçük harf ve Türkçe İ/ı farkı gözetilmez; yalnızca tam kelime olarak geçtiyse silinir
+    final variants = {name, name.toLowerCase(), name.toUpperCase(), _trLower(name), _trUpper(name)};
+    for (final v in variants) {
+      s = s.replaceAll(RegExp('(?<!\\p{L})${RegExp.escape(v)}(?!\\p{L})', caseSensitive: false, unicode: true), '[ad]');
+    }
+  }
   return s;
 }
+
+String _trLower(String s) => s.replaceAll('I', 'ı').replaceAll('İ', 'i').toLowerCase();
+String _trUpper(String s) => s.replaceAll('i', 'İ').replaceAll('ı', 'I').toUpperCase();
 
 String _expand(String rep, Match m) =>
     rep.replaceAllMapped(RegExp(r'\$(\d)'), (g) => m.group(int.parse(g.group(1)!)) ?? '');
