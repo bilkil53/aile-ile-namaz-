@@ -959,10 +959,11 @@ class _FamilyScreenState extends State<FamilyScreen> {
           const SizedBox(height: 6),
           Text(
             t(
-                '"$poolName" havuzuna katılma isteğin ${ownerName.isNotEmpty ? '$ownerName adlı ' : ''}Aile Reisine iletildi. '
+                // Sunucu, onaydan önce havuz ve reis adını vermeyebilir (davet kodunu bilen herkes adı öğrenmesin)
+                '${poolName.isNotEmpty ? '"$poolName" havuzuna katılma isteğin' : 'Katılma isteğin'} ${ownerName.isNotEmpty ? '$ownerName adlı ' : ''}Aile Reisine iletildi. '
                     'Onaylayıp ünvanını belirlediğinde havuz burada açılacak. '
                     'Talep 5 dakika içinde onaylanmalıdır; bu sürede başka talep gönderemezsin.',
-                'Your request to join "$poolName" was sent to the head of family${ownerName.isNotEmpty ? ' ($ownerName)' : ''}. '
+                'Your request to join${poolName.isNotEmpty ? ' "$poolName"' : ''} was sent to the head of family${ownerName.isNotEmpty ? ' ($ownerName)' : ''}. '
                     'The circle opens here once they approve it and set your title. '
                     'The request must be approved within 5 minutes; you cannot send another one meanwhile.'),
             style: const TextStyle(fontSize: 12, color: Color(0xFF78350F), height: 1.35),

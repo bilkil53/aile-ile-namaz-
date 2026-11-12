@@ -35,7 +35,14 @@ class UpdateChecker {
   /// Demo'da indirilecek yayının etiketi (rN); son sürüm sorgusunda bulunur.
   static String _demoTag = '';
 
-  static String get _base => isDemo ? '$_repo/releases/download/$_demoTag' : '$_repo/releases/latest/download';
+  /// Kararlı kanalda son sürüm denetiminde görülen etiket: indirme ve dosya özeti aynı yayına bağlanır.
+  static String _tag = '';
+
+  /// İndirme klasörü: etiket biliniyorsa o yayına sabit adres, bilinmiyorsa "en son" adresi.
+  static String assetBase(String tag) =>
+      buildOfTag(tag) > 0 ? '$_repo/releases/download/$tag' : '$_repo/releases/latest/download';
+
+  static String get _base => isDemo ? '$_repo/releases/download/$_demoTag' : assetBase(_tag);
   static String get _prefix => isDemo ? 'aile-ile-namaz-demo' : 'aile-ile-namaz';
   static String get downloadUrl => '$_base/$_prefix.apk';
 
@@ -122,6 +129,7 @@ class UpdateChecker {
     if (body == null) return null;
     final tag = body['tag_name'] as String? ?? '';
     final n = buildOfTag(tag);
+    if (n > 0 && !isDemo) _tag = tag;
     final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
     return (n, notes);
   }
@@ -220,6 +228,7 @@ class UpdateChecker {
 
       final tag = body['tag_name'] as String? ?? '';
       final latest = buildOfTag(tag);
+      if (latest > 0 && !isDemo) _tag = tag;
       if (latest <= current) return;
 
       final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
