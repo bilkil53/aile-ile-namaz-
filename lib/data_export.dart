@@ -15,7 +15,7 @@ class DataExport {
   /// Dosyaya girecek tablolar: (başlık, tablo, sütunlar, kullanıcı sütunu, sıralama sütunu).
   /// Sıralama sütunu kullanıcı içinde benzersizdir (sayfalar arasında satır atlanmaz / tekrarlanmaz).
   static const tables = <(String, String, String, String, String)>[
-    ('profil', 'profiles', 'id, display_name, icon, created_at', 'id', 'id'),
+    ('profil', 'profiles', 'id, display_name, icon, created_at, kvkk_consent_at, acik_riza_at, acik_riza_version', 'id', 'id'),
     ('namaz_kayitlari', 'daily_prayers', 'prayer_date, fajr, dhuhr, asr, maghrib, isha', 'user_id', 'prayer_date'),
     ('kaza_sayilari', 'kaza_prayers', 'prayer_type, owed_count, completed_count, updated_at', 'user_id', 'prayer_type'),
     ('aile_uyelikleri', 'pool_members', 'pool_id, role_title, icon, gender, joined_at', 'user_id', 'pool_id'),

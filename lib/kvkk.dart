@@ -131,6 +131,61 @@ class Kvkk {
     }
   }
 
+  /// Sunucudaki kayıt ile telefondaki kaydı karşılaştırır (sunucu esastır).
+  static ConsentAction decide({
+    required bool serverBeyan,
+    required bool serverRiza,
+    required bool localGiven,
+    required bool localSynced,
+  }) {
+    if (serverBeyan && serverRiza) return ConsentAction.adopt; // başka telefonda verilmiş de olabilir
+    if (localGiven && !localSynced) return ConsentAction.resend; // verilmiş, henüz yazılamamış
+    return ConsentAction.ask; // sunucuda geçerli rıza yok (hiç verilmemiş ya da metin sürümü eski)
+  }
+
+  /// Her açılışta ve öne gelişte çağrılır: sunucuda geçerli (güncel sürümlü) açık rıza yoksa `true`
+  /// döner → pencere yeniden sorulur. Sunucuda varsa bu telefonda da tanınır (yeni telefonda tekrar
+  /// sorulmaz). İnternet yoksa `false` (engellemez; bir sonraki açılışta yeniden bakılır).
+  static Future<bool> needsServerConsent() async {
+    final uid = _uid;
+    if (uid == null) return false;
+    final p = AppSettings.prefs;
+    try {
+      for (var round = 0; round < 2; round++) {
+        final j = await Supabase.instance.client.rpc('my_consent_status').timeout(const Duration(seconds: 6));
+        if (j is! Map || _uid != uid) return false;
+        final localGiven = _users.contains(uid) && _rizaUsers.contains(uid);
+        final localSynced = (p.getBool(_kSynced(uid)) ?? false) && (p.getBool(_kRizaSynced(uid)) ?? false);
+        switch (decide(
+          serverBeyan: j['beyan'] == true,
+          serverRiza: j['riza'] == true,
+          localGiven: localGiven,
+          localSynced: localSynced,
+        )) {
+          case ConsentAction.adopt:
+            if (!_users.contains(uid)) await p.setStringList(_kUsers, [..._users, uid]);
+            if (!_rizaUsers.contains(uid)) await p.setStringList(_kRizaUsers, [..._rizaUsers, uid]);
+            await p.setBool(_kSynced(uid), true);
+            await p.setBool(_kRizaSynced(uid), true);
+            return false;
+          case ConsentAction.resend:
+            if (round == 1) return false; // yazılamadı (ör. bağlantı): sonraki açılışta yeniden denenir
+            await syncServer();
+          case ConsentAction.ask:
+            // Telefondaki kayıt geçersiz: silinir ki pencere yeniden çıksın
+            if (j['beyan'] != true) {
+              await p.setStringList(_kUsers, _users.where((u) => u != uid).toList());
+              await p.remove(_kSynced(uid));
+            }
+            await p.setStringList(_kRizaUsers, _rizaUsers.where((u) => u != uid).toList());
+            await p.remove(_kRizaSynced(uid));
+            return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  }
+
   /// Giriş yapmış ama iki beyanı birden vermemiş kullanıcıya bir kez sorulur (ör. açık rıza
   /// eklenmeden önce giriş yapmış olanlar). Vazgeçerse oturum kapatılır (gezinti moduyla devam edebilir).
   static Future<void> askIfNeeded(BuildContext context) async {
@@ -189,6 +244,9 @@ class Kvkk {
     }
   }
 }
+
+/// Sunucu–telefon rıza karşılaştırmasının sonucu.
+enum ConsentAction { adopt, resend, ask }
 
 /// İşaret kutusu + metin + "oku" bağlantısı (giriş ekranı ve güncelleme penceresi ortak).
 class ConsentBox extends StatelessWidget {

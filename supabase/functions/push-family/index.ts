@@ -231,10 +231,12 @@ Deno.serve(async (req) => {
     if (!saRaw) { await finish(false); return Response.json({ skipped: "FCM_SERVICE_ACCOUNT yok" }); }
     const sa = JSON.parse(saRaw);
 
-    const [{ data: pool }, { data: members }] = await Promise.all([
+    const [{ data: pool }, { data: members, error: memErr }] = await Promise.all([
       db.from("pools").select("owner_id").eq("id", ev.pool_id).single(),
       db.from("pool_members").select("user_id, role_title, icon, gender").eq("pool_id", ev.pool_id),
     ]);
+    // Üye listesi okunamazsa "gönderilecek kimse yok" sanılmasın: tekrar denensin (fail-closed)
+    if (memErr) { await finish(false); return Response.json({ error: memErr.message, retry: true }, { status: 500 }); }
     const sender = (members ?? []).find((m) => m.user_id === ev.sender_id);
     // Gönderenin ilk adı: aynı ünvanlı iki kişi ("Kızın") ayırt edilsin → "Kızın Ayşe"
     const { data: prof } = await db.from("profiles").select("display_name").eq("id", ev.sender_id).maybeSingle();
@@ -271,8 +273,14 @@ Deno.serve(async (req) => {
     // Cihaz listesi okunamazsa olay "gönderildi" sayılmasın: tekrar denensin (fail-closed)
     if (devErr) { await finish(false); return Response.json({ error: devErr.message, retry: true }, { status: 500 }); }
     const seen = new Set<string>();
-    const devices = (rawDevices ?? []).filter((d) => !seen.has(d.fcm_token) && !!seen.add(d.fcm_token));
-    if (!devices.length) { await finish(true); return Response.json({ sent: 0, reason: "cihaz yok" }); }
+    const allDevices = (rawDevices ?? []).filter((d) => !seen.has(d.fcm_token) && !!seen.add(d.fcm_token));
+    if (!allDevices.length) { await finish(true); return Response.json({ sent: 0, reason: "cihaz yok" }); }
+    // Önceki denemede ulaşmış cihazlara yeniden gönderilmez (çift bildirim olmasın)
+    const { data: doneRows, error: doneErr } = await db.rpc("push_delivered_tokens", { p_id: ev.id });
+    if (doneErr) { await finish(false); return Response.json({ error: doneErr.message, retry: true }, { status: 500 }); }
+    const done = new Set<string>((doneRows ?? []) as string[]);
+    const devices = allDevices.filter((d) => !done.has(d.fcm_token));
+    if (!devices.length) { await finish(true); return Response.json({ sent: 0, reason: "hepsi önceden ulaştı" }); }
 
     let token: string;
     try {
@@ -283,7 +291,8 @@ Deno.serve(async (req) => {
     }
     const icon = sender?.icon ? `${sender.icon} ` : "";
     const reis = (members ?? []).find((m) => m.user_id === pool?.owner_id) as M | undefined;
-    let sent = 0, transient = 0;
+    let sent = 0, transient = 0, denied = 0;
+    const delivered: string[] = [];
     await Promise.all(devices.map(async (d) => {
       // Alıcıya göre akrabalık hitabı: reis "Kızın", kızı "Baban (Aile Reisi)" / "Annen" …
       const viewer = (members ?? []).find((m) => m.user_id === d.user_id) as M | undefined;
@@ -294,6 +303,7 @@ Deno.serve(async (req) => {
       const send = () => fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(8000), // yanıt vermeyen istek işlevi kilitlemesin
         body: JSON.stringify({
           message: {
             token: d.fcm_token,
@@ -326,6 +336,9 @@ Deno.serve(async (req) => {
       }
       if (res.ok) {
         sent++;
+        delivered.push(d.fcm_token);
+      } else if (res.status === 401 || res.status === 403) {
+        denied++; // yetki / yapılandırma hatası: gönderildi sayılmaz
       } else if (res.status === 404 || res.status === 400) {
         // Yalnızca cihaz adresi gerçekten geçersizse listeden çıkar. Mesaj içeriğinden kaynaklanan
         // bir 400 (INVALID_ARGUMENT ama adres geçerli) geçerli cihazı silmesin.
@@ -337,9 +350,15 @@ Deno.serve(async (req) => {
         }
       }
     }));
-    // Hiçbir cihaza gidemediyse ve sebep geçiciyse olay tekrar denenecek
-    await finish(!(sent === 0 && transient > 0));
-    return Response.json({ sent, transient });
+    // Ulaşan cihazlar kaydedilir; geçici ya da yetki hatası alan cihaz varsa olay "gönderildi" sayılmaz ve
+    // yeniden denenir (en çok 3 deneme, 10 dakika). Yeniden denemede yalnızca ulaşmamış cihazlara gider.
+    if (delivered.length) {
+      const { error: markErr } = await db.rpc("mark_push_delivered", { p_id: ev.id, p_tokens: delivered });
+      // Kayıt yazılamadıysa yeniden deneme çift bildirim üretebilir: bu durumda olay kapatılır
+      if (markErr) { await finish(true); return Response.json({ sent, transient, denied, warn: "teslim kaydı yazılamadı" }); }
+    }
+    await finish(transient === 0 && denied === 0);
+    return Response.json({ sent, transient, denied });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
   }
