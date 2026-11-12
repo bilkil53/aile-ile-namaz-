@@ -22,6 +22,7 @@ void main() {
     }
     expect((m['namaz_kayitlari'] as List).length, 1);
     expect(m['profil'], isEmpty);
+    expect(m[DataExport.consentKey], isA<List>());
     expect(m['eksik_bolumler'], ['cihazlar']);
     expect(m['e_posta'], '');
     expect(m['olusturma_zamani'], '2026-11-11T09:00:00.000Z');
@@ -36,6 +37,11 @@ void main() {
     for (final t in DataExport.tables) {
       expect(['id', 'user_id', 'sender_id'], contains(t.$4), reason: t.$2);
     }
+  });
+
+  test('Profil yalnızca okuma izni olan sütunları ister (izinsiz sütun tüm sorguyu düşürür)', () {
+    final profil = DataExport.tables.firstWhere((t) => t.$1 == 'profil');
+    expect(profil.$3, 'id, display_name, icon, created_at');
   });
 
   test('Dosya adı tarihli', () {

@@ -15,7 +15,7 @@ class DataExport {
   /// Dosyaya girecek tablolar: (başlık, tablo, sütunlar, kullanıcı sütunu, sıralama sütunu).
   /// Sıralama sütunu kullanıcı içinde benzersizdir (sayfalar arasında satır atlanmaz / tekrarlanmaz).
   static const tables = <(String, String, String, String, String)>[
-    ('profil', 'profiles', 'id, display_name, icon, created_at, kvkk_consent_at, acik_riza_at, acik_riza_version', 'id', 'id'),
+    ('profil', 'profiles', 'id, display_name, icon, created_at', 'id', 'id'),
     ('namaz_kayitlari', 'daily_prayers', 'prayer_date, fajr, dhuhr, asr, maghrib, isha', 'user_id', 'prayer_date'),
     ('kaza_sayilari', 'kaza_prayers', 'prayer_type, owed_count, completed_count, updated_at', 'user_id', 'prayer_type'),
     ('aile_uyelikleri', 'pool_members', 'pool_id, role_title, icon, gender, joined_at', 'user_id', 'pool_id'),
@@ -43,7 +43,11 @@ class DataExport {
             'Başka aile üyelerinin kayıtları yer almaz.',
         'eksik_bolumler': missing,
         for (final t in tables) t.$1: data[t.$1] ?? const <Map<String, dynamic>>[],
+        consentKey: data[consentKey] ?? const <Map<String, dynamic>>[],
       };
+
+  /// Rıza tarihleri ayrı bölüm: profil sütunlarına doğrudan okuma izni yok, sunucu işleviyle okunur.
+  static const consentKey = 'riza_kayitlari';
 
   static String fileName(DateTime at) {
     String two(int n) => n.toString().padLeft(2, '0');
@@ -98,7 +102,20 @@ class DataExport {
         missing.add(t.$1);
       }
     }
-    if (missing.length == tables.length) throw StateError('hiçbir bölüm okunamadı');
+    try {
+      final j = await supa.rpc('my_consent_status').timeout(_timeout);
+      if (j is! Map) throw StateError('rıza kaydı okunamadı');
+      data[consentKey] = [
+        {
+          'aydinlatma_beyani_tarihi': j['beyan_at'],
+          'acik_riza_tarihi': j['riza_at'],
+          'acik_riza_metin_surumu': j['riza_version'],
+        }
+      ];
+    } catch (_) {
+      missing.add(consentKey);
+    }
+    if (missing.length == tables.length + 1) throw StateError('hiçbir bölüm okunamadı');
     final at = DateTime.now();
     final json = const JsonEncoder.withIndent('  ').convert(
         build(uid: user.id, email: user.email, at: at, appVersion: appVersion, data: data, missing: missing));

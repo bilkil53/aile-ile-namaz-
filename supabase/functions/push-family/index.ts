@@ -293,7 +293,7 @@ Deno.serve(async (req) => {
     const reis = (members ?? []).find((m) => m.user_id === pool?.owner_id) as M | undefined;
     let sent = 0, transient = 0, denied = 0;
     const delivered: string[] = [];
-    await Promise.all(devices.map(async (d) => {
+    await Promise.all(devices.map(async (d) => { try {
       // Alıcıya göre akrabalık hitabı: reis "Kızın", kızı "Baban (Aile Reisi)" / "Annen" …
       const viewer = (members ?? []).find((m) => m.user_id === d.user_id) as M | undefined;
       const en = d.lang === "en"; // alıcının uygulama dili (bilinmiyorsa Türkçe)
@@ -338,7 +338,13 @@ Deno.serve(async (req) => {
         sent++;
         delivered.push(d.fcm_token);
       } else if (res.status === 401 || res.status === 403) {
-        denied++; // yetki / yapılandırma hatası: gönderildi sayılmaz
+        const body = await res.text().catch(() => "");
+        if (body.includes("SENDER_ID_MISMATCH")) {
+          // Cihaz kaydı başka bir Firebase projesine ait: kalıcıdır, yeniden denemek boşuna → listeden çıkar
+          await db.from("devices").delete().eq("user_id", d.user_id).eq("fcm_token", d.fcm_token);
+        } else {
+          denied++; // yetki / yapılandırma hatası: gönderildi sayılmaz
+        }
       } else if (res.status === 404 || res.status === 400) {
         // Yalnızca cihaz adresi gerçekten geçersizse listeden çıkar. Mesaj içeriğinden kaynaklanan
         // bir 400 (INVALID_ARGUMENT ama adres geçerli) geçerli cihazı silmesin.
@@ -349,7 +355,7 @@ Deno.serve(async (req) => {
           await db.from("devices").delete().eq("user_id", d.user_id).eq("fcm_token", d.fcm_token);
         }
       }
-    }));
+    } catch { transient++; } })); // beklenmedik hata: o cihaz ulaşmamış sayılır, ulaşanlar yine kaydedilir
     // Ulaşan cihazlar kaydedilir; geçici ya da yetki hatası alan cihaz varsa olay "gönderildi" sayılmaz ve
     // yeniden denenir (en çok 3 deneme, 10 dakika). Yeniden denemede yalnızca ulaşmamış cihazlara gider.
     if (delivered.length) {
