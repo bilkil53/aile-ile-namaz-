@@ -35,6 +35,9 @@ class Pro {
   /// UI bu değişince yenilenir.
   static final changed = ValueNotifier<int>(0);
 
+  /// Son öğrenilen test hesabı durumu (test rozeti ve test düğmeleri yalnızca test hesabına görünür).
+  static bool isTester = false;
+
   static DateTime? _until;
 
   static DateTime? get until => _until;
@@ -65,7 +68,10 @@ class Pro {
     if (isGuest) return false;
     try {
       final r = await supa.rpc('am_i_pro_tester').timeout(const Duration(seconds: 6));
-      return r == true;
+      final was = isTester;
+      isTester = r == true;
+      if (was != isTester) changed.value++;
+      return isTester;
     } catch (_) {
       return null;
     }

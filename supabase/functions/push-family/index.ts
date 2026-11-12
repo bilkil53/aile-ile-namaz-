@@ -258,6 +258,13 @@ Deno.serve(async (req) => {
     const recipients = ev.target_id
       ? [ev.target_id].filter((id) => id !== ev.sender_id && (members ?? []).some((m) => m.user_id === id))
       : (members ?? []).map((m) => m.user_id).filter((id) => id !== ev.sender_id);
+    // Pro kilidi (sunucu anahtarı açıksa): ücretsiz kişiye aile bildirimi gitmez. Okunamazsa tekrar denenir.
+    if (recipients.length) {
+      const { data: allowed, error: alErr } = await db.rpc("push_allowed_recipients", { p_ids: recipients });
+      if (alErr) { await finish(false); return Response.json({ error: alErr.message, retry: true }, { status: 500 }); }
+      const ok = new Set<string>((allowed ?? []) as string[]);
+      recipients.splice(0, recipients.length, ...recipients.filter((id) => ok.has(id)));
+    }
     if (!recipients.length || !text(ev.event_type, "", ev.prayer, "", false)) {
       await finish(true); // gönderilecek kimse / bildirimi olmayan olay türü
       return Response.json({ sent: 0 });

@@ -304,7 +304,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                     if (kTestChannel && !isGuest)
                       ValueListenableBuilder<int>(
                         valueListenable: Pro.changed,
-                        builder: (_, __, ___) => Container(
+                        builder: (_, __, ___) => !Pro.isTester ? const SizedBox.shrink() : Container(
                           margin: const EdgeInsets.only(left: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
