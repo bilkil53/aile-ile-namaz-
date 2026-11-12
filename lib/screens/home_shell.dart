@@ -59,6 +59,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         await Kvkk.askIfNeeded(context);
         if (isGuest || !mounted) return; // kabul etmediyse oturum kapandı
       }
+      _startupConsentDone = true;
       if (!isGuest) {
         unawaited(_consentCheck());
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
@@ -95,16 +96,19 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   }
 
   bool _consentBusy = false;
+  bool _startupConsentDone = false; // açılıştaki rıza adımı bitti mi (öncesinde ikinci pencere açılmaz)
 
   /// Beyanları sunucuya yazar; sunucuda geçerli açık rıza yoksa (verilmemiş ya da metin sürümü
   /// eskimiş) her açılışta ve öne gelişte yeniden sorar. Vazgeçilirse oturum kapanır.
   Future<void> _consentCheck() async {
-    // Açılıştaki pencere hâlâ açıksa (bu telefonda kayıt yok) ikinci pencere açılmasın
-    if (isGuest || _consentBusy || !Kvkk.given) return;
+    // Açılıştaki pencere hâlâ açıksa ikinci pencere açılmasın
+    if (isGuest || _consentBusy || !_startupConsentDone) return;
     _consentBusy = true;
     try {
-      await Kvkk.syncServer();
-      if (await Kvkk.needsServerConsent() && mounted && !isGuest) {
+      // Kayıt daha önce silinmiş ama pencere gösterilememişse (ekran o an kapalıydı) şimdi sorulur
+      if (Kvkk.given) await Kvkk.syncServer();
+      final ask = await Kvkk.needsServerConsent() || !Kvkk.given;
+      if (ask && mounted && !isGuest) {
         await Kvkk.askIfNeeded(context);
         if (!isGuest) await Kvkk.syncServer();
       }

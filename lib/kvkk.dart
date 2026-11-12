@@ -154,6 +154,8 @@ class Kvkk {
       for (var round = 0; round < 2; round++) {
         final j = await Supabase.instance.client.rpc('my_consent_status').timeout(const Duration(seconds: 6));
         if (j is! Map || _uid != uid) return false;
+        // Profil satırı yoksa kayıt yazılamaz: sormak sonsuz pencereye döner, bu durumda engellenmez
+        if (j['profil'] == false) return false;
         final localGiven = _users.contains(uid) && _rizaUsers.contains(uid);
         final localSynced = (p.getBool(_kSynced(uid)) ?? false) && (p.getBool(_kRizaSynced(uid)) ?? false);
         switch (decide(
