@@ -2,6 +2,7 @@
 -- Açıkken: Pro'su (deneme / ödeme / aile) olmayan kişinin aile olayları (kıldı, kaza, dua, 5 vakit)
 -- hata vermeden düşer ve ücretsiz kişiye aile bildirimi gönderilmez.
 create table if not exists private.flags (key text primary key, value boolean not null default false);
+alter table private.flags enable row level security;
 revoke all on private.flags from public, anon, authenticated;
 insert into private.flags(key, value) values ('pro_enforced', false) on conflict (key) do nothing;
 

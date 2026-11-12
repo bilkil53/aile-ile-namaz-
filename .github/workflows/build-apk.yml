@@ -342,7 +342,9 @@ jobs:
             "SONUC: OK"*) ;;
             *)
               # Teşhis: ilk satırlar (bağlantı adresi gizlenir; GitHub gizli değerleri ayrıca maskeler)
-              echo "$out" | sed "s#${SUPABASE_DB_URL}#***#g; s#postgres[a-z]*://[^ ]*#***#g" | head -15
+              masked="${out//"$SUPABASE_DB_URL"/***}"
+              # Bağlantı adresi, sunucu adı ve kullanıcı adı loga yazılmaz
+              echo "$masked" | sed -E 's#postgres[a-z]*://[^ ]*#***#g; s#[a-z0-9.-]*supabase\.(co|com)#***#g; s#postgres\.[a-z0-9]+#***#g' | head -15
               echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı; derleme durduruldu."; exit 1 ;;
           esac
 

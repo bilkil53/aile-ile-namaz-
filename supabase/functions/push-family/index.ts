@@ -258,12 +258,18 @@ Deno.serve(async (req) => {
     const recipients = ev.target_id
       ? [ev.target_id].filter((id) => id !== ev.sender_id && (members ?? []).some((m) => m.user_id === id))
       : (members ?? []).map((m) => m.user_id).filter((id) => id !== ev.sender_id);
-    // Pro kilidi (sunucu anahtarı açıksa): ücretsiz kişiye aile bildirimi gitmez. Okunamazsa tekrar denenir.
-    if (recipients.length) {
+    // Pro kilidi (sunucu anahtarı açıksa): ücretsiz kişiye namaz/kaza/dua bildirimi gitmez. Katılım ve
+    // Pro isteği bildirimleri herkese gider (Pro'ya geçiş yolu kapanmasın). Okunamazsa tekrar denenir;
+    // işlev sunucuda henüz yoksa (değişiklik 45 uygulanmadan) kilit kapalı sayılır.
+    const FAMILY_EVENTS = ["PRAYED", "MISSED", "KAZA", "DUA", "ALL_PRAYED"];
+    if (recipients.length && FAMILY_EVENTS.includes(ev.event_type)) {
       const { data: allowed, error: alErr } = await db.rpc("push_allowed_recipients", { p_ids: recipients });
-      if (alErr) { await finish(false); return Response.json({ error: alErr.message, retry: true }, { status: 500 }); }
-      const ok = new Set<string>((allowed ?? []) as string[]);
-      recipients.splice(0, recipients.length, ...recipients.filter((id) => ok.has(id)));
+      const missingFn = alErr && (alErr.code === "PGRST202" || alErr.code === "42883");
+      if (alErr && !missingFn) { await finish(false); return Response.json({ error: alErr.message, retry: true }, { status: 500 }); }
+      if (!missingFn) {
+        const ok = new Set<string>((allowed ?? []) as string[]);
+        recipients.splice(0, recipients.length, ...recipients.filter((id) => ok.has(id)));
+      }
     }
     if (!recipients.length || !text(ev.event_type, "", ev.prayer, "", false)) {
       await finish(true); // gönderilecek kimse / bildirimi olmayan olay türü

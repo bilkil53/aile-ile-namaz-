@@ -515,7 +515,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   // ======================= Eylemler =======================
 
   Future<void> _join(String input) async {
-    if (_demoLock(t('Aile havuzuna katılma', 'Joining a family circle'))) return;
+    // Ücretsizde de katılınabilir: Aile Reisinin Pro'su katılan üyeye de geçer
     final v = input.trim();
     if (v.isEmpty) return;
     if (isGuest) return _needLogin(t('Bir aile havuzuna katılmak', 'join a family circle'));

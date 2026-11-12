@@ -36,18 +36,23 @@ final List<(RegExp, String)> _rules = [
 
 // Kişi adları genel bir kalıpla bulunamaz: uygulamanın bildiği adlar (kendi adı, aile üyeleri,
 // katılım isteği gönderenler) yüklendikçe buraya eklenir ve hata metninde geçerse silinir.
-final Set<String> _knownNames = {};
+final Map<String, List<RegExp>> _knownNames = {};
 
 /// Ad ve soyad parçalarını hatırlar (3 harften kısa parçalar alınmaz: "Ali" alınır, "de" alınmaz).
 void rememberNames(Iterable<String?> names) {
   for (final n in names) {
     for (final part in (n ?? '').trim().split(RegExp(r'\s+'))) {
-      if (part.runes.length >= 3) _knownNames.add(part);
+      if (part.runes.length < 3 || _knownNames.containsKey(part)) continue;
+      // Büyük/küçük harf ve Türkçe İ/ı farkı gözetilmez; yalnızca tam kelime olarak geçtiyse silinir.
+      // Kalıplar bir kez derlenir (her hata metninde yeniden derlenmez).
+      _knownNames[part] = {part, _trLower(part), _trUpper(part)}
+          .map((v) => RegExp('(?<!\\p{L})${RegExp.escape(v)}(?!\\p{L})', caseSensitive: false, unicode: true))
+          .toList();
     }
   }
 }
 
-/// Testler için: hatırlanan adları temizler.
+/// Testler ve hesap değişimi için: hatırlanan adları temizler.
 void forgetNames() => _knownNames.clear();
 
 /// Metindeki e-posta, oturum anahtarı, kimlik, telefon, gizli parametre, dosya adı ve bilinen kişi
@@ -57,11 +62,9 @@ String scrubSensitive(String text) {
   for (final (re, rep) in _rules) {
     s = s.replaceAllMapped(re, (m) => _expand(rep, m));
   }
-  for (final name in _knownNames) {
-    // Büyük/küçük harf ve Türkçe İ/ı farkı gözetilmez; yalnızca tam kelime olarak geçtiyse silinir
-    final variants = {name, name.toLowerCase(), name.toUpperCase(), _trLower(name), _trUpper(name)};
-    for (final v in variants) {
-      s = s.replaceAll(RegExp('(?<!\\p{L})${RegExp.escape(v)}(?!\\p{L})', caseSensitive: false, unicode: true), '[ad]');
+  for (final res in _knownNames.values) {
+    for (final re in res) {
+      s = s.replaceAll(re, '[ad]');
     }
   }
   return s;

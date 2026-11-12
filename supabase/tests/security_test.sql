@@ -17,6 +17,8 @@ begin
   if u is null then raise exception 'SONUC: HATA test icin en az iki uyeli havuz yok (aile gorunurlugu sinanamaz)'; end if;
   -- Olay testleri rızası olan kişiyle yapılır (rızasız kişinin olayları sunucuda düşürülür, değişiklik 44)
   update public.profiles set acik_riza_at = now(), acik_riza_version = private.riza_version() where id = u;
+  -- Sunucu Pro kilidi (45) açık olsa da olay testleri etkilenmesin: test kişisine geçici Pro
+  update public.profiles set pro_until = now() + interval '1 day' where id = u;
 
   -- 1) Misafir (anon): Pro, test ve iç fonksiyonlar çağrılamaz
   set local role anon;
@@ -280,6 +282,37 @@ begin
     else fails := fails || 'rizasiz_kayit_aileye_gorunuyor; '; end if;
     reset role;
   end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+
+  -- 10d) Sunucu Pro kilidi (45): anahtar kapalıyken değişiklik yok; açıkken ücretsizin olayı düşer, ona bildirim gitmez
+  reset role;
+  update public.profiles set acik_riza_at = now(), acik_riza_version = private.riza_version(),
+         pro_until = null, pro_paid_until = null where id = u;
+  update public.profiles set pro_paid_until = null where id = (select owner_id from public.pools where id = p);
+  update private.flags set value = false where key = 'pro_enforced';
+  if cardinality(public.push_allowed_recipients(array[u])) = 1 then passed := passed + 1;
+  else fails := fails || 'pro_kilidi_kapaliyken_alici_elendi; '; end if;
+  update private.flags set value = true where key = 'pro_enforced';
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    insert into public.pool_events(pool_id, sender_id, event_type, prayer) values (p, u, 'MISSED', 'DHUHR');
+    if (select count(*) from public.pool_events where sender_id = u and event_type = 'MISSED' and prayer = 'DHUHR'
+         and created_at > now() - interval '1 minute') = 0
+    then passed := passed + 1; else fails := fails || 'ucretsiz_olay_dusmedi; '; end if;
+  exception when others then fails := fails || 'ucretsiz_olay_hata(' || sqlstate || '); '; end;
+  begin perform public.push_allowed_recipients(array[u]); fails := fails || 'uye_alici_listesi_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+  if cardinality(public.push_allowed_recipients(array[u])) = 0 then passed := passed + 1;
+  else fails := fails || 'ucretsize_bildirim_gidiyor; '; end if;
+  update public.profiles set pro_until = now() + interval '1 day' where id = u;
+  if cardinality(public.push_allowed_recipients(array[u])) = 1 then passed := passed + 1;
+  else fails := fails || 'pro_kisiye_bildirim_gitmiyor; '; end if;
+  set local role anon;
+  begin perform public.push_allowed_recipients(array[u]); fails := fails || 'anon_alici_listesi_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
   perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
 
   -- 9) Kaza kaydı olan hesap silinebilir (özet tetikleyicisi silmeyi bozmaz); en sonda, geri alınır

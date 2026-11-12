@@ -2,9 +2,10 @@ import 'package:aile_ile_namaz/screens/home_shell.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Ücretsiz sürümde yalnızca Bugün sekmesi açık', () {
+  test('Ücretsiz sürümde Bugün ve (pasif) Aile açılır; Kaza ve Karne kilitli', () {
     expect(HomeShellTabs.locked(0, demo: true), isFalse);
-    for (final i in [1, 2, 3]) {
+    expect(HomeShellTabs.locked(1, demo: true), isFalse); // katılım ve Pro isteği için açık
+    for (final i in [2, 3]) {
       expect(HomeShellTabs.locked(i, demo: true), isTrue, reason: 'sekme $i');
     }
   });

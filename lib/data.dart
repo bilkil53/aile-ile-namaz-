@@ -170,13 +170,14 @@ class Repo {
           .timeout(const Duration(seconds: 6));
       final n = (p?['display_name'] as String? ?? '').trim();
       _myName = n.isNotEmpty ? n : (supa.auth.currentUser?.email ?? '').split('@').first;
-      rememberNames([_myName, supa.auth.currentUser?.userMetadata?['full_name'] as String?]);
+      // Görünen ad yoksa e-postadan türetilen ad hatırlanmaz ("info", "test" gibi sözcükleri silmesin)
+      rememberNames([n, supa.auth.currentUser?.userMetadata?['full_name'] as String?]);
       await AppSettings.prefs.setString('myName', _myName!);
       return _myName!;
     } catch (_) {
       // Çevrimdışı: son bilinen ad
       final cached = AppSettings.prefs.getString('myName') ?? '';
-      rememberNames([cached]);
+      if (!cached.contains('@')) rememberNames([cached]);
       return cached;
     }
   }
