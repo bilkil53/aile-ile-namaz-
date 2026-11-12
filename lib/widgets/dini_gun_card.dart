@@ -90,6 +90,42 @@ class _DiniGunCardState extends State<DiniGunCard> {
     return const SizedBox.shrink();
   }
 
+  /// Beyaz kartlarda (kandil, mübarek gün, "yarın") paylaşma ve aileye gönderme düğmeleri.
+  Widget _shareRow(DiniGun g) {
+    final msg = t(diniGunMessageTr(g), diniGunMessageEn(g));
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(children: [
+        Expanded(
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.emerald,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Share.share(msg, subject: g.name),
+            icon: const Icon(Icons.share, size: 16),
+            label: Text(g.bayram ? t('Bayramlaş', 'Send Eid greetings') : t('Tebrik et', 'Send greetings'),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.emerald,
+              side: const BorderSide(color: AppColors.emerald),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: _sending ? null : () => _sendFamily(diniGunMessageTr(g)),
+            icon: const Icon(Icons.groups, size: 16),
+            label: Text(_sending ? t('Gönderiliyor…', 'Sending…') : t('Aileye gönder', 'Send to family')),
+          ),
+        ),
+      ]),
+    );
+  }
+
   Widget _bayram(DiniGun g, int dayNo) {
     // Ekranda ve paylaşımda seçilen dilde; aileye her zaman Türkçesi gider, alıcı kendi dilinde görür
     final msg = t(bayramMessageTr(g), bayramMessageEn(g));
@@ -192,6 +228,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                   style: TextStyle(fontSize: 11, color: AppColors.emerald, decoration: TextDecoration.underline)),
             ),
           ),
+          _shareRow(g),
         ]),
       ),
     );
@@ -217,6 +254,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
               const SizedBox(height: 2),
               Text(g.meaning, style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.textSecondary)),
+              _shareRow(g),
             ]),
           ),
         ]),

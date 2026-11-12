@@ -140,6 +140,17 @@ const GREET_EN: Record<string, string> = {
   "Günün farzlarını tamamlayarak huzurla geceye kavuşturan Yüce Allah'a hamdolsun.": "Praise be to Allah the Exalted, who let us complete the day's obligatory prayers and reach the night in peace.",
   "🎉 Ramazan Bayramınız mübarek olsun! Allah nice bayramlara sağlık, huzur ve birlik içinde ulaştırsın. 🤲": "🎉 Eid al-Fitr Mubarak! May Allah let us reach many more Eids in health, peace and togetherness. 🤲",
   "🐑 Kurban Bayramınız mübarek olsun! Allah nice bayramlara sağlık, huzur ve birlik içinde ulaştırsın. 🤲": "🐑 Eid al-Adha Mubarak! May Allah let us reach many more Eids in health, peace and togetherness. 🤲",
+  "🌙 Hicri yeni yılınız mübarek olsun! Rabbim yeni yılı hayırlara vesile kılsın. 🤲": "🌙 Happy Islamic New Year! May my Lord make the new year a means of goodness. 🤲",
+  "🥣 Aşure Gününüz mübarek olsun! Rabbim rahmetini ve bereketini üzerimizden eksik etmesin. 🤲": "🥣 Blessed Day of Ashura! May my Lord never withhold His mercy and blessings from us. 🤲",
+  "🕯️ Mevlid Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲": "🕯️ Blessed Mawlid Kandil! May my Lord accept our prayers. 🤲",
+  "🌿 Üç Aylarınız mübarek olsun! Rabbim bu mübarek ayları hayırla idrak etmeyi nasip eylesin. 🤲": "🌿 Blessed Three Holy Months! May my Lord grant us to observe these blessed months in goodness. 🤲",
+  "🕯️ Regaib Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲": "🕯️ Blessed Raghaib Kandil! May my Lord accept our prayers. 🤲",
+  "🕯️ Miraç Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲": "🕯️ Blessed Mi'raj Kandil! May my Lord accept our prayers. 🤲",
+  "🕯️ Berat Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲": "🕯️ Blessed Bara'ah Kandil! May my Lord accept our prayers. 🤲",
+  "🌙 Ramazan-ı Şerifiniz mübarek olsun! Rabbim oruçlarımızı ve ibadetlerimizi kabul eylesin. 🤲": "🌙 Ramadan Mubarak! May my Lord accept our fasts and worship. 🤲",
+  "✨ Kadir Geceniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲": "✨ Blessed Laylat al-Qadr! May my Lord accept our prayers. 🤲",
+  "🤲 Ramazan Bayramı arefeniz mübarek olsun! Rabbim dualarımızı kabul eylesin.": "🤲 Blessed eve of Eid al-Fitr! May my Lord accept our prayers.",
+  "🤲 Arefe gününüz mübarek olsun! Rabbim dualarımızı kabul eylesin.": "🤲 Blessed Day of Arafah! May my Lord accept our prayers.",
 };
 // İngilizce → Türkçe (1.78 sürümü hazır mesajı gönderenin dilinde yolluyordu)
 const GREET_TR: Record<string, string> = Object.fromEntries(Object.entries(GREET_EN).map(([tr, en]) => [en, tr]));

@@ -32,6 +32,17 @@ void main() {
     }
   });
 
+  test('Her mübarek günün kendi tebriği var (kandil, Kadir, arefe…), 280 harfi geçmez', () {
+    final seen = <String>{};
+    for (final d in diniGunler) {
+      final tr = diniGunMessageTr(d), en = diniGunMessageEn(d);
+      expect(seen.add(tr), isTrue, reason: 'aynı tebrik iki günde: ${d.key}');
+      expect(familyMessagesEn[tr], en, reason: d.key);
+      expect(tr.length, lessThanOrEqualTo(280));
+    }
+    expect(familyMessagesEn.length, greetings.length + diniGunler.length);
+  });
+
   test('Alıcı kendi dilinde görür; kendi yazılmış mesaj değişmez', () async {
     final tr = greetings.first.textTr;
     await Lang.set(AppLang.en);
