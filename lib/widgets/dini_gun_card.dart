@@ -6,7 +6,9 @@ import '../lang.dart';
 import '../data.dart';
 import '../content/family_message.dart';
 import '../dini_gunler.dart';
+import '../pro.dart';
 import '../theme.dart';
+import 'pro_lock.dart';
 
 /// Bugün ekranının en üstünde: bayram günlerinde büyük bayram kartı,
 /// kandil / mübarek gün olan günlerde sade bilgi kartı; mübarek günden 1 gün önce
@@ -27,7 +29,7 @@ class DiniGunCard extends StatefulWidget {
 }
 
 class _DiniGunCardState extends State<DiniGunCard> {
-  bool _sending = false;
+  String? _sendingKey; // hangi günün tebriği gönderiliyor (arefede iki kart birlikte görünür)
 
   @override
   void initState() {
@@ -51,9 +53,25 @@ class _DiniGunCardState extends State<DiniGunCard> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
-  Future<void> _sendFamily(String text) async {
+  Future<void> _sendFamily(DiniGun g) async {
     if (isGuest) return _toast(t('Aileye göndermek için Google ile giriş yap.', 'Sign in with Google to send it to your family.'));
-    setState(() => _sending = true);
+    // Ücretsiz sürümde aileye gönderme yok (sunucu da iletmez): "gönderildi" sanılmasın
+    if (Pro.isDemo) return showProRequired(context, feature: t('Aileye tebrik gönderme', 'Sending greetings to family'));
+    final text = diniGunMessageTr(g);
+    // Tek dokunuşla tüm aileye bildirim gider: önce metni gösterip sor
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t('Aileye gönderilsin mi?', 'Send to your family?')),
+        content: Text(t(text, diniGunMessageEn(g))),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Vazgeç', 'Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t('Gönder', 'Send'))),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _sendingKey = g.key);
     try {
       final pools = await Repo.myPools().timeout(const Duration(seconds: 6));
       if (pools.isEmpty) {
@@ -62,10 +80,12 @@ class _DiniGunCardState extends State<DiniGunCard> {
         await Repo.sendDua(pools.first.id, text).timeout(const Duration(seconds: 8));
         _toast(t('Aileye gönderildi 🤲', 'Sent to your family 🤲'));
       }
-    } catch (_) {
-      _toast(t('Gönderilemedi. Biraz sonra tekrar dene.', 'Could not send. Try again a bit later.'));
+    } catch (e) {
+      _toast(e.toString().contains('rate_limited')
+          ? t('Çok sık gönderdin. Biraz bekleyip tekrar dene.', 'You sent too often. Wait a little and try again.')
+          : t('Gönderilemedi. Biraz sonra tekrar dene.', 'Could not send. Try again a bit later.'));
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) setState(() => _sendingKey = null);
     }
   }
 
@@ -83,7 +103,8 @@ class _DiniGunCardState extends State<DiniGunCard> {
     final u = DiniGunler.upcoming(now);
     // Arefe gibi günlerde bugünkü kartın altında yarınki (ör. bayram) kartı da görünür
     if (s != null && u != null) {
-      return Column(mainAxisSize: MainAxisSize.min, children: [_special(s), _upcoming(u.$1)]);
+      // İki kartta ayrı ayrı tebrik düğmesi olmasın: tebrik bugünkü (arefe) kartta
+      return Column(mainAxisSize: MainAxisSize.min, children: [_special(s), _upcoming(u.$1, share: false)]);
     }
     if (s != null) return _special(s);
     if (u != null) return _upcoming(u.$1);
@@ -117,9 +138,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
               side: const BorderSide(color: AppColors.emerald),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: _sending ? null : () => _sendFamily(diniGunMessageTr(g)),
+            onPressed: _sendingKey != null ? null : () => _sendFamily(g),
             icon: const Icon(Icons.groups, size: 16),
-            label: Text(_sending ? t('Gönderiliyor…', 'Sending…') : t('Aileye gönder', 'Send to family')),
+            label: Text(_sendingKey == g.key ? t('Gönderiliyor…', 'Sending…') : t('Aileye gönder', 'Send to family')),
           ),
         ),
       ]),
@@ -177,9 +198,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.6)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: _sending ? null : () => _sendFamily(bayramMessageTr(g)),
+                onPressed: _sendingKey != null ? null : () => _sendFamily(g),
                 icon: const Icon(Icons.groups, size: 16),
-                label: Text(_sending ? t('Gönderiliyor…', 'Sending…') : t('Aileye gönder', 'Send to family')),
+                label: Text(_sendingKey == g.key ? t('Gönderiliyor…', 'Sending…') : t('Aileye gönder', 'Send to family')),
               ),
             ),
           ]),
@@ -189,7 +210,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
   }
 
   /// Mübarek günden 1 gün önce açılır ("Yarın akşam" / "Yarın"); anlam ve önemini gösterir.
-  Widget _upcoming(DiniGun g) {
+  Widget _upcoming(DiniGun g, {bool share = true}) {
     final when = g.eveBefore ? t('Yarın akşam', 'Tomorrow evening') : t('Yarın', 'Tomorrow');
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -228,7 +249,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                   style: TextStyle(fontSize: 11, color: AppColors.emerald, decoration: TextDecoration.underline)),
             ),
           ),
-          _shareRow(g),
+          if (share) _shareRow(g),
         ]),
       ),
     );

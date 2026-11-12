@@ -19,37 +19,37 @@ String bayramMessageEn(DiniGun g) =>
 const Map<String, (String, String)> _ozelGunTebrik = {
   'hicri_yilbasi': (
     '🌙 Hicri yeni yılınız mübarek olsun! Rabbim yeni yılı hayırlara vesile kılsın. 🤲',
-    '🌙 Happy Islamic New Year! May my Lord make the new year a means of goodness. 🤲'),
+    '🌙 Happy Islamic New Year! May Allah make the new year a means of goodness. 🤲'),
   'asure': (
     '🥣 Aşure Gününüz mübarek olsun! Rabbim rahmetini ve bereketini üzerimizden eksik etmesin. 🤲',
-    '🥣 Blessed Day of Ashura! May my Lord never withhold His mercy and blessings from us. 🤲'),
+    '🥣 Blessed Day of Ashura! May Allah never withhold His mercy and blessings from us. 🤲'),
   'mevlid': (
     '🕯️ Mevlid Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲',
-    '🕯️ Blessed Mawlid Kandil! May my Lord accept our prayers. 🤲'),
+    '🕯️ Blessed Mawlid Kandil! May Allah accept our prayers. 🤲'),
   'uc_aylar': (
-    '🌿 Üç Aylarınız mübarek olsun! Rabbim bu mübarek ayları hayırla idrak etmeyi nasip eylesin. 🤲',
-    '🌿 Blessed Three Holy Months! May my Lord grant us to observe these blessed months in goodness. 🤲'),
+    '🌿 Üç Aylarınız mübarek olsun! Rabbim bu ayları hayırla idrak etmeyi nasip eylesin. 🤲',
+    '🌿 Blessed Three Holy Months! May Allah allow us to spend these blessed months in goodness. 🤲'),
   'regaib': (
     '🕯️ Regaib Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲',
-    '🕯️ Blessed Raghaib Kandil! May my Lord accept our prayers. 🤲'),
+    '🕯️ Blessed Raghaib Kandil! May Allah accept our prayers. 🤲'),
   'mirac': (
     '🕯️ Miraç Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲',
-    "🕯️ Blessed Mi'raj Kandil! May my Lord accept our prayers. 🤲"),
+    "🕯️ Blessed Mi'raj Kandil! May Allah accept our prayers. 🤲"),
   'berat': (
     '🕯️ Berat Kandiliniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲',
-    "🕯️ Blessed Bara'ah Kandil! May my Lord accept our prayers. 🤲"),
+    "🕯️ Blessed Bara'ah Kandil! May Allah accept our prayers. 🤲"),
   'ramazan': (
     '🌙 Ramazan-ı Şerifiniz mübarek olsun! Rabbim oruçlarımızı ve ibadetlerimizi kabul eylesin. 🤲',
-    '🌙 Ramadan Mubarak! May my Lord accept our fasts and worship. 🤲'),
+    '🌙 Ramadan Mubarak! May Allah accept our fasts and worship. 🤲'),
   'kadir': (
     '✨ Kadir Geceniz mübarek olsun! Rabbim dualarımızı kabul eylesin. 🤲',
-    '✨ Blessed Laylat al-Qadr! May my Lord accept our prayers. 🤲'),
+    '✨ Blessed Laylat al-Qadr! May Allah accept our prayers. 🤲'),
   'ramazan_arefe': (
-    '🤲 Ramazan Bayramı arefeniz mübarek olsun! Rabbim dualarımızı kabul eylesin.',
-    '🤲 Blessed eve of Eid al-Fitr! May my Lord accept our prayers.'),
+    '🤲 Ramazan Bayramı Arefeniz mübarek olsun! Rabbim dualarımızı kabul eylesin.',
+    '🤲 Blessed eve of Eid al-Fitr! May Allah accept our prayers.'),
   'kurban_arefe': (
     '🤲 Arefe gününüz mübarek olsun! Rabbim dualarımızı kabul eylesin.',
-    '🤲 Blessed Day of Arafah! May my Lord accept our prayers.'),
+    '🤲 Blessed Day of Arafah! May Allah accept our prayers.'),
 };
 
 /// Mübarek gün tebriği (bayramda bayram tebriği). Aileye her zaman Türkçesi gider.
