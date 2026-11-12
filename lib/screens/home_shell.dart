@@ -133,9 +133,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       final ask = await Kvkk.needsServerConsent() || !Kvkk.given;
       // Üstte başka bir pencere ya da sayfa açıksa (ör. Pro, ayarlar) onun üstüne binmesin:
       // kapanmasını bekle. Bu arada sunucu, rızası geçerli olmayanın bilgisini aileye zaten göstermez.
-      while (ask && mounted && !isGuest && !(ModalRoute.of(context)?.isCurrent ?? true)) {
+      // En çok 10 dakika beklenir; sonra bırakılır, bir sonraki öne gelişte yeniden bakılır
+      for (var i = 0; i < 1200 && ask && mounted && !isGuest && !(ModalRoute.of(context)?.isCurrent ?? true); i++) {
         await Future<void>.delayed(const Duration(milliseconds: 500));
       }
+      if (ask && mounted && !(ModalRoute.of(context)?.isCurrent ?? true)) return;
       if (ask && mounted && !isGuest) {
         await Kvkk.askIfNeeded(context);
         if (!isGuest) await Kvkk.syncServer();

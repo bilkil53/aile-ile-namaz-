@@ -175,8 +175,8 @@ class Kvkk {
         if (j is! Map || _uid != uid) return false;
         // Profil satırı yoksa kayıt yazılamaz: sormak sonsuz pencereye döner, bu durumda engellenmez
         if (j['profil'] == false) return false;
-        final required = (j['gerekli_version'] as num?)?.toInt() ?? 1;
-        _requiredVersion = required;
+        final reqVer = (j['gerekli_version'] as num?)?.toInt() ?? 1;
+        _requiredVersion = reqVer;
         final localGiven = _users.contains(uid) && _rizaUsers.contains(uid);
         final localSynced = (p.getBool(_kSynced(uid)) ?? false) && (p.getBool(_kRizaSynced(uid)) ?? false);
         switch (decide(
@@ -185,14 +185,14 @@ class Kvkk {
           localGiven: localGiven,
           localSynced: localSynced,
           localVersion: _localVersion(uid),
-          requiredVersion: required,
+          requiredVersion: reqVer,
         )) {
           case ConsentAction.adopt:
             if (!_users.contains(uid)) await p.setStringList(_kUsers, [..._users, uid]);
             if (!_rizaUsers.contains(uid)) await p.setStringList(_kRizaUsers, [..._rizaUsers, uid]);
             await p.setBool(_kSynced(uid), true);
             await p.setBool(_kRizaSynced(uid), true);
-            await p.setInt(_kRizaVer(uid), (j['riza_version'] as num?)?.toInt() ?? required);
+            await p.setInt(_kRizaVer(uid), (j['riza_version'] as num?)?.toInt() ?? reqVer);
             return false;
           case ConsentAction.resend:
             if (round == 1) return false; // yazılamadı (ör. bağlantı): sonraki açılışta yeniden denenir
