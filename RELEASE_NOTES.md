@@ -1,4 +1,4 @@
-⏰ Namaz hatırlatmaları daha sağlam: vakit servisine ulaşılamazsa ya da kayıtlı vakit bozuksa kurulu hatırlatmalar artık silinmiyor; yeni plan hazır olunca değiştiriliyor.
+🔗 Güncelleme, gösterilen sürümün dosyasını indirip doğrular (araya yeni sürüm girse de karışmaz). 👪 Katılım isteği onaylanmadan havuz/reis adı gösterilmeyebilir. ⏰ Hatırlatmalar daha sağlam.
 
 ## 🌟 Kullanıcı için
 

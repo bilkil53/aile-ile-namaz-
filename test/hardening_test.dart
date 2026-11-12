@@ -40,4 +40,11 @@ void main() {
     expect(UpdateChecker.buildOfTag(''), 0);
     expect(UpdateChecker.buildOfTag('v1.0.0-beta'), 0);
   });
+
+  test('İndirme adresi görülen yayın etiketine sabitlenir; etiket yoksa "en son" adresi', () {
+    expect(UpdateChecker.assetBase('v1.0.17'), endsWith('/releases/download/v1.0.17'));
+    expect(UpdateChecker.assetBase(''), endsWith('/releases/latest/download'));
+    expect(UpdateChecker.assetBase('r105'), endsWith('/releases/latest/download'));
+    expect(UpdateChecker.assetBase('../kötü'), endsWith('/releases/latest/download'));
+  });
 }

@@ -25,8 +25,17 @@ class UpdateChecker {
 
   static const _latestApi =
       'https://api.github.com/repos/bilkil53/aile-ile-namaz-/releases/latest';
-  static const downloadUrl =
-      'https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz.apk';
+  static const _repoUrl = 'https://github.com/bilkil53/aile-ile-namaz-';
+
+  /// Son sürüm denetiminde görülen yayın etiketi. İndirme ve dosya özeti (SHA-256) AYNI etikete bağlanır:
+  /// denetimle indirme arasında yeni bir sürüm çıksa bile gösterilen sürümün dosyası iner ve doğrulanır.
+  static String _tag = '';
+
+  /// İndirme klasörü: etiket biliniyorsa o yayına sabit adres, bilinmiyorsa "en son" adresi.
+  static String assetBase(String tag) =>
+      buildOfTag(tag) > 0 ? '$_repoUrl/releases/download/$tag' : '$_repoUrl/releases/latest/download';
+
+  static String get downloadUrl => '${assetBase(_tag)}/aile-ile-namaz.apk';
 
   static bool _checked = false;
 
@@ -69,7 +78,7 @@ class UpdateChecker {
     };
     return abi == null
         ? null
-        : 'https://github.com/bilkil53/aile-ile-namaz-/releases/latest/download/aile-ile-namaz-$abi.apk';
+        : '${assetBase(_tag)}/aile-ile-namaz-$abi.apk';
   }
 
   /// GitHub'daki son sürüm: (numara, açıklamanın ilk satırı). Hata olursa null.
@@ -89,6 +98,7 @@ class UpdateChecker {
           as Map<String, dynamic>;
       final tag = body['tag_name'] as String? ?? '';
       final n = buildOfTag(tag);
+      if (n > 0) _tag = tag;
       final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
       return (n, notes);
     } catch (_) {
@@ -203,6 +213,7 @@ class UpdateChecker {
 
       final tag = body['tag_name'] as String? ?? '';
       final latest = buildOfTag(tag);
+      if (latest > 0) _tag = tag;
       if (latest <= current) return;
 
       final notes = ((body['body'] as String?) ?? '').split('\n').first.trim();
