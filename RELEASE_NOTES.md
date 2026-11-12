@@ -1,4 +1,4 @@
-Namaz Demo — 🔗 Güncelleme, gösterilen sürümün dosyasını indirip doğrular. 👪 Katılım isteği onaylanmadan havuz/reis adı gösterilmeyebilir. ⏰ Hatırlatmalar daha sağlam.
+⭐ Pro geldi: ilk 7 gün her şey açık; sonra ücretsiz sürümde Bugün sekmesi kullanılır, Pro ödemesi Google Play sürümüyle açılacak. 🔒 Rıza ve gizlilik iyileştirmeleri.
 
 ## 🌟 Kullanıcı için
 

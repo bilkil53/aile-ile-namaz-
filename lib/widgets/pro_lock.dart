@@ -105,7 +105,7 @@ Future<void> showProCodeDialog(BuildContext context) async {
     if (context.mounted) await _showAskReisDialog(context);
     return;
   }
-  final tester = await Pro.testerStatus() == true;
+  final tester = kTestChannel && await Pro.testerStatus() == true; // kararlı sürümde test düğmesi yok
   if (!context.mounted) return;
   var busy = false;
   String? err;

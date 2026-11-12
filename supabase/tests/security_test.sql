@@ -223,7 +223,27 @@ begin
   else passed := passed + 1; end if;
   reset role;
 
-  -- 10) Bildirim teslim kaydı (41) ve rıza durumu (41, 42)
+  -- 10a) Aile üyesi başkasının yalnızca bugün/dün kaydını görür, eski geçmişini göremez
+  select m2.user_id into male from public.pool_members m2 where m2.pool_id = p and m2.user_id <> u limit 1;
+  if male is null then
+    skipped := skipped || 'aile_gecmisi(ikinci uye yok); ';
+  else
+    -- Görünürlük rızaya bağlı (44): ikinci üyeye geçici rıza
+    update public.profiles set acik_riza_at = now(), acik_riza_version = private.riza_version() where id = male;
+    insert into public.daily_prayers(user_id, prayer_date, fajr) values
+      (male, (now() at time zone 'Europe/Istanbul')::date, 'PRAYED'), (male, '2001-01-01', 'PRAYED')
+      on conflict (user_id, prayer_date) do update set fajr = 'PRAYED';
+    perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+    if (select count(*) from public.daily_prayers where user_id = male and prayer_date = '2001-01-01') <> 0 then
+      fails := fails || 'aile_eski_gecmisi_gorunuyor; ';
+    elsif (select count(*) from public.daily_prayers where user_id = male and prayer_date = (now() at time zone 'Europe/Istanbul')::date) <> 1 then
+      fails := fails || 'aile_bugunu_goremiyor; ';
+    else passed := passed + 1; end if;
+    reset role;
+  end if;
+
+  -- 10b) Bildirim teslim kaydı (41) ve rıza durumu (41, 42)
   perform set_config('request.jwt.claims', '', true); -- kimliksiz: yalnızca izin hatası kabul edilir
   set local role anon;
   begin perform public.my_consent_status(); fails := fails || 'anon_riza_durumu_acik; ';
