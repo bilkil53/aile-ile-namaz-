@@ -13,6 +13,8 @@ declare
 begin
   select m.user_id, m.pool_id into u, p from public.pool_members m limit 1;
   if u is null then raise exception 'SONUC: HATA test icin havuz uyesi yok'; end if;
+  -- Olay testleri rızası olan kişiyle yapılır (rızasız kişinin olayları sunucuda düşürülür, değişiklik 44)
+  update public.profiles set acik_riza_at = now(), acik_riza_version = private.riza_version() where id = u;
 
   -- 1) Misafir (anon): Pro, test ve iç fonksiyonlar çağrılamaz
   set local role anon;
@@ -272,6 +274,29 @@ begin
   if has_column_privilege('authenticated', 'public.profiles', 'acik_riza_at', 'select')
   then fails := fails || 'riza_sutunu_dogrudan_okunabiliyor; ';
   else passed := passed + 1; end if;
+
+  -- 10c) Rızası olmayanın olayı düşer, kaydı aileye görünmez (44). Bölüm 8'de u'nun rızası silindi.
+  select m2.user_id into male from public.pool_members m2 where m2.pool_id = p and m2.user_id <> u limit 1;
+  insert into public.daily_prayers(user_id, prayer_date, fajr) values (u, (now() at time zone 'Europe/Istanbul')::date, 'PRAYED')
+    on conflict (user_id, prayer_date) do update set fajr = 'PRAYED';
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin
+    insert into public.pool_events(pool_id, sender_id, event_type, prayer) values (p, u, 'PRAYED', 'ISHA');
+    if (select count(*) from public.pool_events where sender_id = u and prayer = 'ISHA' and created_at > now() - interval '1 minute') = 0
+    then passed := passed + 1; else fails := fails || 'rizasiz_olay_dusmedi; '; end if;
+  exception when others then fails := fails || 'rizasiz_olay_hata(' || sqlstate || '); '; end;
+  reset role;
+  if male is null then
+    skipped := skipped || 'rizasiz_gorunurluk(ikinci uye yok); ';
+  else
+    perform set_config('request.jwt.claims', json_build_object('sub', male, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+    if (select count(*) from public.daily_prayers where user_id = u) = 0 then passed := passed + 1;
+    else fails := fails || 'rizasiz_kayit_aileye_gorunuyor; '; end if;
+    reset role;
+  end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
 
   -- 9) Kaza kaydı olan hesap silinebilir (özet tetikleyicisi silmeyi bozmaz); en sonda, geri alınır
   insert into public.kaza_prayers(user_id, prayer_type, owed_count, completed_count) values (u, 'ASR', 2, 1)
