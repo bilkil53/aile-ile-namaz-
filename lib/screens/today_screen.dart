@@ -188,7 +188,8 @@ class _TodayScreenState extends State<TodayScreen> {
           _dayToggle(),
           const SizedBox(height: 12),
           if (!_showYesterday) ...[
-            const DiniGunCard(),
+            // Tarih anahtarı: gece yarısı geçince kart yeniden kurulur (yeni günün kartı / yeni yılın takvimi)
+            DiniGunCard(key: ValueKey(DateFormat('yyyy-MM-dd').format(DateTime.now()))),
             _heroCard(),
             const SizedBox(height: 12),
             _quoteCard(),
