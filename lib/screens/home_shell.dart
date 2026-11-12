@@ -55,12 +55,14 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         if (loggedIn || !mounted) return; // giriş yapıldıysa yeni oturum ekranı açılır
       }
       if (!isGuest) await Kvkk.attach(); // giriş ekranında verilen rıza bu hesaba bağlanır
+      // Bu telefonda kayıt yoksa önce sunucuya bakılır: başka telefonda verilmişse yeniden sorulmaz
+      if (!isGuest && !Kvkk.given) await Kvkk.needsServerConsent();
       if (!isGuest && !Kvkk.given && mounted) {
         await Kvkk.askIfNeeded(context);
         if (isGuest || !mounted) return; // kabul etmediyse oturum kapandı
       }
       if (!isGuest) {
-        unawaited(Kvkk.syncServer());
+        unawaited(_consentCheck());
         unawaited(Pro.init().then((_) => Pro.loadRequests()));
         if (LocalStore.guestMode) await LocalStore.setGuestMode(false);
         // Ağ işlerini arka planda başlat (internet yavaş/yoksa ekranı bekletmez)
@@ -93,6 +95,26 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       unawaited(Repo.syncNow()); // telefonda bekleyen işaretleri gönder
       unawaited(Pro.refresh()); // reis Pro aldıysa aile de hemen Pro olsun
       unawaited(Pro.loadRequests()); // reise gelen Pro istekleri
+      unawaited(_consentCheck()); // sunucuda geçerli açık rıza yoksa yeniden sorulur
+    }
+  }
+
+  bool _consentBusy = false;
+
+  /// Beyanları sunucuya yazar; sunucuda geçerli açık rıza yoksa (verilmemiş ya da metin sürümü
+  /// eskimiş) her açılışta ve öne gelişte yeniden sorar. Vazgeçilirse oturum kapanır.
+  Future<void> _consentCheck() async {
+    // Açılıştaki pencere hâlâ açıksa (bu telefonda kayıt yok) ikinci pencere açılmasın
+    if (isGuest || _consentBusy || !Kvkk.given) return;
+    _consentBusy = true;
+    try {
+      await Kvkk.syncServer();
+      if (await Kvkk.needsServerConsent() && mounted && !isGuest) {
+        await Kvkk.askIfNeeded(context);
+        if (!isGuest) await Kvkk.syncServer();
+      }
+    } finally {
+      _consentBusy = false;
     }
   }
 
