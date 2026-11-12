@@ -48,7 +48,15 @@ jobs:
       - name: Android platform dosyalarını oluştur
         run: |
           flutter create . --org com.bilkil53 --project-name aile_ile_namaz --platforms android
-          # Paket sürümleri sabit kalmalı: bu adım kilit dosyasını değiştirdiyse dur
+          # Paket sürümleri sabit kalmalı. "flutter create", yeni çıkan bir paket sürümünü kilit dosyasına
+          # yazabiliyor; bu durumda depodaki kilit dosyası geri alınır ve tam o sürümlerle kurulum zorlanır.
+          # Kilit dosyası gerçekten uyuşmuyorsa (kurulamıyorsa) burada durur.
+          if ! git diff --quiet pubspec.lock pubspec.yaml; then
+            echo "::warning::flutter create kilit dosyasını değiştirdi; depodaki sürümler geri alındı"
+            git diff --stat pubspec.lock pubspec.yaml
+            git checkout -- pubspec.lock pubspec.yaml
+          fi
+          flutter pub get --enforce-lockfile
           git diff --exit-code pubspec.lock pubspec.yaml || { echo '::error::pubspec.lock / pubspec.yaml değişti (paket sürümleri sabit değil)'; exit 1; }
 
       - name: Kapanma sebebi okuyucu (MainActivity)
