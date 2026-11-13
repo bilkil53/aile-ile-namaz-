@@ -439,7 +439,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
   /// Test paneli: mübarek günlerden birini seçip kartın 1 gün önce ve o gün nasıl göründüğünü
-  /// önizler. Takvime ve internete bağlı değildir; aileye hiçbir şey göndermez.
+  /// önizler. Takvime bağlı değildir. Düğmeler gerçek çalışır: "Tebrik et" paylaşma ekranını açar,
+  /// "Aileye gönder" önce sorar, onaylanırsa tebrik gerçekten aileye gider.
   Future<void> _previewDiniGun() async {
     final pick = await showDialog<DiniGun>(
       context: context,
@@ -464,13 +465,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: SizedBox(
           width: MediaQuery.of(ctx).size.width,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Önizleme: düğmeler çalışmaz, aileye bir şey gönderilmez.', style: TextStyle(fontSize: 11)),
+            const Text('Düğmeler gerçek çalışır: "Aileye gönder" önce sorar, onaylarsan tebrik ailene gider.', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 8),
             const Text('1 gün önce:', style: TextStyle(fontWeight: FontWeight.bold)),
-            IgnorePointer(child: DiniGunCard(preview: pick, previewTomorrow: true)),
+            DiniGunCard(preview: pick, previewTomorrow: true),
             const SizedBox(height: 12),
             const Text('O gün:', style: TextStyle(fontWeight: FontWeight.bold)),
-            IgnorePointer(child: DiniGunCard(preview: pick)),
+            DiniGunCard(preview: pick),
           ]),
         ),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kapat'))],
