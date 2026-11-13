@@ -1563,8 +1563,7 @@ class _TitleDialogState extends State<_TitleDialog> {
   }
 }
 
-/// Dua ve tebrik gönder: hazır dualar + kendin yaz.
-/// "Hazır duayı gönder" seçimi: mesaj boş gönderilir, her alıcı hazır duayı kendi dilinde görür.
+/// "Genel dua" seçimi: mesaj boş gönderilir, her alıcı hazır duayı kendi dilinde görür.
 const _kDuaDefault = '\u0000default';
 
 /// Dua ve tebrik penceresi: yalnızca hazır metinler gönderilir (serbest metin yok; kişisel bilgi
