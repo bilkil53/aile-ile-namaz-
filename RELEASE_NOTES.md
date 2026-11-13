@@ -1,4 +1,4 @@
-⭐ Pro geldi: ilk 7 gün her şey açık; sonra ücretsiz sürümde Bugün sekmesi kullanılır, Pro ödemesi Google Play sürümüyle açılacak. 🔒 Rıza ve gizlilik iyileştirmeleri.
+🕯️ Kandil ve mübarek günlerde **Tebrik et** (WhatsApp vb.) ve **Aileye gönder**. 🤲 Aileye yalnızca hazır dua ve tebrikler gönderilir. ⭐ Pro geldi: ilk 7 gün her şey açık; sonra ücretsiz sürümde Bugün sekmesi kullanılır, Pro ödemesi Google Play sürümüyle açılacak. 🔒 Rıza ve gizlilik iyileştirmeleri.
 
 ## 🌟 Kullanıcı için
 

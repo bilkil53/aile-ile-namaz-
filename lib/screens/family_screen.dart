@@ -1567,37 +1567,38 @@ class _TitleDialogState extends State<_TitleDialog> {
 /// "Hazır duayı gönder" seçimi: mesaj boş gönderilir, her alıcı hazır duayı kendi dilinde görür.
 const _kDuaDefault = '\u0000default';
 
-class _DuaDialog extends StatefulWidget {
+/// Dua ve tebrik penceresi: yalnızca hazır metinler gönderilir (serbest metin yok; kişisel bilgi
+/// yazılıp aileye ya da kayıtlara düşmesin).
+class _DuaDialog extends StatelessWidget {
   final String? to;
   const _DuaDialog({this.to});
 
-  @override
-  State<_DuaDialog> createState() => _DuaDialogState();
-}
-
-class _DuaDialogState extends State<_DuaDialog> {
-  final _ctrl = TextEditingController();
   static String get _defaultDua => t('Allah ibadetlerimizi kabul etsin, ailemizi namazda buluştursun 🤲',
       'May Allah accept our worship and unite our family in prayer 🤲');
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.to == null ? t('🤲 Dua ve Tebrik Gönder', '🤲 Send Dua and Greetings') : t('🤲 ${widget.to} için dua', '🤲 Dua for ${widget.to}'),
+      title: Text(to == null ? t('🤲 Dua ve Tebrik Gönder', '🤲 Send Dua and Greetings') : t('🤲 $to için dua', '🤲 Dua for $to'),
           style: const TextStyle(fontSize: 15)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(t('Hazır manevi dualar ve tebrikler:', 'Ready-made duas and greetings:'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(t('Göndermek istediğin duaya dokun:', 'Tap the dua you want to send:'),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
+            Card(
+              margin: const EdgeInsets.symmetric(vertical: 3),
+              child: ListTile(
+                dense: true,
+                leading: const Text('🤲', style: TextStyle(fontSize: 17)),
+                title: Text(t('Genel dua', 'General dua'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                subtitle: Text(_defaultDua, style: const TextStyle(fontSize: 12)),
+                onTap: () => Navigator.pop(context, _kDuaDefault), // alıcı kendi dilinde görür
+              ),
+            ),
             for (final g in greetings)
               Card(
                 margin: const EdgeInsets.symmetric(vertical: 3),
@@ -1609,34 +1610,11 @@ class _DuaDialogState extends State<_DuaDialog> {
                   onTap: () => Navigator.pop(context, g.textTr), // alıcı kendi dilinde görür
                 ),
               ),
-            const SizedBox(height: 8),
-            TextField(
-              onChanged: (_) => setState(() {}),
-              controller: _ctrl,
-              maxLength: 240,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: t('Veya kendi duanı yaz', 'Or write your own dua'),
-                hintText: t('Örn: Allah kabul etsin, hayırlı ve bereketli olsun…', 'e.g. May Allah accept it, may it be blessed…'),
-              ),
-            ),
-            if (_ctrl.text.trim().isEmpty)
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(10)),
-                child: Text(t('Bir şey yazmazsan şu dua gönderilir:\n"$_defaultDua"', 'If you leave it empty, this dua is sent:\n"$_defaultDua"'),
-                    style: TextStyle(fontSize: 12, color: AppColors.emerald)),
-              ),
           ],
         ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(t('Vazgeç', 'Cancel'))),
-        FilledButton(
-          // Boş bırakılırsa gönderilecek dua önizlemede yazar
-          onPressed: () => Navigator.pop(context, _ctrl.text.trim().isEmpty ? _kDuaDefault : _ctrl.text),
-          child: Text(_ctrl.text.trim().isEmpty ? t('Hazır duayı gönder 🤲', 'Send the ready-made dua 🤲') : t('Yazdığımı gönder 🤲', 'Send what I wrote 🤲')),
-        ),
       ],
     );
   }
