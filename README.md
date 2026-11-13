@@ -44,7 +44,7 @@
 * **← Dün / Bugün** geçişi: unutulan dünkü vakitler işaretlenebilir.
 * **Günün Ayeti / Hadisi** (Arapça metin + Diyanet meali).
 * **🎉 Bayram kartı:** Ramazan ve Kurban bayramı günlerinde ekranın en üstünde: "Bayramınız mübarek olsun", bayramın kaçıncı günü olduğu, bayramın anlamı, **Bayramlaş** (paylaşım penceresi) ve **Aileye gönder**.
-* **🕯️ Kandil / mübarek gün kartı:** O gün sade bir kartla ("Bu akşam Miraç Kandili") ve kısa açıklamayla görünür. Başka günlerde bu kartlar görünmez.
+* **🕯️ Kandil / mübarek gün kartı:** O gün sade bir kartla ("Bu akşam Miraç Kandili") ve kısa açıklamayla görünür; **Tebrik et** (WhatsApp vb. paylaşım) ve **Aileye gönder** (onay sorulur). Başka günlerde bu kartlar görünmez.
 * **🧭 Kıble Pusulası:** İnternet gerektirmez; ivme + manyetik sensörle Kâbe yönü.
 
 ### 2. 👨‍👩‍👧‍👦 Aile Havuzu • İbadet Halkası
@@ -58,7 +58,7 @@
 * **Liste sırası:** Önce kişinin kendisi, sonra Aile Reisi, sonra diğer fertler.
 * **Bağlantıyı Teyit Et 🔄**, **BEKLEMEDE / AKTİF** rozeti, Bireysel / Aile Modu profil kartı.
 * **Ortak Matris:** Ailenin 5 vakit durumu (vakit × kişi), **"Bugün Aile Başarısı: x / y Vakit (%)"**, **◄ Dünü Gör**. Yalnızca gerçekten işaretlenen vakitler görünür; boş vakitler "—".
-* **🤲 Dua:** **Aileye Dua Gönder** tüm aileye gider. Bir kişinin kartındaki **Tebrik Et & Dua Gönder** yalnızca o kişiye gider ("Baban sana dua gönderdi 🤲"); kişiye özel duayı sunucu kuralıyla sadece gönderen ve alan görür. Hazır dualar veya kendi yazdığın dua; boş bırakılırsa gidecek dua önizlenir.
+* **🤲 Dua:** **Aileye Dua Gönder** tüm aileye gider. Bir kişinin kartındaki **Tebrik Et & Dua Gönder** yalnızca o kişiye gider ("Baban sana dua gönderdi 🤲"); kişiye özel duayı sunucu kuralıyla sadece gönderen ve alan görür. Yalnızca hazır dualar ve tebrikler gönderilir (elle metin yazılmaz).
 * **Reis yetkileri:** Ünvan/simge değiştirme, reisliği devretme, üyeyi çıkarma, kodu yenileme, **Havuzu Kapat & Sıfırla**. Havuzu kapatma ve havuzdan ayrılma tek pencerede **1. onay + 2. onay** ister.
 * **Aile bildirimleri (uygulama kapalıyken de):** Namaz, kaza, dua ve katılım bildirimleri Firebase Cloud Messaging ile gelir; bildirimde kişinin simgesi ve hitabı yazar. Kilit ekranında içeriğin görünüp görünmeyeceği seçilebilir.
 * **Çevrimdışı:** İnternet yokken ailenin son bilinen durumu "İnternet yok" uyarısıyla gösterilir, bağlantı gelince kendiliğinden yenilenir.
